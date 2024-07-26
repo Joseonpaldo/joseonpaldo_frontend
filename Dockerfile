@@ -1,28 +1,42 @@
 # Use the official Node.js image for version 22
-FROM node:20
+FROM node:20 AS build
+
+# Install pnpm
+RUN npm install -g pnpm
 
 # Create and change to the app directory
 WORKDIR /app
 
 # Copy the package files and install dependencies
-COPY package*.json yarn.lock ./
-RUN yarn install
-RUN npm install
+COPY pnpm-lock.yaml ./
+COPY package.json ./
+
+# Install dependencies using pnpm package management
+RUN pnpm install
 
 # Copy the rest of the application code
 COPY . .
 
-# Print working directory and list files for debugging
-RUN pwd && ls -la
-
 # Build the React app
-RUN yarn build
+RUN pnpm build
 
-# Install `serve` to serve the build directory
-RUN yarn global add serve
+# Use a smaller Node.js runtime for the production build
+FROM node:20-alpine
 
-# Use `serve` to serve the app
-CMD ["serve", "-s", "build"]
+# Install pnpm
+RUN npm install -g pnpm
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy only the built application and necessary files from the previous stage
+COPY --from=build /app ./
+
+# Install production dependencies
+RUN pnpm install --prod
 
 # Expose the port the app runs on
 EXPOSE 3000
+
+# Start the Next.js application
+CMD ["pnpm", "start"]
