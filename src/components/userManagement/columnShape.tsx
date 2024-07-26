@@ -21,7 +21,7 @@ const UserListColumnShape = [
     },
   },
   {
-    Header: "Rank",
+    Header: "Role",
     accessor: "role",
     minWidth: 200,
     Cell: ({ value }: any) => (
@@ -38,7 +38,7 @@ const UserListColumnShape = [
     ),
   },
   {
-    Header: "Winning Rate",
+    Header: "Company",
     accessor: "company",
     minWidth: 150,
   },

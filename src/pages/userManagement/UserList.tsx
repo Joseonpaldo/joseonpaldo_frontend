@@ -1,4 +1,4 @@
-import { Box,  styled } from "@mui/material";
+import { Box, Button, styled } from "@mui/material";
 import FlexBox from "components/FlexBox";
 import SearchInput from "components/SearchInput";
 import UserListColumnShape from "components/userManagement/columnShape";
@@ -6,6 +6,7 @@ import CustomTable from "components/userManagement/CustomTable";
 import { userListFakeData } from "components/userManagement/fakeData";
 import useTitle from "hooks/useTitle";
 import { FC } from "react";
+import { useNavigate } from "react-router-dom";
 
 // styled component
 const StyledFlexBox = styled(FlexBox)(({ theme }) => ({
@@ -23,15 +24,20 @@ const StyledFlexBox = styled(FlexBox)(({ theme }) => ({
   },
 }));
 
-const UserRank: FC = () => {
+const UserList: FC = () => {
   // change navbar title
-  useTitle("놀이 순위");
+  useTitle("User List");
+
+  const navigate = useNavigate();
+  const handleAddUser = () => navigate("/dashboard/add-user");
 
   return (
     <Box pt={2} pb={4}>
       <StyledFlexBox>
         <SearchInput placeholder="Search user..." />
-
+        <Button variant="contained" onClick={handleAddUser}>
+          Add New User
+        </Button>
       </StyledFlexBox>
 
       <CustomTable columnShape={UserListColumnShape} data={userListFakeData} />
@@ -39,4 +45,4 @@ const UserRank: FC = () => {
   );
 };
 
-export default UserRank;
+export default UserList;

@@ -1,6 +1,6 @@
 import { Box, styled } from "@mui/material";
 import { FC, Fragment, useState } from "react";
-import {Outlet, useLocation} from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import DashboardNavbar from "./DashboardNavbar";
 import DashboardSidebar from "./DashboardSideBar";
 
@@ -20,22 +20,18 @@ const Wrapper = styled(Box)(({ theme }) => ({
 
 const DashboardLayout: FC = ({ children }) => {
   const [showMobileSideBar, setShowMobileSideBar] = useState(false);
-  const {pathname} = useLocation();
+
   return (
     <Fragment>
-        {pathname.startsWith("/home/in-game/") ? null :
       <DashboardSidebar
         showMobileSideBar={showMobileSideBar}
         closeMobileSideBar={() => setShowMobileSideBar(false)}
       />
-        }
 
       <Wrapper>
-        {pathname.startsWith("/home/in-game/") ? null :
         <DashboardNavbar
           setShowMobileSideBar={() => setShowMobileSideBar((state) => !state)}
         />
-        }
         {children || <Outlet />}
       </Wrapper>
     </Fragment>

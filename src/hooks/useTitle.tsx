@@ -4,13 +4,7 @@ import { useContext, useEffect } from "react";
 const useTitle = (text: string) => {
   const { title, setTitle } = useContext(TitleContext);
 
-  useEffect(() => {
-    setTitle(text)
-    const titleElement = document.querySelector("title");
-    if (titleElement) {
-      titleElement.textContent = text;
-    }
-  }, [text, setTitle]);
+  useEffect(() => setTitle(text), [text, setTitle]);
 
   return title;
 };

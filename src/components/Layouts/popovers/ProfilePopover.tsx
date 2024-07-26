@@ -1,10 +1,11 @@
-import { Badge, Box, ButtonBase,  styled } from "@mui/material";
+import { Badge, Box, ButtonBase, Divider, styled } from "@mui/material";
 import FlexBox from "components/FlexBox";
 import { H6, Small, Tiny } from "components/Typography";
 import UkoAvatar from "components/UkoAvatar";
 import useAuth from "hooks/useAuth";
 import { FC, Fragment, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import PopoverLayout from "./PopoverLayout";
 
 // styled components
@@ -23,8 +24,14 @@ const StyledSmall = styled(Small)(({ theme }) => ({
 
 const ProfilePopover: FC = () => {
   const anchorRef = useRef(null);
+  const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [open, setOpen] = useState(false);
+
+  const handleMenuItem = (path: string) => {
+    navigate(path);
+    setOpen(false);
+  };
 
   return (
     <Fragment>
@@ -75,19 +82,19 @@ const ProfilePopover: FC = () => {
         }
       >
         <Box pt={1}>
-          {/*<StyledSmall*/}
-          {/*  onClick={() => handleMenuItem("/dashboard/user-profile")}*/}
-          {/*>*/}
-          {/*  Set Status*/}
-          {/*</StyledSmall>*/}
+          <StyledSmall
+            onClick={() => handleMenuItem("/dashboard/user-profile")}
+          >
+            Set Status
+          </StyledSmall>
 
-          {/*<StyledSmall*/}
-          {/*  onClick={() => handleMenuItem("/dashboard/user-profile")}*/}
-          {/*>*/}
-          {/*  Profile & Account*/}
-          {/*</StyledSmall>*/}
+          <StyledSmall
+            onClick={() => handleMenuItem("/dashboard/user-profile")}
+          >
+            Profile & Account
+          </StyledSmall>
 
-          {/*<Divider sx={{ my: 1 }} />*/}
+          <Divider sx={{ my: 1 }} />
 
           <StyledSmall
             onClick={() => {

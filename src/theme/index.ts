@@ -29,7 +29,7 @@ const baseOptions: ThemeOptions = {
     success,
     info,
     divider: secondary[300],
-    background: { default: "#efe9e3" },
+    background: { default: "#f3f4f9" },
     text: {
       primary: secondary[500],
       secondary: secondary[300],

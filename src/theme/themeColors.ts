@@ -12,14 +12,14 @@ declare module "@mui/material/styles" {
 }
 
 export const primary = {
-  100: "#F0E0D1", // 아주 연한 갈색
-  200: "#D9C1A3", // 연한 갈색
-  300: "#C2A08D", // 중간 갈색
-  400: "#A88A6E", // 다소 진한 갈색
-  500: "#8B6B4F", // 진한 갈색
-  main: "#8B6B4F", // 진한 갈색
-  light: "#F0E0D1", // 아주 연한 갈색
-  dark: "#6B4A34", // 더 진한 갈색
+  100: "#D3F5FE",
+  200: "#A7E7FD",
+  300: "#7AD2FA",
+  400: "#59BCF5",
+  500: "#2499EF",
+  main: "#2499EF",
+  light: "#D3F5FE",
+  dark: "#1A77CD",
   red: "#FF6B93",
   purple: "#A798FF",
   yellow: "#FF9777",

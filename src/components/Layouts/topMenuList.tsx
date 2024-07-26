@@ -1,43 +1,41 @@
 import Icons from "icons/sidebar";
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 
 const index = [
-  // {
-  //   title: "",
-  //   Icon: Icons.DashboardIcon,
-  //   path: "/home/in-game/",
-  // },
-  // {
-  //   title: "User Profile",
-  //   Icon: Icons.UserProfileIcon,
-  //   path: "/dashboard/user-profile",
-  // },
   {
-    title: "놀이방",
-    Icon: SportsEsportsIcon,
-    path: "/home/game-room",
+    title: "Dashboard",
+    Icon: Icons.DashboardIcon,
+    path: "/dashboard",
   },
   {
-    title: "순위",
-    Icon: MilitaryTechIcon,
-    path: "/home/user-rank",
+    title: "User Profile",
+    Icon: Icons.UserProfileIcon,
+    path: "/dashboard/user-profile",
   },
-  // {
-  //   title: "Add Room",
-  //   Icon: Icons.AddUserIcon,
-  //   path: "/home/add-room",
-  // },
   {
-    title: "Log Out",
+    title: "User Grid",
+    Icon: Icons.UserGridIcon,
+    path: "/dashboard/user-grid",
+  },
+  {
+    title: "User List",
+    Icon: Icons.UserManagementIcon,
+    path: "/dashboard/user-list",
+  },
+  {
+    title: "Add user",
+    Icon: Icons.AddUserIcon,
+    path: "/dashboard/add-user",
+  },
+  {
+    title: "Login",
     Icon: Icons.LoginIcon,
     path: "/login",
   },
-  // {
-  //   title: "Register",
-  //   Icon: Icons.SessionsIcon,
-  //   path: "/Register",
-  // },
+  {
+    title: "Register",
+    Icon: Icons.SessionsIcon,
+    path: "/Register",
+  },
 ];
 
 export default index;

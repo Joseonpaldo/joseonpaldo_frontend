@@ -30,7 +30,7 @@ const ErrorPage: FC = () => {
       </Paragraph>
 
       <NavLink
-        to="/"
+        to="/dashboard"
         style={{
           display: "block",
           marginTop: "1.5rem",
@@ -39,7 +39,7 @@ const ErrorPage: FC = () => {
           color: theme.palette.primary.main,
         }}
       >
-        Back to Home
+        Back to Dashboard
       </NavLink>
     </FlexBox>
   );

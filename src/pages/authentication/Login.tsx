@@ -57,7 +57,7 @@ const Login: FC = () => {
           .then(() => {
             setLoading(false);
             toast.success("You Logged In Successfully test");
-            navigate("/");
+            navigate("/dashboard");
           })
           .catch((error) => {
             setError(error.message);
@@ -83,7 +83,7 @@ const Login: FC = () => {
           mb={5}
         >
           <Box width={38} mb={1}>
-            <img src="/static/logo/logo.png" width="100%" alt="Uko Logo" />
+            <img src="/static/logo/logo.svg" width="100%" alt="Uko Logo" />
           </Box>
           <H1 fontSize={24} fontWeight={700}>
             Sign In to Uko
@@ -95,13 +95,13 @@ const Login: FC = () => {
             // onClick={loginWithGoogle}
             startIcon={<GoogleIcon sx={{ mr: 1 }} />}
           >
-            Google
+            Sign in with Google
           </SocialIconButton>
           <SocialIconButton
             // onClick={loginWithFacebook}
             startIcon={<FacebookIcon sx={{ mr: 1 }} />}
           >
-            Facebook
+            Sign in with Facebook
           </SocialIconButton>
 
           <Divider sx={{ my: 3, width: "100%", alignItems: "flex-start" }}>

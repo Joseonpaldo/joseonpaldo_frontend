@@ -17,21 +17,26 @@ const Login = Loadable(lazy(() => import("./pages/authentication/Login")));
 const Register = Loadable(
   lazy(() => import("./pages/authentication/Register"))
 );
+const ForgetPassword = Loadable(
+  lazy(() => import("./pages/authentication/ForgetPassword"))
+);
 
 // Dashboard pages
 const DashboardSaaS = Loadable(lazy(() => import("./pages/dashboards/SaaS")));
 
+// user profile
+const UserProfile = Loadable(lazy(() => import("./pages/UserProfile")));
 
 // user management
-const GameRoom = Loadable(
-  lazy(() => import("./pages/userManagement/GameRoom"))
+const UserList = Loadable(
+  lazy(() => import("./pages/userManagement/UserList"))
 );
-const UserRank = Loadable(
-  lazy(() => import("./pages/userManagement/UserRank"))
+const UserGrid = Loadable(
+  lazy(() => import("./pages/userManagement/UserGrid"))
 );
-// const AddNewUser = Loadable(
-//   lazy(() => import("./pages/userManagement/AddNewUser"))
-// );
+const AddNewUser = Loadable(
+  lazy(() => import("./pages/userManagement/AddNewUser"))
+);
 
 // error
 const Error = Loadable(lazy(() => import("./pages/404")));
@@ -40,62 +45,61 @@ const Error = Loadable(lazy(() => import("./pages/404")));
 const routes = [
   {
     path: "/",
-    element: <Navigate to="home/game-room" />,
+    element: <Navigate to="dashboard" />,
   },
   {
     path: "login",
     element: (
-        <GuestGuard>
-          <Login />
-        </GuestGuard>
+      <GuestGuard>
+        <Login />
+      </GuestGuard>
     ),
   },
   {
     path: "register",
     element: (
-        <GuestGuard>
-          <Register />
-        </GuestGuard>
+      <GuestGuard>
+        <Register />
+      </GuestGuard>
     ),
   },
-  // {
-  //   path: "forget-password",
-  //   element: (
-  //     <GuestGuard>
-  //       <ForgetPassword />
-  //     </GuestGuard>
-  //   ),
-  // },
   {
-    path: "home",
+    path: "forget-password",
     element: (
-        <AuthGuard>
-          <DashboardLayout />
-        </AuthGuard>
+      <GuestGuard>
+        <ForgetPassword />
+      </GuestGuard>
+    ),
+  },
+  {
+    path: "dashboard",
+    element: (
+      <AuthGuard>
+        <DashboardLayout />
+      </AuthGuard>
     ),
     children: [
       {
-        path: "in-game/:roomId",
+        path: "",
         element: <DashboardSaaS />,
-
-      },
-      // {
-      //   path: "user-profile",
-      //   element: <UserProfile />,
-      // },
-
-      {
-        path: "user-rank",
-        element: <UserRank />,
       },
       {
-        path: "game-room",
-        element: <GameRoom />,
+        path: "user-profile",
+        element: <UserProfile />,
       },
-      // {
-      //   path: "add-room",
-      //   element: <AddNewUser />,
-      // },
+
+      {
+        path: "user-list",
+        element: <UserList />,
+      },
+      {
+        path: "user-grid",
+        element: <UserGrid />,
+      },
+      {
+        path: "add-user",
+        element: <AddNewUser />,
+      },
     ],
   },
   {

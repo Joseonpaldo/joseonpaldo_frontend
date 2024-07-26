@@ -59,7 +59,7 @@ const ForgetPassword: FC = () => {
           mb={5}
         >
           <Box width={38} mb={1}>
-            <img src="/static/logo/logo.png" width="100%" alt="Uko Logo" />
+            <img src="/static/logo/logo.svg" width="100%" alt="Uko Logo" />
           </Box>
           <H1 fontSize={24} fontWeight={700}>
             Reset your password
