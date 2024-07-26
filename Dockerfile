@@ -5,17 +5,17 @@ FROM node:22
 WORKDIR /app
 
 # Copy the package files and install dependencies
-COPY package*.json ./
-RUN npm install
+COPY package*.json yarn.lock ./
+RUN yarn install
 
 # Copy the rest of the application code
 COPY . .
 
 # Build the React app
-RUN npm run build
+RUN yarn build
 
 # Install `serve` to serve the build directory
-RUN npm install -g serve
+RUN yarn global add serve
 
 # Use `serve` to serve the app
 CMD ["serve", "-s", "build"]
