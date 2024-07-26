@@ -31,6 +31,7 @@
     "@mui/x-date-pickers": "7.7.1",
     "@phosphor-icons/react": "2.1.6",
     "apexcharts": "3.49.2",
+    "clsx": "^2.1.1",
     "dayjs": "1.11.11",
     "formik": "^2.4.6",
     "next": "14.2.4",
