@@ -11,6 +11,9 @@ RUN yarn install
 # Copy the rest of the application code
 COPY . .
 
+# Print working directory and list files for debugging
+RUN pwd && ls -la
+
 # Build the React app
 RUN yarn build
 
