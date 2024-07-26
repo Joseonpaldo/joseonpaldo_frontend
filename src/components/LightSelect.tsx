@@ -30,7 +30,6 @@ const LightSelect = (props: SelectProps) => {
       </InputLabel>
       <StyledSelect
         {...props}
-        label={props.label || "선택하세요"} // 기본 라벨 추가
       />
     </FormControl>
   );
