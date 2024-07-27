@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            docker login -u ${{ secrets.NAVER_ACCESSKEY }} -p ${{ secrets.NAVER_SECRETKEY }} ${{ secrets.REGISTRY_URL }}
+            docker login -u ${{ secrets.NAVER_ACESSKEY }} -p ${{ secrets.NAVER_SECRETKEY }} ${{ secrets.REGISTRY_URL }}
             docker pull ${{ secrets.REGISTRY_URL }}/react-app:latest
             docker stop react-app-container || true
             docker rm react-app-container || true
