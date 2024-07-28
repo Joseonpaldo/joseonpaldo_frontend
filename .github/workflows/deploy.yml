@@ -47,7 +47,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.REGISTRY_URL }}/react-app:latest
+          tags: ${{ secrets.REGISTRY_URL }}/react-app:${{ env.TAG }}
 
 
       - name: SSH and deploy
@@ -58,7 +58,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             docker login -u ${{ secrets.NAVER_ACESSKEY }} -p ${{ secrets.NAVER_SECRETKEY }} ${{ secrets.REGISTRY_URL }}
-            docker pull ${{ secrets.REGISTRY_URL }}/react-app:latest
+            docker pull ${{ secrets.REGISTRY_URL }}/react-app:${{ env.TAG }}
             docker stop react-app-container || true
             docker rm react-app-container || true
-            docker run -d -p 80:3000 --name react-app-container ${{ secrets.REGISTRY_URL }}/react-app:latest
+            docker run -d -p 80:3000 --name react-app-container ${{ secrets.REGISTRY_URL }}/react-app:${{ env.TAG }}
