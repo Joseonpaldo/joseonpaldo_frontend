@@ -5,8 +5,6 @@ import React, {FC} from "react";
 // component props interface
 interface UserCardProps {
     user: {
-        cover: string;
-        avatar: string;
         name: string;
         roomName: string;
         seedMoney: number;
@@ -36,7 +34,7 @@ const ImageWrapper = styled(Box)(({theme}) => ({
 const UserCard: FC<UserCardProps> = ({user}) => {
     return (
         <Card onClick={() => {
-            window.open(`/home/in-game/${user.roomCode}`, '_blank')
+            window.open(`/game/${user.roomCode}`, '_blank')
         }}>
             <ImageWrapper>
                 <img src={user.cover} width="100%" height="100%" alt={user.name}/>

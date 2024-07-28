@@ -70,8 +70,6 @@ const GameRoom: FC = () => {
 // 방 정보 불러오는 api
 const userList = [
   {
-    cover: "/static/cover/cover-1.png",
-    avatar: "/static/avatar/001-man.svg",
     name: "민석이짱",
     roomName: "초보만 들어오셈",
     seedMoney: 500,
@@ -80,8 +78,6 @@ const userList = [
     roomCode: "adsadvkjwi"
   },
   {
-    cover: "/static/cover/cover-4.png",
-    avatar: "/static/avatar/002-girl.svg",
     name: "짱짱맨",
     roomName: "고수만 와라",
     seedMoney: 1000,
@@ -90,8 +86,6 @@ const userList = [
     roomCode: "safasvasdnewo"
   },
   {
-    cover: "/static/cover/cover-4.png",
-    avatar: "/static/avatar/002-girl.svg",
     name: "짱짱맨",
     roomName: "고수만 와라",
     seedMoney: 1000,
@@ -100,8 +94,6 @@ const userList = [
     roomCode: "safasvasdnewo"
   },
   {
-    cover: "/static/cover/cover-4.png",
-    avatar: "/static/avatar/002-girl.svg",
     name: "짱짱맨",
     roomName: "고수만 와라",
     seedMoney: 1000,
@@ -110,8 +102,6 @@ const userList = [
     roomCode: "safasvasdnewo"
   },
   {
-    cover: "/static/cover/cover-4.png",
-    avatar: "/static/avatar/002-girl.svg",
     name: "짱짱맨",
     roomName: "고수만 와라",
     seedMoney: 1000,
@@ -120,8 +110,6 @@ const userList = [
     roomCode: "safasvasdnewo"
   },
   {
-    cover: "/static/cover/cover-4.png",
-    avatar: "/static/avatar/002-girl.svg",
     name: "짱짱맨",
     roomName: "고수만 와라",
     seedMoney: 1000,
@@ -130,8 +118,6 @@ const userList = [
     roomCode: "safasvasdnewo"
   },
   {
-    cover: "/static/cover/cover-4.png",
-    avatar: "/static/avatar/002-girl.svg",
     name: "짱짱맨",
     roomName: "고수만 와라",
     seedMoney: 1000,
@@ -140,8 +126,6 @@ const userList = [
     roomCode: "safasvasdnewo"
   },
   {
-    cover: "/static/cover/cover-4.png",
-    avatar: "/static/avatar/002-girl.svg",
     name: "짱짱맨",
     roomName: "고수만 와라",
     seedMoney: 1000,

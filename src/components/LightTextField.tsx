@@ -21,7 +21,7 @@ const StyledTextField = styled(TextField)<TextFieldProps>(({theme}) => ({
 
 const LightTextField = (props: TextFieldProps) => {
     return <FormControl variant="outlined" fullWidth>
-        <StyledTextField {...props} label={props.label}/>
+        <StyledTextField {...props}/>
     </FormControl>;
 };
 

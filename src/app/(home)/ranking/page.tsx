@@ -16,7 +16,7 @@ import { IntegrationCard } from '@/components/dashboard/integrations/integration
 import type { Integration } from '@/components/dashboard/integrations/integrations-card';
 import { CompaniesFilters } from '@/components/dashboard/integrations/integrations-filters';
 
-export const metadata = { title: `Integrations | Dashboard | ${config.site.name}` } satisfies Metadata;
+export const metadata = { title: `순위 | ${config.site.name}` } satisfies Metadata;
 
 const integrations = [
   {
