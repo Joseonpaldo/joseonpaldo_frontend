@@ -84,6 +84,22 @@ export const shakespeare = {
   950: '#082f44',
 } satisfies PaletteRange;
 
+
+export const brawn = {
+  50: "#FAF4E1", // 아주 연한 갈색
+  100: "#F0E0D1", // 아주 연한 갈색
+  200: "#D9C1A3", // 연한 갈색
+  300: "#C2A08D", // 중간 갈색
+  400: "#A88A6E", // 다소 진한 갈색
+  500: "#8B6B4F", // 진한 갈색
+  600: "#7A5A3A", // 더 진한 갈색
+  700: "#6A4A2B", // 진한 갈색
+  800: "#5A3A1C", // 매우 진한 갈색
+  900: "#4A2A0D", // 거의 검은 갈색
+  950: "#3A1A00", // 검은색에 가까운 갈색
+} satisfies PaletteRange;
+
+
 export const stormGrey = {
   50: '#f9fafb',
   100: '#f1f1f4',
@@ -97,3 +113,6 @@ export const stormGrey = {
   900: '#212636',
   950: '#121621',
 } satisfies PaletteRange;
+
+
+
