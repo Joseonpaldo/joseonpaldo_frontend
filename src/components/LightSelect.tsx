@@ -1,8 +1,8 @@
-import { FormControl, InputLabel, Select, SelectProps, styled } from "@mui/material";
+import {FormControl, InputLabel, Select, SelectProps, styled} from "@mui/material";
 import React from "react";
-import { useTheme } from "@mui/material/styles";
+import {useTheme} from "@mui/material/styles";
 
-const StyledSelect = styled(Select)<SelectProps>(({ theme }) => ({
+const StyledSelect = styled(Select)<SelectProps>(({theme}) => ({
   "& .MuiOutlinedInput-input": {
     fontWeight: 500,
     color: theme.palette.text.primary,
@@ -12,11 +12,11 @@ const StyledSelect = styled(Select)<SelectProps>(({ theme }) => ({
     border: "2px solid",
     borderColor:
       theme.palette.mode === "light"
-        ? theme.palette.secondary[300]
+        ? theme.palette.secondary.main // 수정된 부분
         : theme.palette.divider,
   },
   "& .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline": {
-    borderColor: theme.palette.secondary[300],
+    borderColor: theme.palette.secondary.main, // 수정된 부분
   },
 }));
 
@@ -25,7 +25,7 @@ const LightSelect = (props: SelectProps) => {
 
   return (
     <FormControl variant="outlined" fullWidth>
-      <InputLabel sx={{ color: theme.palette.secondary[400] }}>
+      <InputLabel sx={{color: theme.palette.secondary.light}}>
         {props.label || "선택하세요"} {/* 기본 라벨 추가 */}
       </InputLabel>
       <StyledSelect
