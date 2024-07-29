@@ -7,14 +7,18 @@ import { AccountDetailsForm } from '@/components/dashboard/account/account-detai
 import { AccountInfo } from '@/components/dashboard/account/account-info';
 import YutPan from "@/components/game/YutPan";
 import ChatComponent from "@/components/game/chatComponent";
+import Lobby from "@/components/game/Lobby";
 
 export const metadata = { title: `Account | Dashboard | ${config.site.name}` } satisfies Metadata;
 
 export default function Page(): React.JSX.Element {
   return (
     <Stack spacing={3}>
-      <YutPan/>
+      {/*<YutPan/>*/}
+{/*
       <ChatComponent/>
+*/}
+      <Lobby/>
     </Stack>
   );
 }

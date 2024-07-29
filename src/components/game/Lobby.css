@@ -1,0 +1,114 @@
+.backStyle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("../../../public/image/background.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  overflow: hidden;
+}
+
+.titleStyle {
+  height: 100px;
+  line-height: 100px;
+  text-align: center;
+  background: none;
+}
+
+.titleStyle button {
+  float: right;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.formStyle {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  padding: 20px;
+}
+
+.cardStyle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 220px;
+  height: 420px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.cardStyle h2 {
+  margin: 10px 0 40px;
+}
+
+.cardStyle img {
+  width: 100%;
+  height: auto;
+  margin-bottom: 80px;
+}
+
+.cardStyle button {
+  background-color: #e1b389;
+  width: 80%;
+  font-weight: bold;
+  padding: 10px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* 채팅 스타일 */
+.chatContainer {
+  width: 500px;
+  margin: 20px auto;
+  border: 2px solid #8B6B4F;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: absolute; /* 위치를 절대값으로 설정 */
+  bottom: 0; /* 화면 하단에 고정 */
+  left: 73%; /* 화면 중앙 정렬 */
+  transform: translateX(-50%); /* 중앙 정렬 보정 */
+}
+
+.chatMessages {
+  border-bottom: 1px solid #8B6B4F;
+  height: 150px; /* 높이를 줄여서 화면에 더 잘 보이게 조정 */
+  padding: 10px;
+  overflow-y: auto; /* 스크롤 가능하게 설정 */
+  background-color: #f9f9f9;
+}
+
+.chatInputContainer {
+  display: flex;
+  padding: 10px;
+  background-color: #ffffff;
+}
+
+.chatInput {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+}
+
+.chatSendButton {
+  margin-left: 10px;
+  background-color: #8B6B4F;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.chatSendButton:hover {
+  background-color: #45a049;
+}
