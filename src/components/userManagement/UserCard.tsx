@@ -26,7 +26,7 @@ const ImageWrapper = styled(Box)(({theme}) => ({
         top: 0,
         position: "absolute",
         opacity: 0.6,
-        backgroundColor: theme.palette.primary[100],
+        backgroundColor: theme.palette.primary.light,
     },
 }));
 
@@ -37,7 +37,7 @@ const UserCard: FC<UserCardProps> = ({user}) => {
             window.open(`/game/${user.roomCode}`, '_blank')
         }}>
             <ImageWrapper>
-                <img src={user.cover} width="100%" height="100%" alt={user.name}/>
+                {/*<img src={user.cover} width="100%" height="100%" alt={user.name}/>*/}
 
             </ImageWrapper>
 
