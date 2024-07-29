@@ -49,7 +49,6 @@ jobs:
           push: true
           tags: ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
 
-
       - name: SSH and deploy
         uses: appleboy/ssh-action@master
         with:
