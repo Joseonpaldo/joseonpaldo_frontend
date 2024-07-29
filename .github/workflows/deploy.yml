@@ -11,14 +11,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # 전체 Git 기록을 가져옴
 
-      - name: Get the latest tag or default
-        id: git_tag
+      - name: Get Hash
+        id: get_hash
         run: |
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
-          echo "TAG=${TAG}" >> $GITHUB_ENV
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          echo "COMMIT_HASH=${COMMIT_HASH}" >> $GITHUB_ENV
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -49,7 +47,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.REGISTRY_URL }}/react-app:${{ env.TAG }}
+          tags: ${{ secrets.REGISTRY_URL }}/react-app:${{ env.COMMIT_HASH }}
 
 
       - name: SSH and deploy
@@ -60,7 +58,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             docker login -u ${{ secrets.NAVER_ACESSKEY }} -p ${{ secrets.NAVER_SECRETKEY }} ${{ secrets.REGISTRY_URL }}
-            docker pull ${{ secrets.REGISTRY_URL }}/react-app:${{ env.TAG }}
+            docker pull ${{ secrets.REGISTRY_URL }}/react-app:${{ env.COMMIT_HASH }}
             docker stop react-app-container || true
             docker rm react-app-container || true
-            docker run -d -p 80:3000 --name react-app-container ${{ secrets.REGISTRY_URL }}/react-app:${{ env.TAG }}
+            docker run -d -p 80:3000 --name react-app-container ${{ secrets.REGISTRY_URL }}/react-app:${{ env.COMMIT_HASH }}
