@@ -61,4 +61,4 @@ jobs:
             docker pull ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
             docker stop joseonpaldo-front || true
             docker rm joseonpaldo-front || true
-            docker run -d -p 80:3000 --name joseonpaldo-front ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
+            docker run -d -p 8080:8080 --name joseonpaldo-front ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
