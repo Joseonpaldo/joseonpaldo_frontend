@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 전체 Git 기록을 가져옴
 
       - name: Get the latest tag or default
         id: git_tag
