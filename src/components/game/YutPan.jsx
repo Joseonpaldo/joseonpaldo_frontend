@@ -15,11 +15,22 @@ function YutPan() {
   const [yutThrowAble, setYutThrowAble] = useState(false);
   const windowSizeCustom = useWindowSizeCustom();
 
+  const players = [
+    {name: 'Player 1', money: 1500, rank: '1st', color: '#3b82f6'},
+    {name: 'Player 2', money: 1200, rank: '2nd', color: '#6b7280'},
+    {name: 'Player 3', money: 950, rank: '3rd', color: '#6b7280'},
+    {name: 'Player 4', money: 800, rank: '4th', color: '#6b7280'},
+  ];
 
   const [player1Top, setPlayer1Top] = useState(356.11);
   const [player1Left, setPlayer1Left] = useState(356.31);
   const [player1Index, setPlayer1Index] = useState(0);
   const [player1Direction, setPlayer1Direction] = useState("scaleX(1)");
+  const [player1Name, setPlayer1Name] = useState("player1");
+  const [player1Money, setPlayer1Money] = useState(500);
+  const [player1Color, setPlayer1Color] = useState("#6b7280");
+  const [player1Rank, setPlayer1Rank] = useState("1st");
+
 
 
   const [resultArr, setResultArr] = useState([]);
@@ -426,6 +437,49 @@ function YutPan() {
   });
 
 
+
+  const containerStyle = {
+    position: "absolute",
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  };
+
+
+  const cardStyle = {
+    position: "absolute",
+    backgroundColor: '#ffffff',
+    borderRadius: '8px',
+    padding: '16px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    gap: '24px'
+  };
+
+  const playerNumberStyle = (color) => ({
+    backgroundColor: color,
+    borderRadius: '50%',
+    width: '60px',
+    height: '60px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: '24px',
+  });
+
+  const rankStyle = {
+    textAlign: 'right',
+    fontSize: '32px',
+    fontWeight: 'bold',
+  };
+
+
   return <div style={backStyle}>
 
     <div style={YutPanStyle}>
@@ -508,49 +562,67 @@ function YutPan() {
     </div>
 
 
-    <div style={{
-      position: "absolute",
-      top: 0,
-      left: 0,
-      width: 300,
-      height: 150,
-      background: "red",
-    }}>
-      왼 위
-    </div>
 
-    <div style={{
-      position: "absolute",
-      top: 0,
-      right: 0,
-      width: 300,
-      height: 150,
-      background: "red",
-    }}>
-      오 위
-    </div>
+    <div style={containerStyle}>
+      <div style={{...cardStyle, left: 0, top: 0}}>
+        <div style={playerNumberStyle(players[0].color)}>
+
+        </div>
+        <div>
+          <h3 style={{fontSize: '28px', fontWeight: '600', margin: 0,}}>{players[0].name}</h3>
+          <p style={{color: '#6b7280',  margin: 0,}}>${players[0].money.toLocaleString()}</p>
+        </div>
+
+        <div style={rankStyle}>
+          <span>{players[0].rank}</span>
+        </div>
+      </div>
 
 
-    <div style={{
-      position: "absolute",
-      bottom: 0,
-      right: 0,
-      width: 300,
-      height: 150,
-      background: "red",
-    }}>
-      오 아
-    </div>
+      <div style={{...cardStyle, right: 0, top: 0,flexDirection: "row-reverse" }}>
+        <div style={playerNumberStyle(players[1].color)}>
 
-    <div style={{
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      width: 300,
-      height: 150,
-      background: "red",
-    }}>
-      왼 아
+        </div>
+        <div>
+          <h3 style={{fontSize: '28px', fontWeight: '600', margin: 0,}}>{players[1].name}</h3>
+          <p style={{color: '#6b7280',  margin: 0,}}>${players[1].money.toLocaleString()}</p>
+        </div>
+
+        <div style={rankStyle}>
+          <span>{players[1].rank}</span>
+        </div>
+      </div>
+
+      <div style={{...cardStyle, right: 0, bottom: 0,flexDirection: "row-reverse" }}>
+        <div style={playerNumberStyle(players[2].color)}>
+
+        </div>
+        <div>
+          <h3 style={{fontSize: '28px', fontWeight: '600', margin: 0,}}>{players[2].name}</h3>
+          <p style={{color: '#6b7280',  margin: 0,}}>${players[2].money.toLocaleString()}</p>
+        </div>
+
+        <div style={rankStyle}>
+          <span>{players[2].rank}</span>
+        </div>
+      </div>
+
+
+      <div style={{...cardStyle, left: 0, bottom: 0}}>
+        <div style={playerNumberStyle(players[3].color)}>
+
+        </div>
+        <div>
+          <h3 style={{fontSize: '28px', fontWeight: '600', margin: 0,}}>{players[3].name}</h3>
+          <p style={{color: '#6b7280',  margin: 0,}}>${players[3].money.toLocaleString()}</p>
+        </div>
+
+        <div style={rankStyle}>
+          <span>{players[3].rank}</span>
+        </div>
+      </div>
+
+
     </div>
   </div>
 }

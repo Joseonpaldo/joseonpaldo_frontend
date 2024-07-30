@@ -37,8 +37,8 @@ export default function ChatComponent() {
 
     ws.onclose = () => {
       console.log('chat disconnected');
-      alert("웹소켓 연결 실패")
-      window.location.reload();
+      // alert("웹소켓 연결 실패")
+      // window.location.reload();
     };
 
     setSocket(ws);

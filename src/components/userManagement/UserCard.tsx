@@ -1,6 +1,8 @@
 import {Box, Card, Divider, Grid, styled} from "@mui/material";
-import {H3, H6, Small, Tiny} from "../Typography";
+import {H3, H5, Small, Tiny} from "../Typography";
 import React, {FC} from "react";
+import Avatar from "@mui/material/Avatar";
+import Typography from "@mui/material/Typography";
 
 // component props interface
 interface UserCardProps {
@@ -11,6 +13,7 @@ interface UserCardProps {
         fullMember: number;
         currentMember: number;
         roomCode: string;
+        cover: string;
     };
 }
 
@@ -30,6 +33,20 @@ const ImageWrapper = styled(Box)(({theme}) => ({
     },
 }));
 
+const StyledAvatar = styled(Avatar)(({theme}) => ({
+  zIndex: 1,
+  width: 50,
+  height: 50,
+  bottom: -25,
+  position: "absolute",
+  left: "50%",
+  right: "50%",
+  transform: "translateX(-50%)",
+  border: "2px solid",
+  borderRadius: "50%",
+  borderColor: theme.palette.background.paper,
+}));
+
 
 const UserCard: FC<UserCardProps> = ({user}) => {
     return (
@@ -37,8 +54,17 @@ const UserCard: FC<UserCardProps> = ({user}) => {
             window.open(`/game/${user.roomCode}`, '_blank')
         }}>
             <ImageWrapper>
-                {/*<img src={user.cover} width="100%" height="100%" alt={user.name}/>*/}
-
+              <Typography sx={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                width: "100%",
+                textAlign: "center",
+                transform: "translate(-50%, -50%)",
+              }}>
+                {user.roomName}
+              </Typography>
+              <StyledAvatar src={user.cover} alt={user.name}/>
             </ImageWrapper>
 
             <Box
@@ -49,10 +75,7 @@ const UserCard: FC<UserCardProps> = ({user}) => {
                     marginTop: 5,
                 }}
             >
-                <H6>{user.roomName}</H6>
-                <Tiny color="text.disabled" fontWeight={500}>
-                    {user.name}
-                </Tiny>
+                <H5><span style={{fontWeight: "bolder"}}>{user.name}</span>님의 방</H5>
 
 
             </Box>

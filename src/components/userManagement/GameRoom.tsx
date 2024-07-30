@@ -36,7 +36,7 @@ const GameRoom: FC = () => {
   };
 
   return (
-    <Box pt={2} pb={4}>
+    <Box pb={4}>
       <StyledFlexBox>
         <Button fullWidth={true} variant="contained" onClick={handleClickOpen}>
           방 만들기
@@ -75,7 +75,8 @@ const userList = [
     seedMoney: 500,
     fullMember: 4,
     currentMember: 1,
-    roomCode: "adsadvkjwi"
+    roomCode: "adsadvkjwi",
+    cover: '/assets/avatar.png',
   },
   {
     name: "짱짱맨",
@@ -83,7 +84,8 @@ const userList = [
     seedMoney: 1000,
     fullMember: 2,
     currentMember: 1,
-    roomCode: "safasvasdnewo"
+    roomCode: "safasvasdnewo",
+    cover: '/assets/avatar.png',
   },
   {
     name: "짱짱맨",
@@ -91,7 +93,8 @@ const userList = [
     seedMoney: 1000,
     fullMember: 2,
     currentMember: 1,
-    roomCode: "safasvasdnewo"
+    roomCode: "safasvasdnewo",
+    cover: '/assets/avatar.png',
   },
   {
     name: "짱짱맨",
@@ -99,7 +102,8 @@ const userList = [
     seedMoney: 1000,
     fullMember: 2,
     currentMember: 1,
-    roomCode: "safasvasdnewo"
+    roomCode: "safasvasdnewo",
+    cover: '/assets/avatar.png',
   },
   {
     name: "짱짱맨",
@@ -107,7 +111,8 @@ const userList = [
     seedMoney: 1000,
     fullMember: 2,
     currentMember: 1,
-    roomCode: "safasvasdnewo"
+    roomCode: "safasvasdnewo",
+    cover: '/assets/avatar.png',
   },
   {
     name: "짱짱맨",
@@ -115,7 +120,8 @@ const userList = [
     seedMoney: 1000,
     fullMember: 2,
     currentMember: 1,
-    roomCode: "safasvasdnewo"
+    roomCode: "safasvasdnewo",
+    cover: '/assets/avatar.png',
   },
   {
     name: "짱짱맨",
@@ -123,7 +129,8 @@ const userList = [
     seedMoney: 1000,
     fullMember: 2,
     currentMember: 1,
-    roomCode: "safasvasdnewo"
+    roomCode: "safasvasdnewo",
+    cover: '/assets/avatar.png',
   },
   {
     name: "짱짱맨",
@@ -131,7 +138,8 @@ const userList = [
     seedMoney: 1000,
     fullMember: 2,
     currentMember: 1,
-    roomCode: "safasvasdnewo"
+    roomCode: "safasvasdnewo",
+    cover: '/assets/avatar.png',
   },
 ];
 
