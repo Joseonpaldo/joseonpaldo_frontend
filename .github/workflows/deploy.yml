@@ -71,4 +71,4 @@ jobs:
               docker stop joseonpaldo-front-2 || true
               docker rm joseonpaldo-front-2 || true
             fi
-            docker image prune -f
+            docker images --format '{{.Repository}}:{{.Tag}}' | grep joseonpaldo-react | grep -v "${{ env.COMMIT_HASH }}" | xargs -r docker rmi || true
