@@ -59,6 +59,17 @@ jobs:
           script: |
             docker login -u ${{ secrets.NAVER_ACESSKEY }} -p ${{ secrets.NAVER_SECRETKEY }} ${{ secrets.REGISTRY_URL }}
             docker pull ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
-            docker stop joseonpaldo-front || true
-            docker rm joseonpaldo-front || true
-            docker run -d -p 80:3000 --name joseonpaldo-front ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
+            if [ "$(docker ps -q -f name=joseonpaldo-front-1)" ]; then
+              docker run -d -p 3001:3000 --name joseonpaldo-front-2 ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
+              sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3000 || true
+              sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3001
+              docker stop joseonpaldo-front-1 || true
+              docker rm joseonpaldo-front-1 || true
+            else
+              docker run -d -p 3000:3000 --name joseonpaldo-front-1 ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
+              sudo iptables -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3001 || true
+              sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3000
+              docker stop joseonpaldo-front-2 || true
+              docker rm joseonpaldo-front-2 || true
+            fi
+            docker image prune -f
