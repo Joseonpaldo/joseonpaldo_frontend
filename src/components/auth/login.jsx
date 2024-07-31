@@ -7,6 +7,10 @@ import FacebookIcon from "/src/app/auth/sign-in/FacebookIcon.tsx";
 
 
 export default function Login() {
+  const loginWithGoogle=()=>{
+    let url="https://accounts.google.com/o/oauth2/v2/auth?client_id=260386000062-33p7dl1aeq5oj4dnm59sp05gqfmp0r8f.apps.googleusercontent.com&redirect_uri=http://localhost:8080/auth/login/callback&response_type=code&scope=email profile"
+   window.location.href=url;
+  }
 
   return <FlexBox
     sx={{
@@ -31,7 +35,7 @@ export default function Login() {
 
       <FlexBox justifyContent="space-between" flexWrap="wrap" my="1rem">
         <SocialIconButton
-          // onClick={loginWithGoogle}
+          onClick={loginWithGoogle}
           startIcon={<GoogleIcon sx={{mr: 1}}/>}
         >
           Google
