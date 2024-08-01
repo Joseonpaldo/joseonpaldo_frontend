@@ -112,3 +112,53 @@
 .chatSendButton:hover {
   background-color: #45a049;
 }
+/*사다리 스타일*/
+.ladder-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+}
+
+.ladder-row {
+  display: flex;
+}
+
+.ladder-cell {
+  width: 40px;
+  height: 40px;
+  border: 1px solid black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s;
+}
+
+.ladder-cell.connected {
+  background-color: lightblue;
+}
+
+.ladder-cell.current-step {
+  background-color: yellow;
+}
+
+.countdown {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3em;
+  font-weight: bold;
+  z-index: 20;
+  color: red;
+}
