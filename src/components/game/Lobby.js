@@ -4,38 +4,9 @@ import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './Lobby.css';
 
-const initializeLadder = (numPlayers) => {
-  const ladder = Array.from({ length: numPlayers * 2 }, () => Array(numPlayers - 1).fill(false));
-  return ladder;
-};
-
-const generateLadderConnections = (ladder) => {
-  for (let i = 0; i < ladder.length - 1; i++) {
-    const randomPosition = Math.floor(Math.random() * (ladder[0].length));
-    ladder[i][randomPosition] = true;
-    ladder[i + 1][randomPosition] = true;
-  }
-  return ladder;
-};
-
-const determineOrder = (ladder, players) => {
-  const order = [];
-  for (let i = 0; i < players.length; i++) {
-    let position = i;
-    for (let j = 0; j < ladder.length; j++) {
-      if (ladder[j][position]) {
-        position += 1;
-      } else if (position > 0 && ladder[j][position - 1]) {
-        position -= 1;
-      }
-    }
-    order[position] = players[i];
-  }
-  return order;
-};
-
 const Lobby = () => {
   const [players, setPlayers] = useState([]);
+
   const [readyStates, setReadyStates] = useState({});
   const [allReady, setAllReady] = useState(false);
   const [isHost, setIsHost] = useState(false);
@@ -48,19 +19,24 @@ const Lobby = () => {
   const [showCountdown, setShowCountdown] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
+  const playerName = `플레이어-${Math.random().toString(36).substring(7)}`;
+
+
   useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
     const stompClient = Stomp.over(socket);
     stompClient.connect({}, () => {
-      console.log('Connected to WebSocket');
       setClient(stompClient);
       stompClient.subscribe('/topic/public', (message) => {
-        onMessageReceived(JSON.parse(message.body));
+        try {
+          const parsedMessage = JSON.parse(message.body);
+          onMessageReceived(parsedMessage);
+        } catch (error) {
+          console.error('Failed to parse message:', message.body, error);
+        }
       });
-      stompClient.subscribe(`/user/queue/players`, (message) => {
-        onExistingPlayersReceived(JSON.parse(message.body));
-      });
-      stompClient.send('/app/chat.addUser', {}, JSON.stringify({ sender: `플레이어-${Math.random().toString(36).substring(7)}`, type: 'JOIN' }));
+
+      stompClient.send('/app/chat.addUser', {}, JSON.stringify({ sender: playerName, type: 'JOIN' }));
     });
 
     return () => {
@@ -70,31 +46,14 @@ const Lobby = () => {
     };
   }, []);
 
-  useEffect(() => {
-    checkAllReady();
-  }, [players, readyStates]);
-
-  useEffect(() => {
-    if (showCountdown && countdown > 0) {
-      const countdownInterval = setInterval(() => {
-        setCountdown(prevCountdown => prevCountdown - 1);
-      }, 1000);
-      return () => clearInterval(countdownInterval);
-    } else if (showCountdown && countdown === 0) {
-      setShowCountdown(false);
-      setShowLadder(true);
-      animateLadder();
-    }
-  }, [showCountdown, countdown]);
-
   const onMessageReceived = (message) => {
     if (message.type === 'JOIN') {
-      setPlayers(prevPlayers => {
-        if (prevPlayers.length < 4 && !prevPlayers.find(player => player.name === message.sender)) {
-          const newPlayers = [...prevPlayers, { name: message.sender, ready: false }];
-          if (newPlayers.length === 1) setIsHost(true);
-          return newPlayers;
-        }
+      setPlayers(() => {
+        let names = message.content.split(",");
+        let prevPlayers = names.map((name) => {
+          return {name: name, ready: ""}
+        })
+
         return prevPlayers;
       });
     } else if (message.type === 'READY') {
@@ -108,14 +67,10 @@ const Lobby = () => {
     }
   };
 
-  const onExistingPlayersReceived = (message) => {
-    if (message.type === 'EXISTING_PLAYERS') {
-      const existingPlayers = message.content.split(',');
-      const updatedPlayers = existingPlayers.map(player => ({ name: player, ready: false }));
-      setPlayers(prevPlayers => [...prevPlayers, ...updatedPlayers]);
-    }
-  };
 
+
+
+  //준비
   const checkAllReady = () => {
     if (players.length > 1) {
       const allReady = players.every(player => readyStates[player.name] === true);
@@ -125,6 +80,12 @@ const Lobby = () => {
     }
   };
 
+
+  useEffect(() => {
+    checkAllReady();
+  }, [players, readyStates]);
+
+
   const handleReadyClick = (player) => {
     if (client && client.connected) {
       const updatedReadyState = !player.ready;
@@ -132,57 +93,28 @@ const Lobby = () => {
     }
   };
 
-  const handleStartGame = () => {
-    if (allReady && isHost) {
-      const ladder = initializeLadder(players.length);
-      const ladderWithConnections = generateLadderConnections(ladder);
-      const order = determineOrder(ladderWithConnections, players);
-      setLadder(ladderWithConnections);
-      setPlayerOrder(order);
-      setShowStartButton(false);
-      setShowCountdown(true);
-      setCountdown(3);
-    }
-  };
-
-  const animateLadder = () => {
-    const animationInterval = setInterval(() => {
-      setCurrentStep(prevStep => {
-        if (prevStep < ladder.length - 1) {
-          return prevStep + 1;
-        } else {
-          clearInterval(animationInterval);
-          return prevStep;
-        }
-      });
-    }, 500);
-  };
-
   return (
     <div className="backStyle">
       <div className={"titleStyle"}>
-        <h1>Room
+        <h1>Room {players.length}/4
           <button type={"button"}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor"
-                 className="bi bi-box-arrow-right" viewBox="0 0 16 16">
-              <path fillRule="evenodd"
-                    d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5.5 0 0 0 0 3.5v9A1.5.1.5 0 0 0 1.5 14h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-1 0z"/>
-              <path fillRule="evenodd"
-                    d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" fill="currentColor" className="bi bi-box-arrow-right" viewBox="0 0 16 16">
+              <path fillRule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5.5 0 0 0 0 3.5v9A1.5.1.5 0 0 0 1.5 14h8a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-1 0z"/>
+              <path fillRule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
             </svg>
           </button>
         </h1>
       </div>
 
-      {!showLadder && players.length > 0 && (  // 사다리 게임이 표시되지 않은 경우에만 렌더링
+      {!showLadder && players.length > 0 && ( // 사다리 게임이 표시되지 않은 경우에만 렌더링
         <div className="formStyle">
-          {players.map((player, index) => (
+          {players.map((prevPlayers, index) => (
             <div key={index} className="cardStyle">
-              <h2>{player.name}</h2>
-              <img src="/image/pinkbin.png" alt={player.name} />
+              <h2>{prevPlayers.name}</h2>
+              <img src="/image/pinkbin.png" alt={prevPlayers.name} />
               {index !== 0 && (
-                <button type="button" onClick={() => handleReadyClick(player)}>
-                  {player.ready ? '준비완료' : '준비'}
+                <button type="button" onClick={() => handleReadyClick(prevPlayers)}>
+                  {prevPlayers.ready ? '준비완료' : '준비'}
                 </button>
               )}
             </div>
@@ -190,19 +122,19 @@ const Lobby = () => {
         </div>
       )}
 
-      {isHost && allReady && showStartButton && (  // 게임 시작 버튼이 표시될 때만 렌더링
+      {/*isHost &&*/ allReady && showStartButton && ( // 게임 시작 버튼이 표시될 때만 렌더링
         <div className="startGame">
           <button type="button" onClick={handleStartGame}>게임 시작하기</button>
         </div>
       )}
 
-      {showCountdown && (  // 카운트다운 표시
+      {showCountdown && ( // 카운트다운 표시
         <div className="countdown">
           <h2>{countdown}</h2>
         </div>
       )}
 
-      {showLadder && (  // 사다리 게임 표시 여부에 따라 렌더링
+      {showLadder && ( // 사다리 게임 표시 여부에 따라 렌더링
         <div className="ladder-container">
           {ladder.map((row, rowIndex) => (
             <div key={rowIndex} className="ladder-row">
@@ -231,7 +163,7 @@ const Lobby = () => {
         </div>
       </div>
 
-      {playerOrder.length > 0 && showLadder && (  // 사다리 게임이 표시된 후에만 렌더링
+      {playerOrder.length > 0 && showLadder && ( // 사다리 게임이 표시된 후에만 렌더링
         <div className="orderList">
           <h2>플레이어 순서</h2>
           <ol>
