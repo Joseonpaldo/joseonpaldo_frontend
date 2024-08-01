@@ -11,7 +11,7 @@ import {CustomersTable} from '@/components/dashboard/customer/customers-table';
 import Grid from "@mui/material/Unstable_Grid2";
 import Winner from "@/components/rank/Winner";
 
-export const metadata = {title: `Customers | ${config.site.name}`} satisfies Metadata;
+export const metadata = {title: `순위 | ${config.site.name}`} satisfies Metadata;
 
 const customers = [
 
