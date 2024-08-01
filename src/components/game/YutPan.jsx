@@ -28,7 +28,19 @@ function YutPan() {
       color: "#ff8686",
       rank: "1st",
       avatar: "/image/character/bear.png",
-      profile: "/assets/avatar-1.png"
+      profile: "/assets/avatar-1.png",
+      estate: [
+        {
+          "location": 4,
+          "landmark": 1,
+          "price": 100,
+        },
+        {
+          "location": 11,
+          "landmark": 1,
+          "price": 100,
+        },
+      ]
     },
     player2: {
       top: 356.11,
@@ -40,7 +52,19 @@ function YutPan() {
       color: "#fff493",
       rank: "1st",
       avatar: "/image/character/dragon.png",
-      profile: "/assets/avatar-2.png"
+      profile: "/assets/avatar-2.png",
+      estate: [
+        {
+          "location": 1,
+          "landmark": 1,
+          "price": 100,
+        },
+        {
+          "location": 10,
+          "landmark": 2,
+          "price": 100,
+        },
+      ]
     },
     player3: {
       top: 356.11,
@@ -52,7 +76,19 @@ function YutPan() {
       color: "#8eff9c",
       rank: "1st",
       avatar: "/image/character/monkey.png",
-      profile: "/assets/avatar-3.png"
+      profile: "/assets/avatar-3.png",
+      estate: [
+        {
+          "location": 5,
+          "landmark": 3,
+          "price": 100,
+        },
+        {
+          "location": 17,
+          "landmark": 1,
+          "price": 100,
+        },
+      ]
     },
     player4: {
       top: 356.11,
@@ -64,7 +100,19 @@ function YutPan() {
       color: "#8091ff",
       rank: "1st",
       avatar: "/image/character/rabbit.png",
-      profile: "/assets/avatar-4.png"
+      profile: "/assets/avatar-4.png",
+      estate: [
+        {
+          "location": 14,
+          "landmark": 2,
+          "price": 100,
+        },
+        {
+          "location": 23,
+          "landmark": 1,
+          "price": 100,
+        },
+      ]
     },
   });
 
@@ -96,11 +144,20 @@ function YutPan() {
       }
 
       arrowDisplayNone();
-      resultArrDelete(resultDelIndex);
     } else {
       console.warn(`YutData not found for index: ${index}`);
     }
   }, [players[myPlayer].index]);
+
+  useEffect(() => {
+
+
+    return () => {
+    };
+  }, [players]);
+
+
+
 
   const [resultArr, setResultArr] = useState([]);
   const [resultDelIndex, setResultDelIndex] = useState(null);
@@ -216,6 +273,7 @@ function YutPan() {
 
   const arrowClick = (index) => {
     updatePlayer(myPlayer, {index: parseInt(index, 10)})
+    resultArrDelete(resultDelIndex);
   };
 
 
