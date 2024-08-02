@@ -2,11 +2,35 @@
 // noinspection BadExpressionStatementJS
 
 
-import {forwardRef, useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import useWindowSizeCustom from "../../hooks/useWindowSizeCustom.js";
 import {yutStates} from "./YutStates.js"
 import {useParams} from "next/navigation";
+import {
+  backStyle,
+  cardStyle,
+  containerStyle,
+  rankStyle,
+  StateBuildStyle,
+  YetResultBtnStyle,
+  YutFanBackGroundStyle,
+  YutThrowBtnStyle,
+} from "./YutPanStyle"
 
+import {
+  Arrow,
+  arrowMouseOut,
+  arrowMouseOver,
+  BuyEstateConfirmDialog,
+  playerNumberStyle,
+  stateMouseOut,
+  stateMouseOver, UpgradeEstateConfirmDialog,
+  YutState,
+  YutThrowBtnDown,
+  YutThrowBtnOut,
+  YutThrowBtnOver,
+  YutThrowBtnUp,
+} from "./yutPanFunction"
 
 function YutPan() {
 
@@ -17,9 +41,13 @@ function YutPan() {
   const [yutThrowAble, setYutThrowAble] = useState(false);
   const windowSizeCustom = useWindowSizeCustom();
 
+  const [BuyEstateOpen, setBuyEstateOpen] = useState(false);
+  const [UpgradeEstateOpen, setUpgradeEstateOpen] = useState(false);
+  const [UpgradeLevel, setUpgradeLevel] = useState(0);
 
   const [resultArr, setResultArr] = useState([]);
   const [resultDelIndex, setResultDelIndex] = useState(null);
+
 
 
   const [players, setPlayers] = useState({
@@ -30,12 +58,11 @@ function YutPan() {
       direction: "scaleX(1)",
       name: "player1",
       money: 500,
-      color: "#ff8686",
+      color: "#b59282",
       rank: "1st",
       avatar: "/image/character/bear.png",
       profile: "/assets/avatar-1.png",
-      estate: [
-      ]
+      estate: []
     },
     player2: {
       top: 356.11,
@@ -44,12 +71,11 @@ function YutPan() {
       direction: "scaleX(1)",
       name: "player2",
       money: 500,
-      color: "#fff493",
+      color: "#A4D8C2",
       rank: "1st",
       avatar: "/image/character/dragon.png",
       profile: "/assets/avatar-2.png",
-      estate: [
-      ]
+      estate: []
     },
     player3: {
       top: 356.11,
@@ -58,12 +84,11 @@ function YutPan() {
       direction: "scaleX(1)",
       name: "player3",
       money: 500,
-      color: "#8eff9c",
+      color: "#633630",
       rank: "1st",
       avatar: "/image/character/monkey.png",
       profile: "/assets/avatar-3.png",
-      estate: [
-      ]
+      estate: []
     },
     player4: {
       top: 356.11,
@@ -72,12 +97,11 @@ function YutPan() {
       direction: "scaleX(1)",
       name: "player4",
       money: 500,
-      color: "#8091ff",
+      color: "#FBD8E2",
       rank: "1st",
       avatar: "/image/character/rabbit.png",
       profile: "/assets/avatar-4.png",
-      estate: [
-      ]
+      estate: []
     },
   });
 
@@ -119,6 +143,10 @@ function YutPan() {
   }, [players[myPlayer].index]);
 
 
+  let currentRank = 1;
+  let lastScore = null;
+  let countAtRank = 0;
+
   useEffect(() => {
     Object.values(players).forEach((player) => {
       player.estate.forEach((estate) => {
@@ -127,23 +155,33 @@ function YutPan() {
         ele.style.borderColor = player.color ? player.color : "#fff";
         ele.classList.add(player.name);
 
-        const stateDiv = document.createElement('div');
-        Object.assign(stateDiv.style, StateBuildStyle); // 스타일 적용
-        stateDiv.style.backgroundImage = `url(/image/level${estate.landmark}.png)`; // 필요한 경우 배경 이미지 설정
+        ele.children[1].style.backgroundImage = `url(/image/level${estate.landmark}.png)`; // 필요한 경우 배경 이미지 설정
 
-        // ele에 추가
-        ele.appendChild(stateDiv);
+        let name = yutStates.find(states => states.YutIndex === parseInt(index)).name;
+
+        switch (estate.landmark){
+          case 1 : name = name + "시"; break;
+          case 2 : name = name + "광역시"; break;
+          case 3 : name = name + "특별시"; break;
+        }
+        ele.children[0].innerText = name;
+
+
       })
+
+
     });
 
-    return () => {
-    };
-  }, [players, myPlayer,
+
+  }, [
+    players,
+    myPlayer,
     yutThrowImageSrc,
     yutThrowImageDisplay,
     yutThrowAble,
     resultArr,
-    resultDelIndex
+    resultDelIndex,
+    windowSizeCustom
   ]);
 
 
@@ -181,42 +219,6 @@ function YutPan() {
   //   });
   // }, [])
 
-  const stateMouseOver = (e) => {
-    const element = e.target;
-    element.querySelector(".yutName").style.scale = "1.5";
-  }
-
-  const stateMouseOut = (e) => {
-    const element = e.target;
-    element.querySelector(".yutName").style.scale = "0.7";
-  }
-
-  const YutThrowBtnOver = (e) => {
-    const element = e.target;
-    if (element.style.backgroundImage === `url("/image/Btthrow.normal.0.png")`) {
-      element.style.backgroundImage = `url("/image/Btthrow.mouseOver.0.png")`;
-    }
-  }
-
-  const YutThrowBtnOut = (e) => {
-    const element = e.target;
-    if (element.style.backgroundImage === `url("/image/Btthrow.mouseOver.0.png")`) {
-      element.style.backgroundImage = `url("/image/Btthrow.normal.0.png")`;
-    }
-  }
-
-  const YutThrowBtnDown = (e) => {
-    const element = e.target;
-    if (element.style.backgroundImage === `url("/image/Btthrow.mouseOver.0.png")`) {
-      element.style.backgroundImage = `url("/image/Btthrow.pressed.0.png")`;
-    }
-  }
-  const YutThrowBtnUp = (e) => {
-    const element = e.target;
-    if (element.style.backgroundImage === `url("/image/Btthrow.pressed.0.png")`) {
-      element.style.backgroundImage = `url("/image/Btthrow.disabled.0.png")`;
-    }
-  }
 
   const YutThrowBtnClick = () => {
     if (yutThrowAble) {
@@ -243,12 +245,6 @@ function YutPan() {
 
   }
 
-  const arrowMouseOver = (e) => {
-    e.currentTarget.querySelector("img").style.filter = "drop-shadow(0px 0px 7px #ff0)";
-  }
-  const arrowMouseOut = (e) => {
-    e.currentTarget.querySelector("img").style.filter = "drop-shadow(0px 0px 0px #ff0)";
-  }
 
   const arrowDisplayNone = () => {
     yutRefs.current.forEach(arrow => {
@@ -384,35 +380,29 @@ function YutPan() {
     }, 0); // 상태가 업데이트된 후 바로 실행
   }
 
+
+  //기본 땅 밟을 시 이벤트
   const defaultStateEvent = (index) => {
     const ele = yutIndexRefs.current.find(s => s.classList[0] === "YutState" + index);
     if (ele?.classList[2] === undefined) {
-      if (confirm("살거임?")) {
-        updatePlayer(myPlayer, {money: players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(index)).price});
+      //땅 주인 없을 떄
+      // 모달 창 띄우기
+      BuyEstateHandleClickOpen()
 
-        updatePlayer(myPlayer, {
-          estate: [
-            ...players[myPlayer].estate,
-            {
-              location: index,
-              landmark: 1,
-            }]
+    } else {
+      //땅 주인 있을떄
+      const owner = ele?.classList[2]
+      //땅 주인이 나라면
+      if (myPlayer === owner) {
+        players[myPlayer].estate.map((item) => {
+          if (item.location === players[myPlayer].index){
+            setUpgradeLevel(item.landmark);
+          }
         });
 
-      }
-    } else {
-      const owner = ele?.classList[2]
-      if (myPlayer === owner) {
-        if (confirm("업글 할거임?")) {
-          const updateEstate = players[myPlayer].estate.map((item) => {
-            if (item.location === index) {
-              console.log("item.landmark : " + item.landmark);
-              return {...item, landmark: item.landmark + 1};
-            }
-            return item;
-          })
-          updatePlayer(myPlayer, {estate: updateEstate});
-        }
+        UpgradeEstateHandleClickOpen()
+
+        //땅 주인이 내가 아니면
       } else {
         //통행료 내기
         console.log((players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(index)).price * 1.5));
@@ -423,52 +413,64 @@ function YutPan() {
     }
   }
 
-  const YutName = {
-    position: "absolute",
-    top: "-32px",
-    opacity: 1,
-    left: "-25px",
-    fontSize: "10px",
-    textAlign: "center",
-    width: "50px",
-    transition: "all 0.3s ease-in-out",
-    zIndex: 5,
-    pointerEvents: "none",
-    textShadow: "black 0px 0px 3px",
-    fontWeight: "bold",
-    color: "white",
-    scale: "0.7"
-  }
+  const BuyEstateHandleClickOpen = () => {
+    setBuyEstateOpen(true);
+  };
 
-  const YutStateStyle = {
-    position: "absolute",
-    borderRadius: "13px",
-    boxShadow: "1px 1px 6px black",
+  const BuyEstateHandleClose = (result) => {
+    setBuyEstateOpen(false);
 
-  }
+    if (result) {
+      updatePlayer(myPlayer, {money: players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(players[myPlayer].index)).price});
+      updatePlayer(myPlayer, {
+        estate: [
+          ...players[myPlayer].estate,
+          {
+            location: players[myPlayer].index,
+            landmark: 1,
+          }]
+      });
+    }
+  };
 
-  const StateBuildStyle = {
-    position: "absolute",
-    top: "-1px",
-    left: 0,
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover',
-    width: "80px",
-    height: "43px",
-    transform: "translate(-50%, -50%)",
-    pointerEvents: "none",
-  }
+  const UpgradeEstateHandleClickOpen = () => {
+    setUpgradeEstateOpen(true);
+  };
 
-  const YutFanBackGroundStyle = {
-    position: "absolute",
-    top: -20,
-    left: -20,
-    width: "500px",
-    height: "500px",
-    background: "lightgray",
-    borderRadius: "5%",
-    opacity: 0.8,
-  }
+  const UpgradeEstateHandleClose = (result) => {
+    setUpgradeEstateOpen(false);
+
+    if (result) {
+      const updateEstate = players[myPlayer].estate.map((item) => {
+        if (item.location === players[myPlayer].index) {
+          if (item.landmark === 3) {
+            alert("toast 더 이상 업글 못함")
+            return item;
+          }
+          console.log("item.landmark : " + item.landmark);
+          return {...item, landmark: item.landmark + 1};
+        }
+        return item;
+      })
+      updatePlayer(myPlayer, {estate: updateEstate});
+    }
+  };
+
+
+  const playerStyles = Object.keys(players).map((key) => {
+    return {
+      position: "absolute",
+      width: 40,
+      zIndex: 4,
+      pointerEvents: "none",
+      top: players[key].top - 5,
+      left: players[key].left,
+      display: "block",
+      scale: "0.8",
+      filter: `drop-shadow(0px 0px 3px ${players[key].color})`
+    };
+  });
+
 
   const YutThrowImageStyle = {
     position: "absolute",
@@ -495,159 +497,6 @@ function YutPan() {
     scale: "1.5",
     transformOrigin: "0px 0px",
   }
-
-  const YutThrowBtnStyle = {
-    left: 149,
-    top: 325.05,
-    width: 161,
-    height: 45,
-    scale: '0.7',
-    position: 'absolute',
-    backgroundImage: `url("/image/Btthrow.disabled.0.png")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover',
-  }
-
-  const YetResultBtnStyle = {
-    left: 124,
-    top: 65,
-    width: 210,
-    height: 30,
-    scale: "0.8",
-    position: 'absolute',
-    display: "flex",
-    justifyContent: "space-evenly",
-  }
-
-
-  const playerStyles = Object.keys(players).map((key) => {
-    return {
-      position: "absolute",
-      width: 40,
-      zIndex: 4,
-      pointerEvents: "none",
-      top: players[key].top - 5,
-      left: players[key].left,
-      display: "block",
-    };
-  });
-
-
-  const playerNameStyle = {
-    fontSize: "14px",
-    fontWeight: "bolder",
-    display: "inline-block",
-    width: "auto",
-    textAlign: "center",
-    position: "absolute",
-    bottom: "-10px",
-    left: "50%",
-    transform: "translateX(-50%)",
-  }
-
-  const arrowStyle = {
-    position: "absolute",
-    width: 20,
-    height: 30,
-    display: "none",
-  }
-
-  const backStyle = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundImage: `url("/image/background.jpg")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundSize: 'cover',
-    overflow: "hidden",
-  };
-
-
-  const YutState = forwardRef(({index, name, left, top, border, onMouseOver, onMouseOut}, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={`YutState${index} YutState`}
-        onMouseOver={onMouseOver}
-        onMouseOut={onMouseOut}
-        style={{
-          ...YutStateStyle,
-          left: `${left}px`,
-          top: `${top}px`,
-          border: border,
-        }}
-      >
-        <div style={YutName} className="yutName">{name}</div>
-      </div>
-    );
-  });
-
-
-  const Arrow = forwardRef(({index, left, top, onMouseOver, onMouseOut, onClick}, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={`arrowIndex${index} arrowIndex`}
-        onMouseOver={onMouseOver}
-        onMouseOut={onMouseOut}
-        onClick={onClick}
-        style={{
-          ...arrowStyle,
-
-          left: `${left + 10}px`,
-          top: `${top - 35}px`,
-        }}
-      >
-        <img src="/image/underArrow.png" alt="" style={{width: "100%"}}/>
-      </div>
-    );
-  });
-
-
-  const containerStyle = {
-    position: "absolute",
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    height: '100%',
-    pointerEvents: "none",
-  };
-
-
-  const cardStyle = {
-    position: "absolute",
-    backgroundColor: '#ffffff',
-    borderRadius: '8px',
-    padding: '16px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-    gap: '24px',
-    pointerEvents: "auto"
-  };
-
-  const playerNumberStyle = (color) => ({
-    borderRadius: '50%',
-    width: '60px',
-    height: '60px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: '24px',
-    border: '7px solid ' + color,
-  });
-
-  const rankStyle = {
-    textAlign: 'right',
-    fontSize: '32px',
-    fontWeight: 'bold',
-  };
 
 
   return <div style={backStyle}>
@@ -686,6 +535,7 @@ function YutPan() {
         </div>
 
         <div style={{fontSize: "20px", position: "absolute"}} onClick={oneMore}>한번더</div>
+        <div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={arrowDisplayFlex}>rrrrrrrrr</div>
 
 
         {Object.keys(players).map((key, index) => {
@@ -699,7 +549,7 @@ function YutPan() {
                 style={{transform: player.direction}}
                 width="100%"
               />
-              <span style={playerNameStyle}>{player.name}</span>
+              {/*<span style={playerNameStyle}>{player.name}</span>*/}
             </div>
           );
         })}
@@ -741,7 +591,6 @@ function YutPan() {
 
     </div>
 
-
     <div style={containerStyle}>
 
 
@@ -763,6 +612,7 @@ function YutPan() {
               console.log(myPlayer);
               // joinRoom();
             }}>
+              <img src={player.avatar} alt={player.name} width={50}/>
               <img src={player.profile} alt={player.name} style={playerNumberStyle(player.color)}/>
               <div>
                 <h3 style={{fontSize: '28px', fontWeight: '600', margin: 0}}>{player.name}</h3>
@@ -779,8 +629,10 @@ function YutPan() {
 
     </div>
 
+    <BuyEstateConfirmDialog open={BuyEstateOpen} onClose={BuyEstateHandleClose}/>
 
-    {/*<TransitionsModal />*/}
+    <UpgradeEstateConfirmDialog open={UpgradeEstateOpen} onClose={UpgradeEstateHandleClose} level={UpgradeLevel} />
+
   </div>
 }
 
