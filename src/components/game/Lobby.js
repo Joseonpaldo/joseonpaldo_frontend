@@ -19,30 +19,23 @@ const characters = [
 const maps = [
   { id: 'A', src: '/image/map/1.png', alt: 'Map A' },
   { id: 'B', src: '/image/map/2.png', alt: 'Map B' },
-  { id: 'C', src: '/image/map/3.png', alt: 'Map C' }
+  { id: 'C', src: '/image/map/3.png', alt: 'Map C' },
+  { id: 'D', src: '/image/background.jpg', alt: 'Map D' }
 ];
 
 const Lobby = () => {
   const [players, setPlayers] = useState([]);
   const [readyStates, setReadyStates] = useState({});
   const [allReady, setAllReady] = useState(false);
-  const [isHost, setIsHost] = useState(false);
   const [client, setClient] = useState(null);
-  const [ladder, setLadder] = useState([]);
-  const [playerOrder, setPlayerOrder] = useState([]);
-  const [showLadder, setShowLadder] = useState(false);
-  const [showStartButton, setShowStartButton] = useState(true);
-  const [countdown, setCountdown] = useState(3);
-  const [showCountdown, setShowCountdown] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [selectedMap, setSelectedMap] = useState(maps[0].src);
-  const [selectedCharacters, setSelectedCharacters] = useState([]); // 선택된 캐릭터 상태 추가
-
+  const [selectedCharacters, setSelectedCharacters] = useState([]);
   const playerName = React.useMemo(() => `${Math.random().toString(36).substring(7)}`, []);
-
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [countdown, setCountdown] = useState(3);
+  const [showCountdown, setShowCountdown] = useState(false);
 
   useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
@@ -62,19 +55,36 @@ const Lobby = () => {
       stompClient.send('/app/chat.addUser', {}, JSON.stringify({ sender: playerName, type: 'JOIN', roomId: 'default' }));
     });
 
+    const handleBeforeUnload = (event) => {
+      leaveUser();
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       if (stompClient) {
         stompClient.disconnect();
       }
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [playerName]);
 
+  const leaveUser = () => {
+    if (client && client.connected) {
+      client.send('/app/chat.leaveUser', {}, JSON.stringify({ sender: playerName, type: 'LEAVE', roomId: 'default' }));
+    }
+  };
+
   const onMessageReceived = (message) => {
     if (message.type === 'JOIN') {
+      setMessages(prevMessages => [...prevMessages, { content: message.content }]);
+    } else if (message.type === 'UPDATE') {
       const playersInfo = message.content.split(",");
       const newPlayers = playersInfo.map((info) => {
         const [name, characterSrc] = info.split(":");
-        return { name: name, ready: "", characterSrc: characterSrc || '/image/pinkbin.png' };
+        return { name: name, ready: false, characterSrc: characterSrc || '/image/pinkbin.png' };
       });
       setPlayers(newPlayers);
     } else if (message.type === 'READY') {
@@ -83,8 +93,6 @@ const Lobby = () => {
         [message.sender]: message.ready
       }));
       setPlayers(prevPlayers => prevPlayers.map(p => p.name === message.sender ? { ...p, ready: message.ready } : p));
-    } else if (message.type === 'LEAVE') {
-      setPlayers(prevPlayers => prevPlayers.filter(p => p.name !== message.sender));
     } else if (message.type === 'SELECT') {
       setPlayers(prevPlayers => prevPlayers.map(p => p.name === message.sender ? { ...p, characterSrc: message.content } : p));
       setSelectedCharacters(prevSelected => [...prevSelected, message.content]);
@@ -95,6 +103,21 @@ const Lobby = () => {
       alert('The character has already been selected by another player.');
     } else if (message.type === 'CHAT') {
       setMessages(prevMessages => [...prevMessages, { sender: message.sender, content: message.content }]);
+    } else if (message.type === 'LEAVE') {
+      setMessages(prevMessages => [...prevMessages, { content: message.content }]);
+      setPlayers(prevPlayers => prevPlayers.filter(p => p.name !== message.sender));
+    }
+  };
+
+  useEffect(() => {
+    checkAllReady();
+  }, [players]);
+
+  const checkAllReady = () => {
+    if (players.length > 1 && players.slice(1).every(player => player.ready)) {
+      setAllReady(true);
+    } else {
+      setAllReady(false);
     }
   };
 
@@ -111,11 +134,17 @@ const Lobby = () => {
       alert('This character has already been selected by another player.');
       return;
     }
+
+    if (selectedCharacter !== null) {
+      handleCharacterDeselect(selectedCharacter);
+    }
+
     setSelectedCharacter(characterId);
     setPlayers(prevPlayers => prevPlayers.map(player =>
       player.name === playerName ? { ...player, characterSrc: characterSrc } : player
     ));
-    setSelectedCharacters(prevSelected => [...prevSelected, characterSrc]); // 선택된 캐릭터 추가
+
+    setSelectedCharacters(prevSelected => [...prevSelected, characterSrc]);
     if (client && client.connected) {
       client.send('/app/chat.selectCharacter', {}, JSON.stringify({ sender: playerName, type: 'SELECT', content: characterSrc, roomId: 'default' }));
     }
@@ -127,14 +156,25 @@ const Lobby = () => {
     setPlayers(prevPlayers => prevPlayers.map(player =>
       player.name === playerName ? { ...player, characterSrc: '/image/pinkbin.png' } : player
     ));
-    setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== characterSrc)); // 선택된 캐릭터 제거
+    setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== characterSrc));
     if (client && client.connected) {
       client.send('/app/chat.deselectCharacter', {}, JSON.stringify({ sender: playerName, type: 'DESELECT', content: characterSrc, roomId: 'default' }));
     }
   };
 
   const handleStartGame = () => {
-    // 게임 시작 로직을 추가합니다.
+    setShowCountdown(true);
+    let countdownValue = 3;
+    const countdownInterval = setInterval(() => {
+      setCountdown(countdownValue);
+      countdownValue -= 1;
+      if (countdownValue < 0) {
+        clearInterval(countdownInterval);
+        setShowCountdown(false);
+        // 게임 시작 로직 추가
+        console.log("Game Started!");
+      }
+    }, 1000);
   };
 
   const handleMapSelect = () => {
@@ -142,6 +182,12 @@ const Lobby = () => {
     const nextIndex = (currentIndex + 1) % maps.length;
     setSelectedMap(maps[nextIndex].src);
   };
+
+  useEffect(() => {
+    document.body.style.backgroundImage = `url(${selectedMap})`;
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundSize = 'cover';
+  }, [selectedMap]);
 
   const sendMessage = () => {
     const chatMessage = {
@@ -157,13 +203,17 @@ const Lobby = () => {
     <div className="backStyle">
       <div className="titleStyle">
         <h1>Room {players.length}/4
-          <button type="button">
+          <button type="button" onClick={() => {
+            leaveUser();
+            window.location.href = '/exit-page';
+          }}>
             <h3>Exit</h3>
           </button>
         </h1>
       </div>
 
-      {!showLadder && players.length > 0 && (
+
+      {players.length > 0 && (
         <div className="formStyle">
           {players.map((player, index) => (
             <div key={index} className="cardStyle">
@@ -183,7 +233,7 @@ const Lobby = () => {
         <div className="chatMessages">
           {messages.map((msg, index) => (
             <div key={index}>
-              <b>{msg.sender}: </b>{msg.content}
+              {msg.sender ? <b>{msg.sender}: </b> : null}{msg.content}
             </div>
           ))}
         </div>
@@ -208,6 +258,7 @@ const Lobby = () => {
 
       <div className="game-container">
         <b style={{ fontSize: '20px' }}>Select&nbsp;Character</b>
+
         <div className="character-selection">
           {characters.map((character) => (
             <div key={character.id} className="character-slot">
@@ -232,13 +283,13 @@ const Lobby = () => {
       </div>
 
       <div className="map-info">
-        <img src={selectedMap} alt="Map" className="map-image" />
+        <img src={selectedMap} alt="Map" className="map-image"/>
         <div className="map-details">
         </div>
         <button className="map-select-button" onClick={handleMapSelect}>맵 변경</button>
       </div>
 
-      {isHost && allReady && showStartButton && (
+      {players.length > 0 && players[0].name === playerName && allReady && (
         <div className="start-button-section">
           <button className="start-button" onClick={handleStartGame}>시작</button>
         </div>
@@ -247,30 +298,6 @@ const Lobby = () => {
       {showCountdown && (
         <div className="countdown">
           <h2>{countdown}</h2>
-        </div>
-      )}
-
-      {showLadder && (
-        <div className="ladder-container">
-          {ladder.map((row, rowIndex) => (
-            <div key={rowIndex} className="ladder-row">
-              {row.map((cell, cellIndex) => (
-                <div key={cellIndex}
-                     className={`ladder-cell ${cell ? 'connected' : ''} ${currentStep === rowIndex ? 'current-step' : ''}`}></div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {playerOrder.length > 0 && showLadder && (
-        <div className="orderList">
-          <h2>플레이어 순서</h2>
-          <ol>
-            {playerOrder.map((player, index) => (
-              <li key={index}>{player.name}</li>
-            ))}
-          </ol>
         </div>
       )}
     </div>
