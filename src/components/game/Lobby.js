@@ -33,9 +33,11 @@ const Lobby = () => {
   const [selectedCharacters, setSelectedCharacters] = useState([]);
   const playerName = React.useMemo(() => `${Math.random().toString(36).substring(7)}`, []);
   const [messages, setMessages] = useState([]);
+  const chatMessagesRef = useState(null);
   const [input, setInput] = useState('');
   const [countdown, setCountdown] = useState(3);
   const [showCountdown, setShowCountdown] = useState(false);
+
 
   useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
@@ -106,6 +108,8 @@ const Lobby = () => {
     } else if (message.type === 'LEAVE') {
       setMessages(prevMessages => [...prevMessages, { content: message.content }]);
       setPlayers(prevPlayers => prevPlayers.filter(p => p.name !== message.sender));
+    }else if (message.type === 'CHANGE_MAP'){
+      setSelectedMap(message.content);
     }
   };
 
@@ -177,10 +181,16 @@ const Lobby = () => {
     }, 1000);
   };
 
+
   const handleMapSelect = () => {
     const currentIndex = maps.findIndex(map => map.src === selectedMap);
     const nextIndex = (currentIndex + 1) % maps.length;
-    setSelectedMap(maps[nextIndex].src);
+    const newSelectedMap = maps[nextIndex].src;
+    setSelectedMap(newSelectedMap);
+
+    if (client && client.connected) {
+      client.send('/app/chat.changeMap', {}, JSON.stringify({ sender: playerName, type: 'CHANGE_MAP', content: newSelectedMap, roomId: 'default' }));
+    }
   };
 
   useEffect(() => {
@@ -190,14 +200,21 @@ const Lobby = () => {
   }, [selectedMap]);
 
   const sendMessage = () => {
-    const chatMessage = {
-      sender: playerName,
-      content: input,
-      type: 'CHAT'
-    };
-    client.send('/app/chat.sendMessage', {}, JSON.stringify(chatMessage));
-    setInput('');
+    if (input.trim() !== '') {
+      const chatMessage = {
+        sender: playerName,
+        content: input,
+        type: 'CHAT'
+      };
+      client.send('/app/chat.sendMessage', {}, JSON.stringify(chatMessage));
+      setInput('');
+    }
   };
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   return (
     <div className="backStyle">
@@ -230,7 +247,7 @@ const Lobby = () => {
       )}
 
       <div className="chatContainer">
-        <div className="chatMessages">
+        <div className="chatMessages" ref={chatMessagesRef}>
           {messages.map((msg, index) => (
             <div key={index}>
               {msg.sender ? <b>{msg.sender}: </b> : null}{msg.content}
@@ -257,7 +274,7 @@ const Lobby = () => {
       </div>
 
       <div className="game-container">
-        <b style={{ fontSize: '20px' }}>Select&nbsp;Character</b>
+        <b style={{fontSize: '20px'}}>Select&nbsp;Character</b>
 
         <div className="character-selection">
           {characters.map((character) => (
