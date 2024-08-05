@@ -88,12 +88,13 @@
   height: 70px;
   line-height: 70px;
   text-align: center;
-  background: white;
+  background: wheat; /* 어두운 블루 계열 */
   margin-bottom: 30px;
   position: relative;
-  color: black;
+  color: #ecf0f1; /* 밝은 색상 */
   box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.3);
   font-family: 'Press Start 2P', cursive; /* 레트로 게임 폰트 */
+  border-radius: 15px; /* 둥근 모서리 추가 */
 }
 
 .titleStyle h1 {
@@ -108,24 +109,27 @@
   right: 20px;
   top: 50%;
   transform: translateY(-50%);
-  background: #1a1a1d;
-  color: white;
+  background: #e74c3c; /* 강렬한 레드 계열 */
+  color: #ecf0f1; /* 밝은 색상 */
   cursor: pointer;
   padding: 10px 20px;
   font-family: 'Press Start 2P', cursive;
   font-size: 16px;
   transition: background 0.3s, color 0.3s, transform 0.3s;
+  border-radius: 10px; /* 둥근 모서리 추가 */
 }
 
 .titleStyle button:hover {
-  background: #e63946;
-  color: #1a1a1d;
+  background: #c0392b; /* 어두운 레드 계열 */
+  color: #ecf0f1;
+  transform: translateY(-50%) scale(1.05);
 }
 
 .titleStyle button h3 {
   margin: 0;
   padding: 0;
 }
+
 
 /* 플레이어 */
 .formStyle {
@@ -148,6 +152,7 @@
   border-radius: 8px;
   text-align: center;
   box-shadow: 5px 5px 5px gray;
+  position: relative;
 }
 
 .cardStyle h2 {
@@ -156,7 +161,7 @@
 
 .cardStyle img {
   width: 100px;
-  height: auto;
+  height: 100px;
   margin-bottom: 10px;
 }
 
@@ -168,6 +173,7 @@
   border: none;
   border-radius: 20px;
   cursor: pointer;
+  box-shadow: 5px 5px 5px gray;
 }
 
 /* 채팅 스타일 */
@@ -300,7 +306,7 @@
 
 .start-button {
   padding: 15px;
-  background-color: cornflowerblue;
+  background-color: #e1b389;
   color: black;
   font-weight: bold;
   text-align: center;
@@ -314,6 +320,13 @@
   bottom: 4%;
   transform: translateY(-20%);
   box-shadow: 5px 5px 5px gray;
+}
+
+.start-button:disabled {
+  background-color: lightgray;
+  color: darkgray;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .map-info {
@@ -343,6 +356,7 @@
   color: black;
   border: none;
   border-radius: 5px;
+  box-shadow: 2px 2px 2px gray;
   cursor: pointer;
   margin-left: 20px;
   margin-top: 20px;

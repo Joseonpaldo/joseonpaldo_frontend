@@ -1,8 +1,9 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './Lobby.css';
+import dynamic from 'next/dynamic';
 
 const characters = [
   { id: 1, src: '/image/character/bear.png', alt: 'Character 1' },
@@ -33,11 +34,23 @@ const Lobby = () => {
   const [selectedCharacters, setSelectedCharacters] = useState([]);
   const playerName = React.useMemo(() => `${Math.random().toString(36).substring(7)}`, []);
   const [messages, setMessages] = useState([]);
-  const chatMessagesRef = useState(null);
+  const chatMessagesRef = useRef(null);
   const [input, setInput] = useState('');
   const [countdown, setCountdown] = useState(3);
   const [showCountdown, setShowCountdown] = useState(false);
 
+  const [roomId, setRoomId] = useState('');
+
+  const [allPlayersReady, setAllPlayersReady] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlPath = window.location.pathname;
+      const pathSegments = urlPath.split('/');
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      setRoomId(lastSegment);
+    }
+  }, []);
 
   useEffect(() => {
     const socket = new SockJS('http://localhost:8080/ws');
@@ -45,7 +58,7 @@ const Lobby = () => {
 
     stompClient.connect({}, () => {
       setClient(stompClient);
-      stompClient.subscribe('/topic/public', (message) => {
+      stompClient.subscribe(`/topic/${roomId}`, (message) => {
         try {
           const parsedMessage = JSON.parse(message.body);
           onMessageReceived(parsedMessage);
@@ -54,7 +67,7 @@ const Lobby = () => {
         }
       });
 
-      stompClient.send('/app/chat.addUser', {}, JSON.stringify({ sender: playerName, type: 'JOIN', roomId: 'default' }));
+      stompClient.send(`/app/chat.addUser/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'JOIN', roomId }));
     });
 
     const handleBeforeUnload = (event) => {
@@ -71,11 +84,11 @@ const Lobby = () => {
       }
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [playerName]);
+  }, [playerName, roomId]);
 
   const leaveUser = () => {
     if (client && client.connected) {
-      client.send('/app/chat.leaveUser', {}, JSON.stringify({ sender: playerName, type: 'LEAVE', roomId: 'default' }));
+      client.send(`/app/chat.leaveUser/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'LEAVE', roomId }));
     }
   };
 
@@ -108,7 +121,7 @@ const Lobby = () => {
     } else if (message.type === 'LEAVE') {
       setMessages(prevMessages => [...prevMessages, { content: message.content }]);
       setPlayers(prevPlayers => prevPlayers.filter(p => p.name !== message.sender));
-    }else if (message.type === 'CHANGE_MAP'){
+    } else if (message.type === 'CHANGE_MAP') {
       setSelectedMap(message.content);
     }
   };
@@ -119,16 +132,16 @@ const Lobby = () => {
 
   const checkAllReady = () => {
     if (players.length > 1 && players.slice(1).every(player => player.ready)) {
-      setAllReady(true);
+      setAllPlayersReady(true);
     } else {
-      setAllReady(false);
+      setAllPlayersReady(false);
     }
   };
 
   const handleReadyClick = (player) => {
     if (client && client.connected) {
       const updatedReadyState = !player.ready;
-      client.send('/app/chat.ready', {}, JSON.stringify({ sender: player.name, type: 'READY', ready: updatedReadyState, roomId: 'default' }));
+      client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({ sender: player.name, type: 'READY', ready: updatedReadyState, roomId }));
     }
   };
 
@@ -150,7 +163,7 @@ const Lobby = () => {
 
     setSelectedCharacters(prevSelected => [...prevSelected, characterSrc]);
     if (client && client.connected) {
-      client.send('/app/chat.selectCharacter', {}, JSON.stringify({ sender: playerName, type: 'SELECT', content: characterSrc, roomId: 'default' }));
+      client.send(`/app/chat.selectCharacter/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'SELECT', content: characterSrc, roomId }));
     }
   };
 
@@ -162,7 +175,7 @@ const Lobby = () => {
     ));
     setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== characterSrc));
     if (client && client.connected) {
-      client.send('/app/chat.deselectCharacter', {}, JSON.stringify({ sender: playerName, type: 'DESELECT', content: characterSrc, roomId: 'default' }));
+      client.send(`/app/chat.deselectCharacter/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'DESELECT', content: characterSrc, roomId }));
     }
   };
 
@@ -181,7 +194,6 @@ const Lobby = () => {
     }, 1000);
   };
 
-
   const handleMapSelect = () => {
     const currentIndex = maps.findIndex(map => map.src === selectedMap);
     const nextIndex = (currentIndex + 1) % maps.length;
@@ -189,7 +201,7 @@ const Lobby = () => {
     setSelectedMap(newSelectedMap);
 
     if (client && client.connected) {
-      client.send('/app/chat.changeMap', {}, JSON.stringify({ sender: playerName, type: 'CHANGE_MAP', content: newSelectedMap, roomId: 'default' }));
+      client.send(`/app/chat.changeMap/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'CHANGE_MAP', content: newSelectedMap, roomId }));
     }
   };
 
@@ -204,12 +216,14 @@ const Lobby = () => {
       const chatMessage = {
         sender: playerName,
         content: input,
-        type: 'CHAT'
+        type: 'CHAT',
+        roomId: roomId
       };
-      client.send('/app/chat.sendMessage', {}, JSON.stringify(chatMessage));
+      client.send(`/app/chat.sendMessage/${roomId}`, {}, JSON.stringify(chatMessage));
       setInput('');
     }
   };
+
   useEffect(() => {
     if (chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
@@ -228,7 +242,6 @@ const Lobby = () => {
           </button>
         </h1>
       </div>
-
 
       {players.length > 0 && (
         <div className="formStyle">
@@ -306,9 +319,11 @@ const Lobby = () => {
         <button className="map-select-button" onClick={handleMapSelect}>맵 변경</button>
       </div>
 
-      {players.length > 0 && players[0].name === playerName && allReady && (
+      {players.length > 0 && players[0].name === playerName && (
         <div className="start-button-section">
-          <button className="start-button" onClick={handleStartGame}>시작</button>
+          <button className="start-button" onClick={handleStartGame} disabled={!allPlayersReady}>
+            시작
+          </button>
         </div>
       )}
 
