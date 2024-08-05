@@ -30,6 +30,7 @@
     "@mui/utils": "5.15.20",
     "@mui/x-date-pickers": "7.7.1",
     "@phosphor-icons/react": "2.1.6",
+    "@stomp/stompjs": "^7.0.0",
     "apexcharts": "3.49.2",
     "clsx": "^2.1.1",
     "dayjs": "1.11.11",
@@ -39,6 +40,7 @@
     "react-apexcharts": "1.4.1",
     "react-dom": "18.3.1",
     "react-hook-form": "7.52.0",
+    "sockjs-client": "^1.6.1",
     "yup": "^1.4.0",
     "zod": "3.23.8"
   },
