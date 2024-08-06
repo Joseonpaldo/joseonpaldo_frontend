@@ -11,12 +11,10 @@ import {
   cardStyle,
   containerStyle,
   rankStyle,
-  StateBuildStyle,
   YetResultBtnStyle,
   YutFanBackGroundStyle,
   YutThrowBtnStyle,
 } from "./YutPanStyle"
-
 import {
   Arrow,
   arrowMouseOut,
@@ -24,13 +22,17 @@ import {
   BuyEstateConfirmDialog,
   playerNumberStyle,
   stateMouseOut,
-  stateMouseOver, UpgradeEstateConfirmDialog,
+  stateMouseOver,
+  UpgradeEstateConfirmDialog,
   YutState,
   YutThrowBtnDown,
   YutThrowBtnOut,
   YutThrowBtnOver,
   YutThrowBtnUp,
 } from "./yutPanFunction"
+import {Stomp} from "@stomp/stompjs";
+import SockJS from 'sockjs-client';
+
 
 function YutPan() {
 
@@ -49,9 +51,9 @@ function YutPan() {
   const [resultDelIndex, setResultDelIndex] = useState(null);
 
 
-
   const [players, setPlayers] = useState({
     player1: {
+      player: "player1",
       top: 356.11,
       left: 356.31,
       index: 0,
@@ -65,6 +67,7 @@ function YutPan() {
       estate: []
     },
     player2: {
+      player: "player2",
       top: 356.11,
       left: 356.31,
       index: 0,
@@ -78,6 +81,7 @@ function YutPan() {
       estate: []
     },
     player3: {
+      player: "player3",
       top: 356.11,
       left: 356.31,
       index: 0,
@@ -91,6 +95,7 @@ function YutPan() {
       estate: []
     },
     player4: {
+      player: "player4",
       top: 356.11,
       left: 356.31,
       index: 0,
@@ -120,32 +125,33 @@ function YutPan() {
 
 
   useEffect(() => {
-    const index = players[myPlayer].index;
-    const YutData = yutStates.find(states => states.YutIndex === parseInt(index));
+    Object.values(players).forEach((player, index) => {
 
-    if (YutData) {
-      updatePlayer(myPlayer, {top: parseInt(YutData.top, 10)});
-      updatePlayer(myPlayer, {left: parseInt(YutData.left, 10)});
 
-      if ((index >= 0 && index <= 9) || index === "22" || index === "23") {
-        updatePlayer(myPlayer, {direction: "scaleX(1)"});
-      } else {
-        updatePlayer(myPlayer, {direction: "scaleX(-1)"});
+      const location = player.index;
+      const YutData = yutStates.find(states => states.YutIndex === parseInt(location));
+
+      if (YutData) {
+        updatePlayer("player" + (index + 1), {top: parseInt(YutData.top, 10)});
+        updatePlayer("player" + (index + 1), {left: parseInt(YutData.left, 10)});
+
+        if ((location >= 0 && location <= 9) || location === "22" || location === "23") {
+          updatePlayer("player" + (index + 1), {direction: "scaleX(1)"});
+        } else {
+          updatePlayer("player" + (index + 1), {direction: "scaleX(-1)"});
+        }
       }
 
-      arrowDisplayNone();
-      if (resultDelIndex != null) {
-        resultArrDelete(resultDelIndex);
-      }
-    } else {
-      console.warn(`YutData not found for index: ${index}`);
-    }
-  }, [players[myPlayer].index]);
 
+    });
 
-  let currentRank = 1;
-  let lastScore = null;
-  let countAtRank = 0;
+  }, [
+    players.player1.index,
+    players.player2.index,
+    players.player3.index,
+    players.player4.index
+  ]);
+
 
   useEffect(() => {
     Object.values(players).forEach((player) => {
@@ -153,26 +159,26 @@ function YutPan() {
         const index = estate.location;
         const ele = yutIndexRefs.current.find(s => s.classList[0] === "YutState" + index);
         ele.style.borderColor = player.color ? player.color : "#fff";
-        ele.classList.add(player.name);
+        ele.classList.add(player.player);
 
         ele.children[1].style.backgroundImage = `url(/image/level${estate.landmark}.png)`; // 필요한 경우 배경 이미지 설정
 
         let name = yutStates.find(states => states.YutIndex === parseInt(index)).name;
 
-        switch (estate.landmark){
-          case 1 : name = name + "시"; break;
-          case 2 : name = name + "광역시"; break;
-          case 3 : name = name + "특별시"; break;
+        switch (estate.landmark) {
+          case 1 :
+            name = name + "시";
+            break;
+          case 2 :
+            name = name + "광역시";
+            break;
+          case 3 :
+            name = name + "특별시";
+            break;
         }
         ele.children[0].innerText = name;
-
-
       })
-
-
     });
-
-
   }, [
     players,
     myPlayer,
@@ -201,10 +207,85 @@ function YutPan() {
   const {roomId} = useParams();
 
 
+  const socket = new SockJS('http://localhost:8080/socket'); // WebSocket 서버 URL
+  useEffect(() => {
 
+    const stompClient = Stomp.over(socket);
+    stompClient.connect({}, (frame) => {
+      stompClient.send(
+        `/app/join/${roomId}`,
+        {
+          name: myPlayer,
+          // sessionId :
+        },
+        JSON.stringify({message: "join"}));
 
+      // 특정 방에 메시지 구독
+      stompClient.subscribe(`/topic/main-game/${roomId}`, (msg) => {
+        console.log(players);
 
+        let getPlayers = JSON.parse(msg.body);
+        const playerObjects = {
+          player1: JSON.parse(getPlayers.player1),
+          player2: JSON.parse(getPlayers.player2),
+          player3: JSON.parse(getPlayers.player3),
+          player4: JSON.parse(getPlayers.player4)
+        };
 
+        console.log(playerObjects);
+        Object.values(playerObjects).forEach((player, index) => {
+          updatePlayer("player" + (index + 1), {
+            name: player.name,
+            avatar: `/image/character/${player.avatar}.png`,
+            index: player.location,
+            profile: player.profile,
+            money: player.money,
+            rank: "1st",
+            estate: [],
+            player: player.player
+          });
+          switch (player.avatar) {
+            case "bear":
+              updatePlayer("player" + (index + 1), {color: "#b59282"});
+              break;
+            case "cow":
+              updatePlayer("player" + (index + 1), {color: "#ffb6cc"});
+              break;
+            case "dragon":
+              updatePlayer("player" + (index + 1), {color: "#A4D8C2"});
+              break;
+            case "duck":
+              updatePlayer("player" + (index + 1), {color: "#ffe53b"});
+              break;
+            case "fox":
+              updatePlayer("player" + (index + 1), {color: "#ff631b"});
+              break;
+            case "monkey":
+              updatePlayer("player" + (index + 1), {color: "#633630"});
+              break;
+            case "panda":
+              updatePlayer("player" + (index + 1), {color: "#757575"});
+              break;
+            case "rabbit":
+              updatePlayer("player" + (index + 1), {color: "#ffe4e4"});
+              break;
+            case "tiger":
+              updatePlayer("player" + (index + 1), {color: "#b85b00"});
+              break;
+          }
+          if (player.myTurn) {
+            if (myPlayer === ("player" + (index + 1))) {
+              oneMore();
+            }
+          }
+        });
+
+        console.log(players);
+
+      });
+    });
+
+  }, [myPlayer]);
 
 
   const YutThrowBtnClick = () => {
@@ -251,26 +332,28 @@ function YutPan() {
 
   const arrowClick = (index) => {
     updatePlayer(myPlayer, {index: parseInt(index, 10)})
+
+
+    arrowDisplayNone();
+
+    //사용한 결과 지우기
+    if (resultDelIndex != null) {
+      setResultArr((current) => {
+        const newArray = [...current];
+        newArray.splice(resultDelIndex, 1);
+
+        // 결과 배열이 0이면 밟은 위치 확정하기
+        if (newArray.length === 0 && !yutThrowAble) {
+          stepOnEvent(parseInt(index, 10))
+        }
+
+        return newArray;
+      });
+    }
   };
 
 
-  const resultArrDelete = (index) => {
-    setResultArr((current) => {
-      const newArray = [...current];
-      newArray.splice(index, 1);
-
-      // 상태 업데이트 후 조건 검사
-      if (newArray.length === 0 && !yutThrowAble) {
-        stepOnEvent()
-      }
-
-      return newArray;
-    });
-  }
-
-
-  const stepOnEvent = () => {
-    const index = players[myPlayer].index;
+  const stepOnEvent = (index) => {
     console.log("last step index " + index);
     // const ele = yutIndexRefs.current.find(s => s.classList[0] === "YutState" + index);
     // console.log(ele)
@@ -382,7 +465,7 @@ function YutPan() {
       //땅 주인이 나라면
       if (myPlayer === owner) {
         players[myPlayer].estate.map((item) => {
-          if (item.location === players[myPlayer].index){
+          if (item.location === players[myPlayer].index) {
             setUpgradeLevel(item.landmark);
           }
         });
@@ -595,9 +678,7 @@ function YutPan() {
           return (
             <div key={key} style={positionStyle} onClick={() => {
               setResultDelIndex(null);
-              setMyPlayer(player.name);
-              console.log(myPlayer);
-              // joinRoom();
+              setMyPlayer(player.player);
             }}>
               <img src={player.avatar} alt={player.name} width={50}/>
               <img src={player.profile} alt={player.name} style={playerNumberStyle(player.color)}/>
@@ -618,9 +699,10 @@ function YutPan() {
 
     <BuyEstateConfirmDialog open={BuyEstateOpen} onClose={BuyEstateHandleClose}/>
 
-    <UpgradeEstateConfirmDialog open={UpgradeEstateOpen} onClose={UpgradeEstateHandleClose} level={UpgradeLevel} />
+    <UpgradeEstateConfirmDialog open={UpgradeEstateOpen} onClose={UpgradeEstateHandleClose} level={UpgradeLevel}/>
 
   </div>
 }
+
 
 export default YutPan;
