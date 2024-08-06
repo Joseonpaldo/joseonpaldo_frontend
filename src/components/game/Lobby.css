@@ -24,11 +24,27 @@
     padding: 10px;
     height: auto;
   }
-}
-@media (max-width: 1200px) {
-  .game-container, .chatContainer, .formStyle {
-    width: 80%;
-    left: 10%;
+
+  .formStyle,
+  .chatContainer,
+  .game-container,
+  .map-info {
+    width: 100%;
+    left: auto;
+    right: auto;
+    transform: none;
+    margin: 0;
+    padding: 10px;
+  }
+
+  .formStyle {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .game-container,
+  .map-info {
+    height: auto;
   }
 }
 
@@ -70,6 +86,15 @@
     right: auto;
     bottom: auto;
     transform: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .game-container,
+  .chatContainer,
+  .formStyle {
+    width: 80%;
+    left: 10%;
   }
 }
 
@@ -347,7 +372,7 @@
 .map-image {
   width: 150px;
   height: auto;
-  border: 1px solid black;
+  border: 2px solid black;
 }
 
 .map-select-button {

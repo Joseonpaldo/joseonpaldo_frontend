@@ -188,8 +188,24 @@ const Lobby = () => {
       if (countdownValue < 0) {
         clearInterval(countdownInterval);
         setShowCountdown(false);
-        // 게임 시작 로직 추가
-        console.log("Game Started!");
+        // 게임 시작 메시지를 서버에 보냄
+        if (client && client.connected) {
+          const gameInfo = {
+            roomId,
+            players: players.map(player => ({
+              name: player.name,
+              characterSrc: player.characterSrc,
+            })),
+            map: selectedMap,
+          };
+          client.send(`/app/chat.startGame/${roomId}`, {}, JSON.stringify({
+            sender: playerName,
+            type: 'START',
+            content: JSON.stringify(gameInfo),
+            roomId
+          }));
+          console.log("Game Started with info:", gameInfo);
+        }
       }
     }, 1000);
   };
@@ -316,7 +332,9 @@ const Lobby = () => {
         <img src={selectedMap} alt="Map" className="map-image"/>
         <div className="map-details">
         </div>
-        <button className="map-select-button" onClick={handleMapSelect}>맵 변경</button>
+        {players.length > 0 && players[0].name === playerName && (
+          <button className="map-select-button" onClick={handleMapSelect}>맵 변경</button>
+        )}
       </div>
 
       {players.length > 0 && players[0].name === playerName && (
