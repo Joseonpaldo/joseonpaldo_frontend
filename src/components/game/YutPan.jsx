@@ -200,6 +200,13 @@ function YutPan() {
 
   const {roomId} = useParams();
 
+
+
+
+
+
+
+
   const YutThrowBtnClick = () => {
     if (yutThrowAble) {
       setYutThrowImageDisplay("flex")
