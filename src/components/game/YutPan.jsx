@@ -201,25 +201,6 @@ function YutPan() {
   const {roomId} = useParams();
 
 
-  // useEffect(() => {
-  //   const socket = new SockJS('http://localhost:8080/socket');
-  //   const stompClient = Stomp.over(socket);
-  //   stompClient.connect({}, () => {
-  //     console.log('Connected to WebSocket');
-  //     stompClient.subscribe('/topic/public', (message) => {
-  //       console.log(message);
-  //     });
-  //     stompClient.subscribe(`/user/queue/players`, (message) => {
-  //       console.log(message);
-  //     });
-  //     stompClient.send('/app/chat.addUser', {}, JSON.stringify({
-  //       sender: `플레이어-${Math.random().toString(36).substring(7)}`,
-  //       type: 'JOIN'
-  //     }));
-  //   });
-  // }, [])
-
-
   const YutThrowBtnClick = () => {
     if (yutThrowAble) {
       setYutThrowImageDisplay("flex")
