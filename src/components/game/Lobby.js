@@ -43,8 +43,10 @@ const Lobby = () => {
   const [showRace, setShowRace] = useState(false);
   const [order, setOrder] = useState([]);
   const [balloons, setBalloons] = useState({});
-
   const runnersRef = useRef([]);
+
+  const [showOptions, setShowOptions] = useState(false); // 버튼을 보여줄지 여부를 관리하는 상태
+
 
   useEffect(() => {
     const handleAnimationEnd = (runner, index) => {
@@ -336,6 +338,17 @@ const Lobby = () => {
   }, [messages]);
 
 
+
+  const handleButtonClick = () => {
+    setShowOptions(!showOptions);
+  };
+
+  const handleOptionClick = (option) => {
+    console.log(`Selected option: ${option}`);
+    // 여기서 각 옵션에 따른 동작을 추가할 수 있습니다.
+  };
+
+
   return (
     <div className="backStyle">
       {!showRace && (
@@ -354,10 +367,32 @@ const Lobby = () => {
           {players.length > 0 && (
             <div className="formStyle">
               {players.map((player, index) => (
-                <div key={index} className="cardStyle">
-                  <h2>{player.name}</h2>
-                  <div className="player-container" style={{ position: 'relative' }}>
-                    <img src={player.characterSrc} alt={player.name} />
+                <div className="cardStyle">
+                  <div className="player-info">
+                    <h2>{player.name}</h2>
+                    <div className="options-container">
+                      <button onClick={handleButtonClick} className="show-options-button" style={{backgroundColor:'skyblue'}}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                             className="bi bi-three-dots" viewBox="0 0 16 16">
+                          <path
+                            d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                        </svg>
+                      </button>
+                      {showOptions && (
+                        <div className="options-menu">
+                          <button onClick={() => handleOptionClick('Option 1')} style={{backgroundColor:'skyblue'}}>
+                            정보
+                          </button>
+                          <button onClick={() => handleOptionClick('Option 2')} style={{backgroundColor:'skyblue'}}>
+                            친구추가
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="player-container" style={{position: 'relative'}}>
+                    <img src={player.characterSrc} alt={player.name}/>
                     {balloons[player.name] && (
                       <div className={`balloon ${balloons[player.name] ? 'show' : ''}`}>
                         {balloons[player.name]}
@@ -365,11 +400,16 @@ const Lobby = () => {
                     )}
                   </div>
                   {index !== 0 && (
-                    <button type="button" onClick={() => handleReadyClick(player)}>
+                    <button
+                      type="button"
+                      onClick={() => handleReadyClick(player)}
+                      className={!showOptions ? '' : 'hidden'}
+                    >
                       {player.ready ? '준비완료' : '준비'}
                     </button>
                   )}
                 </div>
+
               ))}
             </div>
           )}

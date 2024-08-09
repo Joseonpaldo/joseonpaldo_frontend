@@ -3,33 +3,9 @@
     font-size: 1.2em;
   }
 
-  .cardStyle {
+  .cardStyle, .formStyle, .chatContainer, .game-container, .map-info {
     width: 100%;
     height: auto;
-  }
-
-  .chatMessages {
-    height: 100px;
-  }
-
-  .chatInput {
-    padding: 5px;
-  }
-
-  .chatSendButton {
-    padding: 5px 10px;
-  }
-
-  .start-button {
-    padding: 10px;
-    height: auto;
-  }
-
-  .formStyle,
-  .chatContainer,
-  .game-container,
-  .map-info {
-    width: 100%;
     left: auto;
     right: auto;
     transform: none;
@@ -37,65 +13,45 @@
     padding: 10px;
   }
 
-  .formStyle {
-    grid-template-columns: 1fr;
-    height: auto;
+  .chatMessages {
+    height: 100px;
   }
 
-  .game-container,
-  .map-info {
-    height: auto;
+  .chatInput, .chatSendButton, .start-button {
+    padding: 10px;
+  }
+
+  .formStyle {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .formStyle {
-    grid-template-columns: 1fr;
-    height: auto;
-    position: relative;
-    left: auto;
-    transform: none;
-  }
-
-  .chatContainer {
-    width: 100%;
-    position: relative;
-    left: auto;
-    transform: none;
-  }
-
-  .game-container {
+  .formStyle, .chatContainer, .game-container, .map-info, .start-button {
     width: 100%;
     height: auto;
     position: relative;
+    left: auto;
     right: auto;
     top: auto;
     transform: none;
-    padding: 10px;
   }
 
-  .map-info {
-    width: 100%;
-    position: relative;
-    right: auto;
+  .formStyle {
+    grid-template-columns: 1fr;
   }
 
   .start-button {
     width: 100%;
-    position: relative;
-    right: auto;
-    bottom: auto;
-    transform: none;
   }
 }
 
 @media (max-width: 1200px) {
-  .game-container,
-  .chatContainer,
-  .formStyle {
+  .game-container, .chatContainer, .formStyle {
     width: 80%;
     left: 10%;
   }
+
 }
 
 /* 공통 스타일 */
@@ -109,17 +65,17 @@
   background-size: cover;
   overflow: hidden;
 }
+
 .titleStyle {
   height: 70px;
   line-height: 70px;
   text-align: center;
-  background: wheat;
   margin-bottom: 30px;
   position: relative;
-  color: #ecf0f1; /* 밝은 색상 */
+  color: #ecf0f1;
   box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.3);
-  font-family: 'Press Start 2P', cursive; /* 레트로 게임 폰트 */
-  border-radius: 15px; /* 둥근 모서리 추가 */
+  font-family: 'Press Start 2P', cursive;
+  border-radius: 15px;
 }
 
 .titleStyle h1 {
@@ -133,30 +89,22 @@
   position: absolute;
   right: 20px;
   top: 50%;
+  width: 50px;
   transform: translateY(-50%);
-  background: #e74c3c; /* 강렬한 레드 계열 */
-  color: #ecf0f1; /* 밝은 색상 */
+  background: #e74c3c;
+  color: #ecf0f1;
   cursor: pointer;
-  padding: 10px 20px;
   font-family: 'Press Start 2P', cursive;
   font-size: 16px;
   transition: background 0.3s, color 0.3s, transform 0.3s;
-  border-radius: 10px; /* 둥근 모서리 추가 */
+  border-radius: 10px;
 }
 
 .titleStyle button:hover {
-  background: #c0392b; /* 어두운 레드 계열 */
-  color: #ecf0f1;
+  background: #c0392b;
   transform: translateY(-50%) scale(1.05);
 }
 
-.titleStyle button h3 {
-  margin: 0;
-  padding: 0;
-}
-
-
-/* 플레이어 */
 .formStyle {
   display: grid;
   grid-template-columns: repeat(2, 300px);
@@ -251,14 +199,13 @@
 .chatSendButton:hover {
   background-color: #45a049;
 }
+
 .balloon {
   position: absolute;
-  top: -50px; /* 필요에 따라 위치 조정 */
-  left: 150%; /* 필요에 따라 위치 조정 */
+  top: -50px;
+  left: 100%;
   transform: translateX(-50%);
   width: 100px;
-  max-width: 100px;
-  max-height: 100px;
   border-radius: 10px;
   padding: 5px 10px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -267,10 +214,14 @@
   background-color: #f3e1c0;
 }
 
+.balloon.show {
+  display: block;
+}
+
 .balloon:after {
   content: '';
   position: absolute;
-  bottom: -10px; /* 말풍선 꼬리 위치 조정 */
+  bottom: -10px;
   left: 30%;
   transform: translateX(-50%);
   width: 0;
@@ -279,12 +230,6 @@
   border-top: 10px solid #f3e1c0;
 }
 
-.balloon.show {
-  display: block;
-}
-
-
-/* GameUI.css */
 .game-container {
   width: 500px;
   height: 445px;
@@ -307,11 +252,11 @@
   margin-bottom: 50px;
   border: 1px solid black;
 }
+
 .character-slot {
   position: relative;
   display: inline-block;
   width: 100px;
-  height: auto;
   cursor: pointer;
   margin-left: 20px;
 }
@@ -322,29 +267,21 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.5); /* 반투명 배경 */
+  background: rgba(255, 255, 255, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 2rem;
   color: red;
-  pointer-events: none; /* 클릭 이벤트를 차단 */
+  pointer-events: none;
 }
 
 .character {
   width: 100%;
-  height: 100%;
 }
 
 .character.selected {
   border: 2px solid black;
-}
-
-.selection-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
 }
 
 .selection-button {
@@ -386,9 +323,6 @@
   cursor: not-allowed;
   box-shadow: none;
 }
-.start-button-section {
-  margin-top: 20px;
-}
 
 .map-info {
   display: flex;
@@ -407,7 +341,6 @@
 
 .map-image {
   width: 150px;
-  height: auto;
   border: 2px solid black;
 }
 
@@ -423,20 +356,8 @@
   margin-top: 20px;
 }
 
-.countdown {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 5em;
-  font-weight: bold;
-  z-index: 20;
-  color: red;
-}
-
 .raceTrack {
   position: relative;
-  /*width: 80%;*/
   width: 50%;
   height: 400px;
   margin: 50px auto;
@@ -444,10 +365,9 @@
   border-radius: 10px;
   overflow: hidden;
   background-image: url('../../../public/image/track.jpg');
-
-  background-size: contain; /* 이미지 크기를 가득 채우도록 설정 */
-  background-position: center; /* 이미지가 중앙에 위치하도록 설정 */
-  background-repeat: no-repeat; /* 이미지 반복을 방지 */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .runner {
@@ -496,4 +416,61 @@
 .order li {
   margin: 5px 0;
   font-size: 1.5em;
+}
+
+.player-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 10px;
+  position: relative;
+}
+
+.options-container {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.show-options-button {
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.show-options-button:hover {
+  background-color: #2980b9;
+}
+
+.options-menu {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  border-radius: 5px;
+  z-index: 10;
+  margin-top: 5px;
+  width: 70px;
+}
+
+.options-menu button {
+  color: #333;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.options-menu button:hover {
+  background-color: #bdc3c7;
 }
