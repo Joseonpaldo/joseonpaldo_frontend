@@ -433,32 +433,26 @@
   z-index: 20;
   color: red;
 }
-/* 순번 게임 */
-.playerList {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.playerItem {
-  padding: 5px;
-  font-size: 1.2em;
-}
 
 .raceTrack {
   position: relative;
-  width: 80%;
+  /*width: 80%;*/
+  width: 50%;
   height: 400px;
   margin: 50px auto;
   border: 2px solid #ffffff;
   border-radius: 10px;
   overflow: hidden;
-  background-color: #222;
+  background-image: url('../../../public/image/track.jpg');
+
+  background-size: contain; /* 이미지 크기를 가득 채우도록 설정 */
+  background-position: center; /* 이미지가 중앙에 위치하도록 설정 */
+  background-repeat: no-repeat; /* 이미지 반복을 방지 */
 }
 
 .runner {
   position: absolute;
+  margin-top: 15px;
   display: flex;
   flex-direction: column;
   align-items: center;

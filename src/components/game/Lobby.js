@@ -79,7 +79,6 @@ const Lobby = () => {
     }
   }, [order]);
 
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlPath = window.location.pathname;
@@ -94,7 +93,7 @@ const Lobby = () => {
       try {
         const response = await fetch(`http://localhost:8080/room/${roomId}/status`);
         const roomStatus = await response.json();
-        const playersInfo = roomStatus.players.map((player, index) => {
+        const playersInfo = roomStatus.players.map((player) => {
           return { name: player, ready: false, characterSrc: roomStatus.characters[player] || '/image/pinkbin.png' };
         });
         setPlayers(playersInfo);
@@ -160,7 +159,6 @@ const Lobby = () => {
       });
       setPlayers(newPlayers);
 
-      // 선택된 캐릭터 목록 업데이트
       const selectedChars = newPlayers.map(player => player.characterSrc).filter(src => src !== '/image/pinkbin.png');
       setSelectedCharacters(selectedChars);
     } else if (message.type === 'READY') {
@@ -189,7 +187,6 @@ const Lobby = () => {
         ...prevBalloons,
         [message.sender]: trimmedContent
       }));
-      //말풍선 시간 초
       setTimeout(() => {
         setBalloons(prevBalloons => ({
           ...prevBalloons,
@@ -204,7 +201,6 @@ const Lobby = () => {
       setSelectedMap(message.content);
     }
   };
-
 
   useEffect(() => {
     checkAllReady();
@@ -260,40 +256,48 @@ const Lobby = () => {
   };
 
   const handleStartGame = () => {
-    setShowCountdown(true);
-    let countdownValue = 3;
-    const countdownInterval = setInterval(() => {
-      setCountdown(countdownValue);
-      countdownValue -= 1;
-      if (countdownValue < 0) {
-        clearInterval(countdownInterval);
-        setShowCountdown(false);
-        setShowRace(true);
+    if (client && client.connected) {
+      client.send(`/app/chat.startGame/${roomId}`, {}, JSON.stringify({
+        sender: playerName,
+        type: 'START',
+        roomId: roomId,
+      }));
+    }
 
-        setTimeout(() => {
-          setShowRace(false);
+    client.subscribe(`/topic/${roomId}`, (message) => {
+      const parsedMessage = JSON.parse(message.body);
+      if (parsedMessage.type === 'START') {
+        const gameInfo = parsedMessage.content.split("\n");
+        const updatedPlayers = [];
 
-          if (client && client.connected) {
-            const gameInfo = {
-              roomId,
-              players: order.map(player => ({
-                name: player.name,
-                characterSrc: players.find(p => p.name === player.name).characterSrc,
-              })),
-              map: selectedMap,
-            };
-            client.send(`/app/chat.startGame/${roomId}`, {}, JSON.stringify({
-              sender: playerName,
-              type: 'START',
-              content: JSON.stringify(gameInfo),
-              roomId
-            }));
-            console.log("Game Started with info:", gameInfo);
+        gameInfo.forEach(line => {
+          const match = line.match(/^(\d+)\.\s(\w+):\s.+,\sSpeed:\s(\d+)$/);
+          if (match) {
+            const player = match[2];
+            const speed = parseInt(match[3], 10);
+
+            const runner = runnersRef.current.find(r => r.dataset.player === player);
+            if (runner) {
+              const duration = 50 / speed;
+              runner.style.animationDuration = `${duration}s`;
+            }
+
+            updatedPlayers.push({ name: player, speed: speed, characterSrc: players.find(p => p.name === player).characterSrc });
           }
-        }, 20000); // 10초 동안 경주 애니메이션 실행
+        });
+
+        setPlayers(updatedPlayers);
+        setShowRace(true);
       }
-    }, 1000);
+    });
   };
+
+  useEffect(() => {
+    if (showRace) {
+      const finishOrder = players.slice().sort((a, b) => b.speed - a.speed);
+      setOrder(finishOrder);
+    }
+  }, [showRace, players]);
 
   const handleMapSelect = () => {
     const currentIndex = maps.findIndex(map => map.src === selectedMap);
@@ -330,6 +334,7 @@ const Lobby = () => {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   }, [messages]);
+
 
   return (
     <div className="backStyle">
@@ -453,23 +458,29 @@ const Lobby = () => {
             <div
               key={index}
               className={`runner runner-${index}`}
-              // 플레이어의 애니메이션 지속 시간을 10초에서 20초 사이로 설정
-              style={{top: `${index * 25}%`, animationDuration: `${10 + Math.random() * 10}s`}}
-              ref={(el) => (runnersRef.current[index] = el)}
+              style={{
+                top: `${index * 25}%`,
+                animationDuration: `${50 / player.speed}s`
+              }}
+              ref={(el) => {
+                runnersRef.current[index] = el;
+                if (el) {
+                  el.dataset.player = player.name;  // dataset 설정
+                }
+              }}
             >
               <img src={player.characterSrc} alt={player.name}/>
               <span>{player.name}</span>
-              <hr/>
             </div>
           ))}
+
           <div className="finishLine"></div>
         </div>
       )}
 
-
-      {order.length > 0 && !showRace && (
+      {order.length > 0 && (
         <div className="order">
-          <h2>순번 결과:</h2>
+          <h2>순번 결과</h2>
           <ul>
             {order.map((player, index) => (
               <li key={index}>{index + 1}. {player.name}</li>
@@ -479,6 +490,6 @@ const Lobby = () => {
       )}
     </div>
   );
-    };
+};
 
-    export default Lobby;
+export default Lobby;
