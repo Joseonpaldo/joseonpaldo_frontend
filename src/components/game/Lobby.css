@@ -1,60 +1,3 @@
-@media (max-width: 480px) {
-  .titleStyle {
-    font-size: 1.2em;
-  }
-
-  .cardStyle, .formStyle, .chatContainer, .game-container, .map-info {
-    width: 100%;
-    height: auto;
-    left: auto;
-    right: auto;
-    transform: none;
-    margin: 0;
-    padding: 10px;
-  }
-
-  .chatMessages {
-    height: 100px;
-  }
-
-  .chatInput, .chatSendButton, .start-button {
-    padding: 10px;
-  }
-
-  .formStyle {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .formStyle, .chatContainer, .game-container, .map-info, .start-button {
-    width: 100%;
-    height: auto;
-    position: relative;
-    left: auto;
-    right: auto;
-    top: auto;
-    transform: none;
-  }
-
-  .formStyle {
-    grid-template-columns: 1fr;
-  }
-
-  .start-button {
-    width: 100%;
-  }
-}
-
-@media (max-width: 1200px) {
-  .game-container, .chatContainer, .formStyle {
-    width: 80%;
-    left: 10%;
-  }
-
-}
-
-/* 공통 스타일 */
 .backStyle {
   position: absolute;
   top: 0;
@@ -159,7 +102,7 @@
   display: flex;
   flex-direction: column;
   position: absolute;
-  bottom: 3%;
+  bottom: 0;
   left: 30%;
   transform: translateX(-50%);
   box-shadow: 5px 5px 5px gray;
@@ -240,7 +183,7 @@
   text-align: center;
   position: absolute;
   right: 5%;
-  top: 38%;
+  top: 40%;
   transform: translateY(-50%);
   box-shadow: 5px 5px 5px gray;
 }
@@ -312,7 +255,7 @@
   height: 50px;
   position: absolute;
   right: 5%;
-  bottom: 4%;
+  bottom: 2%;
   transform: translateY(-20%);
   box-shadow: 5px 5px 5px gray;
 }
@@ -332,7 +275,7 @@
   height: 150px;
   background-color: white;
   border-radius: 20px;
-  top: 77%;
+  bottom: 2%;
   right: 5%;
   transform: translateY(-50%);
   position: absolute;

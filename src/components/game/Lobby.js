@@ -36,6 +36,7 @@ const Lobby = () => {
   const [messages, setMessages] = useState([]);
   const chatMessagesRef = useRef(null);
   const [input, setInput] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [showCountdown, setShowCountdown] = useState(false);
   const [roomId, setRoomId] = useState('');
@@ -44,111 +45,9 @@ const Lobby = () => {
   const [order, setOrder] = useState([]);
   const [balloons, setBalloons] = useState({});
   const runnersRef = useRef([]);
-
   const [showOptions, setShowOptions] = useState(false); // 버튼을 보여줄지 여부를 관리하는 상태
+  const [visibleOptions, setVisibleOptions] = useState({});
 
-
-  useEffect(() => {
-    const handleAnimationEnd = (runner, index) => {
-      const finishLineOffset = document.querySelector('.finishLine').offsetLeft;
-      const runnerOffset = runner.getBoundingClientRect().left + runner.offsetWidth;
-
-      if (runnerOffset >= finishLineOffset) {
-        runner.style.animationPlayState = 'paused';
-
-        // 현재 시간을 기록하여 순위 계산
-        const finishTime = new Date().getTime();
-        setOrder(prevOrder => [...prevOrder, { name: players[index].name, finishTime }]);
-      }
-    };
-
-    runnersRef.current.forEach((runner, index) => {
-      runner.addEventListener('animationiteration', () => handleAnimationEnd(runner, index));
-    });
-
-    return () => {
-      runnersRef.current.forEach((runner) => {
-        runner.removeEventListener('animationiteration', handleAnimationEnd);
-      });
-    };
-  }, [players]);
-
-  useEffect(() => {
-    if (order.length === players.length) {
-      // finishTime을 기준으로 정렬
-      const sortedOrder = order.sort((a, b) => a.finishTime - b.finishTime);
-      setOrder(sortedOrder);
-    }
-  }, [order]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlPath = window.location.pathname;
-      const pathSegments = urlPath.split('/');
-      const lastSegment = pathSegments[pathSegments.length - 1];
-      setRoomId(lastSegment);
-    }
-  }, []);
-
-  useEffect(() => {
-    const fetchRoomStatus = async () => {
-      try {
-        const response = await fetch(`http://localhost:8080/room/${roomId}/status`);
-        const roomStatus = await response.json();
-        const playersInfo = roomStatus.players.map((player) => {
-          return { name: player, ready: false, characterSrc: roomStatus.characters[player] || '/image/pinkbin.png' };
-        });
-        setPlayers(playersInfo);
-        setSelectedMap(roomStatus.map);
-      } catch (error) {
-        console.error('Failed to fetch room status:', error);
-      }
-    };
-
-    fetchRoomStatus();
-
-    const socket = new SockJS('http://localhost:8080/ws');
-    const stompClient = Stomp.over(socket);
-
-    stompClient.connect({}, () => {
-      setClient(stompClient);
-      stompClient.subscribe(`/topic/${roomId}`, (message) => {
-        try {
-          const parsedMessage = JSON.parse(message.body);
-          onMessageReceived(parsedMessage);
-        } catch (error) {
-          console.error('Failed to parse message:', message.body, error);
-        }
-      });
-
-      stompClient.send(`/app/chat.addUser/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'JOIN', roomId }));
-
-      const heartbeatInterval = setInterval(() => {
-        if (stompClient.connected) {
-          stompClient.send(`/app/chat.heartbeat/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'HEARTBEAT', roomId }));
-        }
-      }, 3000);
-
-      window.addEventListener('beforeunload', (event) => {
-        clearInterval(heartbeatInterval);
-        leaveUser();
-        event.preventDefault();
-        event.returnValue = '';
-      });
-    });
-
-    return () => {
-      if (stompClient) {
-        stompClient.disconnect();
-      }
-    };
-  }, [playerName, roomId]);
-
-  const leaveUser = () => {
-    if (client && client.connected) {
-      client.send(`/app/chat.leaveUser/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'LEAVE', roomId }));
-    }
-  };
 
   const onMessageReceived = (message) => {
     if (message.type === 'JOIN') {
@@ -205,6 +104,88 @@ const Lobby = () => {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlPath = window.location.pathname;
+      const pathSegments = urlPath.split('/');
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      setRoomId(lastSegment);
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchRoomStatus = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/room/${roomId}/status`);
+        const roomStatus = await response.json();
+
+        // 방이 가득 찬 경우 처리
+        if (roomStatus.players.length >= 4) {
+          alert('가득 찬 방입니다.');
+          window.close(); // 창을 닫음
+          return;
+        }
+
+        const playersInfo = roomStatus.players.map((player) => {
+          return { name: player, ready: false, characterSrc: roomStatus.characters[player] || '/image/pinkbin.png' };
+        });
+        setPlayers(playersInfo);
+        setSelectedMap(roomStatus.map);
+      } catch (error) {
+        console.error('Failed to fetch room status:', error);
+      }
+    };
+
+    fetchRoomStatus();
+
+    const socket = new SockJS('http://localhost:8080/ws');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+      setClient(stompClient);
+      stompClient.subscribe(`/topic/${roomId}`, (message) => {
+        try {
+          const parsedMessage = JSON.parse(message.body);
+          if (parsedMessage.type === 'ERROR' && parsedMessage.content === 'Maximum number of players reached') {
+            alert('가득 찬 방입니다.');
+            window.close();
+          } else {
+            onMessageReceived(parsedMessage);
+          }
+        } catch (error) {
+          console.error('Failed to parse message:', message.body, error);
+        }
+      });
+
+      stompClient.send(`/app/chat.addUser/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'JOIN', roomId }));
+
+      const heartbeatInterval = setInterval(() => {
+        if (stompClient.connected) {
+          stompClient.send(`/app/chat.heartbeat/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'HEARTBEAT', roomId }));
+        }
+      }, 3000);
+
+      window.addEventListener('beforeunload', (event) => {
+        clearInterval(heartbeatInterval);
+        leaveUser();
+        event.preventDefault();
+        event.returnValue = '';
+      });
+    });
+
+    return () => {
+      if (stompClient) {
+        stompClient.disconnect();
+      }
+    };
+  }, [playerName, roomId]);
+
+  const leaveUser = () => {
+    if (client && client.connected) {
+      client.send(`/app/chat.leaveUser/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'LEAVE', roomId }));
+    }
+  };
+
+  useEffect(() => {
     checkAllReady();
   }, [players]);
 
@@ -221,6 +202,19 @@ const Lobby = () => {
       const updatedReadyState = !player.ready;
       client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({ sender: player.name, type: 'READY', ready: updatedReadyState, roomId }));
     }
+  };
+
+
+  const handleButtonClick = (name) => {
+    setVisibleOptions((prevState) => ({
+      ...prevState,
+      [name]: !prevState[name]
+    }));
+  };
+
+  const handleOptionClick = (option) => {
+    console.log(`Selected option: ${option}`);
+    // 여기서 각 옵션에 따른 동작을 추가할 수 있습니다.
   };
 
   const handleCharacterSelect = (characterId) => {
@@ -256,6 +250,52 @@ const Lobby = () => {
       client.send(`/app/chat.deselectCharacter/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'DESELECT', content: characterSrc, roomId }));
     }
   };
+
+  const handleMapSelect = () => {
+    const currentIndex = maps.findIndex(map => map.src === selectedMap);
+    const nextIndex = (currentIndex + 1) % maps.length;
+    const newSelectedMap = maps[nextIndex].src;
+    setSelectedMap(newSelectedMap);
+
+    if (client && client.connected) {
+      client.send(`/app/chat.changeMap/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'CHANGE_MAP', content: newSelectedMap, roomId }));
+    }
+  };
+
+  useEffect(() => {
+    document.body.style.backgroundImage = `url(${selectedMap})`;
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundSize = 'cover';
+  }, [selectedMap]);
+
+  const sendMessage = () => {
+    if (input.trim() !== '') {
+      const chatMessage = {
+        sender: playerName,
+        content: input,
+        type: 'CHAT',
+        roomId: roomId
+      };
+      client.send(`/app/chat.sendMessage/${roomId}`, {}, JSON.stringify(chatMessage));
+      setInput('');
+    }
+  };
+
+
+  const onEmojiClick = (event, emojiObject) => {
+    setInput(input + emojiObject.emoji);
+  };
+
+  const handleSendMessage = () => {
+    sendMessage(input);
+    setInput('');
+  };
+
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleStartGame = () => {
     if (client && client.connected) {
@@ -295,58 +335,46 @@ const Lobby = () => {
   };
 
   useEffect(() => {
+    const handleAnimationEnd = (runner, index) => {
+      const finishLineOffset = document.querySelector('.finishLine').offsetLeft;
+      const runnerOffset = runner.getBoundingClientRect().left + runner.offsetWidth;
+
+      if (runnerOffset >= finishLineOffset) {
+        runner.style.animationPlayState = 'paused';
+
+        // 현재 시간을 기록하여 순위 계산
+        const finishTime = new Date().getTime();
+        setOrder(prevOrder => [...prevOrder, { name: players[index].name, finishTime }]);
+      }
+    };
+
+    runnersRef.current.forEach((runner, index) => {
+      runner.addEventListener('animationiteration', () => handleAnimationEnd(runner, index));
+    });
+
+    return () => {
+      runnersRef.current.forEach((runner) => {
+        runner.removeEventListener('animationiteration', handleAnimationEnd);
+      });
+    };
+  }, [players]);
+
+
+
+  useEffect(() => {
     if (showRace) {
       const finishOrder = players.slice().sort((a, b) => b.speed - a.speed);
       setOrder(finishOrder);
     }
   }, [showRace, players]);
 
-  const handleMapSelect = () => {
-    const currentIndex = maps.findIndex(map => map.src === selectedMap);
-    const nextIndex = (currentIndex + 1) % maps.length;
-    const newSelectedMap = maps[nextIndex].src;
-    setSelectedMap(newSelectedMap);
-
-    if (client && client.connected) {
-      client.send(`/app/chat.changeMap/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'CHANGE_MAP', content: newSelectedMap, roomId }));
-    }
-  };
-
   useEffect(() => {
-    document.body.style.backgroundImage = `url(${selectedMap})`;
-    document.body.style.backgroundRepeat = 'no-repeat';
-    document.body.style.backgroundSize = 'cover';
-  }, [selectedMap]);
-
-  const sendMessage = () => {
-    if (input.trim() !== '') {
-      const chatMessage = {
-        sender: playerName,
-        content: input,
-        type: 'CHAT',
-        roomId: roomId
-      };
-      client.send(`/app/chat.sendMessage/${roomId}`, {}, JSON.stringify(chatMessage));
-      setInput('');
+    if (order.length === players.length) {
+      // finishTime을 기준으로 정렬
+      const sortedOrder = order.sort((a, b) => a.finishTime - b.finishTime);
+      setOrder(sortedOrder);
     }
-  };
-
-  useEffect(() => {
-    if (chatMessagesRef.current) {
-      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-
-
-  const handleButtonClick = () => {
-    setShowOptions(!showOptions);
-  };
-
-  const handleOptionClick = (option) => {
-    console.log(`Selected option: ${option}`);
-    // 여기서 각 옵션에 따른 동작을 추가할 수 있습니다.
-  };
+  }, [order]);
 
 
   return (
@@ -371,19 +399,23 @@ const Lobby = () => {
                   <div className="player-info">
                     <h2>{player.name}</h2>
                     <div className="options-container">
-                      <button onClick={handleButtonClick} className="show-options-button" style={{backgroundColor:'skyblue'}}>
+                      <button
+                        onClick={() => handleButtonClick(player.name)}
+                        className="show-options-button"
+                        style={{backgroundColor:'skyblue'}}
+                      >
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
                              className="bi bi-three-dots" viewBox="0 0 16 16">
                           <path
                             d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
                         </svg>
                       </button>
-                      {showOptions && (
+                      {visibleOptions[player.name] && (
                         <div className="options-menu">
-                          <button onClick={() => handleOptionClick('Option 1')} style={{backgroundColor:'skyblue'}}>
+                          <button onClick={() => handleOptionClick('Option 1')} style={{backgroundColor: 'skyblue'}}>
                             정보
                           </button>
-                          <button onClick={() => handleOptionClick('Option 2')} style={{backgroundColor:'skyblue'}}>
+                          <button onClick={() => handleOptionClick('Option 2')} style={{backgroundColor: 'skyblue'}}>
                             친구추가
                           </button>
                         </div>
