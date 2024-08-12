@@ -110,6 +110,7 @@
 
 .chatMessages {
   border-bottom: 1px solid #8B6B4F;
+  font-size: 16px;
   height: 160px;
   padding: 10px;
   overflow-y: auto;
@@ -171,6 +172,23 @@
   height: 0;
   border-right: 10px solid transparent;
   border-top: 10px solid #f3e1c0;
+}
+.chatInputContainer button{
+  margin-left: 10px;
+}
+.emojiContainer {
+  position: absolute;
+  z-index: 100;
+  margin-left: 20px;
+}
+.modalContainer{
+  position: absolute;
+  bottom: 10%;
+  left: 24%;
+  height: 250px;
+}
+.closeButton{
+  float: right;
 }
 
 .game-container {

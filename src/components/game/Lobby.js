@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './Lobby.css';
+import dynamic from 'next/dynamic';
 
 const characters = [
   { id: 1, src: '/image/character/bear.png', alt: 'Character 1' },
@@ -23,6 +24,8 @@ const maps = [
   { id: 'C', src: '/image/map/3.png', alt: 'Map C' },
   { id: 'D', src: '/image/background.jpg', alt: 'Map D' }
 ];
+
+const Picker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
 const Lobby = () => {
   const [players, setPlayers] = useState([]);
@@ -282,13 +285,16 @@ const Lobby = () => {
   };
 
 
-  const onEmojiClick = (event, emojiObject) => {
-    setInput(input + emojiObject.emoji);
+  const handleEmojiClick = (emojiObject) => {
+    setInput(prevInput => prevInput + emojiObject.emoji);  // 이모지를 입력란에 추가
   };
 
-  const handleSendMessage = () => {
-    sendMessage(input);
-    setInput('');
+  const handleSendMessage = (event) => {
+    event.preventDefault();
+    if (input.trim() !== '') {
+      client.send(`/app/chat.sendMessage/${roomId}`, {}, JSON.stringify({ sender: playerName, content: input, type: 'CHAT', roomId }));
+      setInput('');  // 메시지 전송 후 입력 필드 비우기
+    }
   };
 
   useEffect(() => {
@@ -467,11 +473,36 @@ const Lobby = () => {
                 className="chatInput"
                 placeholder="Type your message..."
               />
+
+              <button
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                style={{backgroundColor: "white", border: 'none', cursor: 'pointer'}}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                     className="bi bi-emoji-neutral" viewBox="0 0 16 16">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                  <path
+                    d="M4 10.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5m3-4C7 5.672 6.552 5 6 5s-1 .672-1 1.5S5.448 8 6 8s1-.672 1-1.5m4 0c0-.828-.448-1.5-1-1.5s-1 .672-1 1.5S9.448 8 10 8s1-.672 1-1.5"/>
+                </svg>
+              </button>
               <button onClick={sendMessage} className="chatSendButton">
                 Send
               </button>
             </div>
           </div>
+
+          {showEmojiPicker && (
+            <>
+              <div className="modalOverlay" onClick={() => setShowEmojiPicker(false)}></div>
+              <div className="modalContainer">
+                <button className="closeButton" onClick={() => setShowEmojiPicker(false)}>X</button>
+                <Picker onEmojiClick={(event, emojiObject) => {
+                  handleEmojiClick(emojiObject);
+                  setShowEmojiPicker(false);
+                }} />
+              </div>
+            </>
+          )}
 
           <div className="game-container">
             <b style={{fontSize: '20px'}}>Select&nbsp;Character</b>
