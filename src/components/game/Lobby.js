@@ -51,7 +51,6 @@ const Lobby = () => {
   const [showOptions, setShowOptions] = useState(false); // 버튼을 보여줄지 여부를 관리하는 상태
   const [visibleOptions, setVisibleOptions] = useState({});
 
-
   const onMessageReceived = (message) => {
     if (message.type === 'JOIN') {
       setMessages(prevMessages => [...prevMessages, { content: message.content }]);
@@ -103,8 +102,35 @@ const Lobby = () => {
       setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== message.content));
     } else if (message.type === 'CHANGE_MAP') {
       setSelectedMap(message.content);
+    } else if (message.type === 'START') {
+      const gameInfo = message.content.split("\n");
+      const updatedPlayers = [];
+
+      gameInfo.forEach(line => {
+        const match = line.match(/^(\d+)\.\s(\w+):\s.+,\sSpeed:\s(\d+)$/);
+        if (match) {
+          const player = match[2];
+          const speed = parseInt(match[3], 10);
+
+          // 플레이어를 찾는 로직에서 undefined를 처리
+          const playerInfo = players.find(p => p.name === player);
+          const characterSrc = playerInfo ? playerInfo.characterSrc : '/image/pinkbin.png';
+
+          const runner = runnersRef.current.find(r => r.dataset.player === player);
+          if (runner) {
+            const duration = 50 / speed;
+            runner.style.animationDuration = `${duration}s`;
+          }
+
+          updatedPlayers.push({ name: player, speed: speed, characterSrc: characterSrc });
+        }
+      });
+
+      setPlayers(updatedPlayers);
+      setShowRace(true); // 모든 플레이어가 게임 화면으로 전환되도록 설정
     }
   };
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -113,9 +139,7 @@ const Lobby = () => {
       const lastSegment = pathSegments[pathSegments.length - 1];
       setRoomId(lastSegment);
     }
-  }, []);
 
-  useEffect(() => {
     const fetchRoomStatus = async () => {
       try {
         const response = await fetch(`http://localhost:8080/room/${roomId}/status`);
@@ -148,6 +172,7 @@ const Lobby = () => {
       stompClient.subscribe(`/topic/${roomId}`, (message) => {
         try {
           const parsedMessage = JSON.parse(message.body);
+          console.log("Received message: ", parsedMessage); // 메시지 수신 확인용 로그
           if (parsedMessage.type === 'ERROR' && parsedMessage.content === 'Maximum number of players reached') {
             alert('가득 찬 방입니다.');
             window.close();
@@ -206,7 +231,6 @@ const Lobby = () => {
       client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({ sender: player.name, type: 'READY', ready: updatedReadyState, roomId }));
     }
   };
-
 
   const handleButtonClick = (name) => {
     setVisibleOptions((prevState) => ({
@@ -284,7 +308,6 @@ const Lobby = () => {
     }
   };
 
-
   const handleEmojiClick = (emojiObject) => {
     setInput(prevInput => prevInput + emojiObject.emoji);  // 이모지를 입력란에 추가
   };
@@ -311,33 +334,6 @@ const Lobby = () => {
         roomId: roomId,
       }));
     }
-
-    client.subscribe(`/topic/${roomId}`, (message) => {
-      const parsedMessage = JSON.parse(message.body);
-      if (parsedMessage.type === 'START') {
-        const gameInfo = parsedMessage.content.split("\n");
-        const updatedPlayers = [];
-
-        gameInfo.forEach(line => {
-          const match = line.match(/^(\d+)\.\s(\w+):\s.+,\sSpeed:\s(\d+)$/);
-          if (match) {
-            const player = match[2];
-            const speed = parseInt(match[3], 10);
-
-            const runner = runnersRef.current.find(r => r.dataset.player === player);
-            if (runner) {
-              const duration = 50 / speed;
-              runner.style.animationDuration = `${duration}s`;
-            }
-
-            updatedPlayers.push({ name: player, speed: speed, characterSrc: players.find(p => p.name === player).characterSrc });
-          }
-        });
-
-        setPlayers(updatedPlayers);
-        setShowRace(true);
-      }
-    });
   };
 
   useEffect(() => {
@@ -365,8 +361,6 @@ const Lobby = () => {
     };
   }, [players]);
 
-
-
   useEffect(() => {
     if (showRace) {
       const finishOrder = players.slice().sort((a, b) => b.speed - a.speed);
@@ -382,7 +376,6 @@ const Lobby = () => {
     }
   }, [order]);
 
-
   return (
     <div className="backStyle">
       {!showRace && (
@@ -393,7 +386,15 @@ const Lobby = () => {
                 leaveUser();
                 window.close();
               }}>
-                <h3>Exit</h3>
+                <b>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+                       className="bi bi-box-arrow-right" viewBox="0 0 16 16">
+                    <path
+                      d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+                    <path
+                      d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                  </svg>
+                </b>
               </button>
             </h1>
           </div>
@@ -401,14 +402,14 @@ const Lobby = () => {
           {players.length > 0 && (
             <div className="formStyle">
               {players.map((player, index) => (
-                <div className="cardStyle">
+                <div className="cardStyle" key={index}>
                   <div className="player-info">
                     <h2>{player.name}</h2>
                     <div className="options-container">
                       <button
                         onClick={() => handleButtonClick(player.name)}
                         className="show-options-button"
-                        style={{backgroundColor:'skyblue'}}
+                        style={{ backgroundColor: 'skyblue' }}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
                              className="bi bi-three-dots" viewBox="0 0 16 16">
@@ -418,10 +419,10 @@ const Lobby = () => {
                       </button>
                       {visibleOptions[player.name] && (
                         <div className="options-menu">
-                          <button onClick={() => handleOptionClick('Option 1')} style={{backgroundColor: 'skyblue'}}>
+                          <button onClick={() => handleOptionClick('Option 1')} style={{ backgroundColor: 'skyblue' }}>
                             정보
                           </button>
-                          <button onClick={() => handleOptionClick('Option 2')} style={{backgroundColor: 'skyblue'}}>
+                          <button onClick={() => handleOptionClick('Option 2')} style={{ backgroundColor: 'skyblue' }}>
                             친구추가
                           </button>
                         </div>
@@ -429,8 +430,8 @@ const Lobby = () => {
                     </div>
                   </div>
 
-                  <div className="player-container" style={{position: 'relative'}}>
-                    <img src={player.characterSrc} alt={player.name}/>
+                  <div className="player-container" style={{ position: 'relative' }}>
+                    <img src={player.characterSrc} alt={player.name} />
                     {balloons[player.name] && (
                       <div className={`balloon ${balloons[player.name] ? 'show' : ''}`}>
                         {balloons[player.name]}
@@ -476,7 +477,7 @@ const Lobby = () => {
 
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                style={{backgroundColor: "white", border: 'none', cursor: 'pointer'}}
+                style={{ backgroundColor: "white", border: 'none', cursor: 'pointer' }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                      className="bi bi-emoji-neutral" viewBox="0 0 16 16">
@@ -490,7 +491,6 @@ const Lobby = () => {
               </button>
             </div>
           </div>
-
           {showEmojiPicker && (
             <>
               <div className="modalOverlay" onClick={() => setShowEmojiPicker(false)}></div>
@@ -503,9 +503,8 @@ const Lobby = () => {
               </div>
             </>
           )}
-
           <div className="game-container">
-            <b style={{fontSize: '20px'}}>Select&nbsp;Character</b>
+            <b style={{ fontSize: '20px' }}>Select&nbsp;Character</b>
 
             <div className="character-selection">
               {characters.map((character) => (
@@ -531,7 +530,7 @@ const Lobby = () => {
           </div>
 
           <div className="map-info">
-            <img src={selectedMap} alt="Map" className="map-image"/>
+            <img src={selectedMap} alt="Map" className="map-image" />
             <div className="map-details">
             </div>
             {players.length > 0 && players[0].name === playerName && (
@@ -572,7 +571,7 @@ const Lobby = () => {
                 }
               }}
             >
-              <img src={player.characterSrc} alt={player.name}/>
+              <img src={player.characterSrc} alt={player.name} />
               <span>{player.name}</span>
             </div>
           ))}
