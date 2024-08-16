@@ -36,7 +36,8 @@ import SockJS from 'sockjs-client';
 
 function YutPan() {
 
-  const [myPlayer, setMyPlayer] = useState("player1");
+  const [myPlayer, setMyPlayer] = useState(null);
+  const [myTurn, setMyTurn] = useState(false);
 
   const [yutThrowImageSrc, setYutThrowImageSrc] = useState("/image/yut1.gif");
   const [yutThrowImageDisplay, setYutThrowImageDisplay] = useState("none");
@@ -49,6 +50,8 @@ function YutPan() {
 
   const [resultArr, setResultArr] = useState([]);
   const [resultDelIndex, setResultDelIndex] = useState(null);
+
+  const [client, setClient] = useState(null);
 
 
   const [players, setPlayers] = useState({
@@ -155,39 +158,37 @@ function YutPan() {
 
   useEffect(() => {
     Object.values(players).forEach((player) => {
-      player.estate.forEach((estate) => {
-        const index = estate.location;
-        const ele = yutIndexRefs.current.find(s => s.classList[0] === "YutState" + index);
-        ele.style.borderColor = player.color ? player.color : "#fff";
-        ele.classList.add(player.player);
+      if (player.estate !== undefined) {
+        player.estate.forEach((estate) => {
+          const index = estate.location;
+          const ele = yutIndexRefs.current.find(s => s.classList[0] === "YutState" + index);
+          ele.style.borderColor = player.color ? player.color : "#fff";
+          ele.classList.add(player.player);
 
-        ele.children[1].style.backgroundImage = `url(/image/level${estate.landmark}.png)`; // 필요한 경우 배경 이미지 설정
+          ele.children[1].style.backgroundImage = `url(/image/level${estate.landmark}.png)`; // 필요한 경우 배경 이미지 설정
 
-        let name = yutStates.find(states => states.YutIndex === parseInt(index)).name;
+          let name = yutStates.find(states => states.YutIndex === parseInt(index)).name;
 
-        switch (estate.landmark) {
-          case 1 :
-            name = name + "시";
-            break;
-          case 2 :
-            name = name + "광역시";
-            break;
-          case 3 :
-            name = name + "특별시";
-            break;
-        }
-        ele.children[0].innerText = name;
-      })
+          switch (estate.landmark) {
+            case 1 :
+              name = name + "시";
+              break;
+            case 2 :
+              name = name + "광역시";
+              break;
+            case 3 :
+              name = name + "특별시";
+              break;
+          }
+          ele.children[0].innerText = name;
+        })
+      }
     });
   }, [
-    players,
-    myPlayer,
-    yutThrowImageSrc,
-    yutThrowImageDisplay,
-    yutThrowAble,
-    resultArr,
-    resultDelIndex,
-    windowSizeCustom
+    players.player1.estate,
+    players.player2.estate,
+    players.player3.estate,
+    players.player4.estate
   ]);
 
 
@@ -207,110 +208,152 @@ function YutPan() {
   const {roomId} = useParams();
 
 
-  const socket = new SockJS('http://localhost:8080/socket'); // WebSocket 서버 URL
   useEffect(() => {
-
+    if (myPlayer === null){
+      return;
+    }
+    const socket = new SockJS('http://localhost:8080/socket'); // WebSocket 서버 URL
     const stompClient = Stomp.over(socket);
     stompClient.connect({}, (frame) => {
+      setClient(stompClient);
       stompClient.send(
-        `/app/join/${roomId}`,
+        `/app/main/join/${roomId}`,
         {
           name: myPlayer,
           // sessionId :
         },
-        JSON.stringify({message: "join"}));
+        JSON.stringify({message: "join"})
+      );
 
-      // 특정 방에 메시지 구독
+      // 플레이어 정보 가져오기
       stompClient.subscribe(`/topic/main-game/${roomId}`, (msg) => {
-        console.log(players);
+        const message = JSON.parse(msg.body)
+        if (message.type === "getPlayer") {
+          let getPlayers = JSON.parse(message.message);
+          setResultDelIndex(null);
+          arrowDisplayNone();
+          const playerObjects = {
+            player1: JSON.parse(getPlayers.player1),
+            player2: JSON.parse(getPlayers.player2),
+            player3: JSON.parse(getPlayers.player3),
+            player4: JSON.parse(getPlayers.player4)
+          };
 
-        let getPlayers = JSON.parse(msg.body);
-        const playerObjects = {
-          player1: JSON.parse(getPlayers.player1),
-          player2: JSON.parse(getPlayers.player2),
-          player3: JSON.parse(getPlayers.player3),
-          player4: JSON.parse(getPlayers.player4)
-        };
-
-        console.log(playerObjects);
-        Object.values(playerObjects).forEach((player, index) => {
-          updatePlayer("player" + (index + 1), {
-            name: player.name,
-            avatar: `/image/character/${player.avatar}.png`,
-            index: player.location,
-            profile: player.profile,
-            money: player.money,
-            rank: "1st",
-            estate: [],
-            player: player.player
-          });
-          switch (player.avatar) {
-            case "bear":
-              updatePlayer("player" + (index + 1), {color: "#b59282"});
-              break;
-            case "cow":
-              updatePlayer("player" + (index + 1), {color: "#ffb6cc"});
-              break;
-            case "dragon":
-              updatePlayer("player" + (index + 1), {color: "#A4D8C2"});
-              break;
-            case "duck":
-              updatePlayer("player" + (index + 1), {color: "#ffe53b"});
-              break;
-            case "fox":
-              updatePlayer("player" + (index + 1), {color: "#ff631b"});
-              break;
-            case "monkey":
-              updatePlayer("player" + (index + 1), {color: "#633630"});
-              break;
-            case "panda":
-              updatePlayer("player" + (index + 1), {color: "#757575"});
-              break;
-            case "rabbit":
-              updatePlayer("player" + (index + 1), {color: "#ffe4e4"});
-              break;
-            case "tiger":
-              updatePlayer("player" + (index + 1), {color: "#b85b00"});
-              break;
-          }
-          if (player.myTurn) {
-            if (myPlayer === ("player" + (index + 1))) {
-              oneMore();
+          Object.values(playerObjects).forEach((player, index) => {
+            updatePlayer("player" + (index + 1), {
+              name: player.name,
+              avatar: `/image/character/${player.avatar}.png`,
+              index: player.location,
+              profile: player.profile,
+              money: player.money,
+              rank: "1st",
+              estate: player.estate,
+              player: player.player
+            });
+            switch (player.avatar) {
+              case "bear":
+                updatePlayer("player" + (index + 1), {color: "#b59282"});
+                break;
+              case "cow":
+                updatePlayer("player" + (index + 1), {color: "#ffb6cc"});
+                break;
+              case "dragon":
+                updatePlayer("player" + (index + 1), {color: "#A4D8C2"});
+                break;
+              case "duck":
+                updatePlayer("player" + (index + 1), {color: "#ffe53b"});
+                break;
+              case "fox":
+                updatePlayer("player" + (index + 1), {color: "#ff631b"});
+                break;
+              case "monkey":
+                updatePlayer("player" + (index + 1), {color: "#633630"});
+                break;
+              case "panda":
+                updatePlayer("player" + (index + 1), {color: "#757575"});
+                break;
+              case "rabbit":
+                updatePlayer("player" + (index + 1), {color: "#ffe4e4"});
+                break;
+              case "tiger":
+                updatePlayer("player" + (index + 1), {color: "#b85b00"});
+                break;
             }
+            if (player.myTurn) {
+              if (myPlayer === ("player" + (index + 1))) {
+                setMyTurn(true);
+              }
+            }else {
+              setMyTurn(false);
+            }
+          });
+        } else if (message.type === "getResult") {
+          let resultNum = JSON.parse(message.message);
+          setYutThrowImageDisplay("flex")
+          setYutThrowImageSrc(`/image/yut${resultNum}.gif`)
+          setYutThrowAble(false)
+          setTimeout(() => {
+            setYutThrowImageDisplay("none")
+            setYutThrowImageSrc("1")
+          }, 2000)
+        } else if (message.type === "commend") {
+          let commend = message.message;
+          if (commend === "oneMore") {
+            setTimeout(() => oneMore(), 2000)
           }
-        });
-
-        console.log(players);
+        } else if (message.type === "resultArr") {
+          setTimeout(() => setResultArr(JSON.parse(message.message)), 0)
+        } else if (message.type === "displayArrow") {
+          arrowDisplayNone();
+          JSON.parse(message.message).forEach((item) => {
+            if (item !== -1){
+                  const arrow1 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + item);
+                  arrow1.style.display = "block";
+            }
+          })
+        } else if (message.type === "isThrow") {
+          if (JSON.parse(message.message)){
+            oneMore();
+          }
+        } else {
+          console.log("error : " + JSON.parse(message.message).toString());
+        }
 
       });
-    });
 
+
+    });
   }, [myPlayer]);
+
+  useEffect(() => {
+    if (resultArr.length === 0 && !yutThrowAble && myTurn) {
+      stepOnEvent(parseInt(players[myPlayer].index , 10))
+    }
+  }, [resultArr]);
+
 
 
   const YutThrowBtnClick = () => {
     if (yutThrowAble) {
-      setYutThrowImageDisplay("flex")
-      const randomNum = Math.floor(Math.random() * 5 + 1);
-      setYutThrowImageSrc(`/image/yut${randomNum}.gif`)
-
-      setTimeout(() => {
-        setYutThrowImageDisplay("none")
-        setYutThrowImageSrc("1")
-        setResultArr((arr) => [...arr, randomNum])
-        if (randomNum === 4 || randomNum === 5) {
-          oneMore();
-        }
-      }, 2000)
-      setYutThrowAble(false)
+      client.send(
+        `/app/main/throwYut/${roomId}`,
+        {name: myPlayer}, // 헤더 설정
+        JSON.stringify({message: "throw"})
+      );
     }
   }
 
   const oneMore = () => {
-    console.log("one more");
     setYutThrowAble(true)
     document.getElementsByClassName("YutThrowBtn")[0].style.backgroundImage = `url("/image/Btthrow.normal.0.png")`;
+  }
 
+  const passTurn = () => {
+    client.send(
+      `/app/main/passTurn/${roomId}`,
+      {name: myPlayer}, // 헤더 설정
+      JSON.stringify({message: "pass"})
+    );
   }
 
 
@@ -333,25 +376,29 @@ function YutPan() {
   const arrowClick = (index) => {
     updatePlayer(myPlayer, {index: parseInt(index, 10)})
 
-
     arrowDisplayNone();
 
-    //사용한 결과 지우기
-    if (resultDelIndex != null) {
-      setResultArr((current) => {
-        const newArray = [...current];
-        newArray.splice(resultDelIndex, 1);
+    client.send(
+      `/app/main/arrowClick/${roomId}`,
+      {name: myPlayer, location: index, resultDelIndex: resultDelIndex}, // 헤더 설정
+      JSON.stringify({message: "move this"})
+    );
 
-        // 결과 배열이 0이면 밟은 위치 확정하기
-        if (newArray.length === 0 && !yutThrowAble) {
-          stepOnEvent(parseInt(index, 10))
-        }
-
-        return newArray;
-      });
-    }
+    // //사용한 결과 지우기
+    // if (resultDelIndex != null) {
+    //   setResultArr((current) => {
+    //     const newArray = [...current];
+    //     newArray.splice(resultDelIndex, 1);
+    //
+    //     // 결과 배열이 0이면 밟은 위치 확정하기
+    //     if (newArray.length === 0 && !yutThrowAble) {
+    //       stepOnEvent(parseInt(index, 10))
+    //     }
+    //
+    //     return newArray;
+    //   });
+    // }
   };
-
 
   const stepOnEvent = (index) => {
     console.log("last step index " + index);
@@ -370,7 +417,7 @@ function YutPan() {
         break;
 
       case 0:
-        arrowDisplayFlex();
+        // arrowDisplayFlex();
         break;
 
       case 6:
@@ -396,58 +443,63 @@ function YutPan() {
     arrowDisplayNone();
     setResultDelIndex(index);
 
+    client.send(
+      `/app/main/useResult/${roomId}`,
+      {name: myPlayer, item: item}, // 헤더 설정
+      JSON.stringify({message: "use result"})
+    );
     // 상태 업데이트 후 화살표 표시를 위한 setTimeout 사용
-    setTimeout(() => {
-
-      let moveIndex = players[myPlayer].index + item;
-      if (players[myPlayer].index === 100) {
-        let go1 = (33 + item);
-        if (go1 > 36) go1 = go1 - 36 + 17;
-
-        const arrow1 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go1);
-        arrow1.style.display = "block";
-
-        let go2 = (43 + item);
-        if (go2 > 46) go2 = go2 - 47;
-        const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go2);
-        arrow2.style.display = "block";
-        return;
-      }
-
-      // 크게 한바퀴 돌았을때
-      if (moveIndex >= 24 && players[myPlayer].index <= 23) {
-        moveIndex -= 24;
-      }
-
-      if (players[myPlayer].index >= 30 && players[myPlayer].index <= 36 && moveIndex > 36) {
-        moveIndex = moveIndex - 37 + 18;
-      }
-
-      if (players[myPlayer].index >= 40 && players[myPlayer].index <= 46 && moveIndex > 46) {
-        moveIndex = moveIndex - 47;
-      }
-
-      // 중앙
-      if (moveIndex === 33 || moveIndex === 43) {
-        moveIndex = 100;
-      }
-      // console.log(moveIndex);
-      const arrow1 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + moveIndex);
-      arrow1.style.display = "block";
-
-      if (players[myPlayer].index === 6) {
-        let go = (item + 29);
-        if (go === 33) go = 100;
-        const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go);
-        arrow2.style.display = "block";
-      }
-      if (players[myPlayer].index === 12) {
-        let go = (item + 39);
-        if (go === 43) go = 100;
-        const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go);
-        arrow2.style.display = "block";
-      }
-    }, 0); // 상태가 업데이트된 후 바로 실행
+    // setTimeout(() => {
+    //
+    //   let moveIndex = players[myPlayer].index + item;
+    //   if (players[myPlayer].index === 100) {
+    //     let go1 = (33 + item);
+    //     if (go1 > 36) go1 = go1 - 36 + 17;
+    //
+    //     const arrow1 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go1);
+    //     arrow1.style.display = "block";
+    //
+    //     let go2 = (43 + item);
+    //     if (go2 > 46) go2 = go2 - 47;
+    //     const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go2);
+    //     arrow2.style.display = "block";
+    //     return;
+    //   }
+    //
+    //   // 크게 한바퀴 돌았을때
+    //   if (moveIndex >= 24 && players[myPlayer].index <= 23) {
+    //     moveIndex -= 24;
+    //   }
+    //
+    //   if (players[myPlayer].index >= 30 && players[myPlayer].index <= 36 && moveIndex > 36) {
+    //     moveIndex = moveIndex - 37 + 18;
+    //   }
+    //
+    //   if (players[myPlayer].index >= 40 && players[myPlayer].index <= 46 && moveIndex > 46) {
+    //     moveIndex = moveIndex - 47;
+    //   }
+    //
+    //   // 중앙
+    //   if (moveIndex === 33 || moveIndex === 43) {
+    //     moveIndex = 100;
+    //   }
+    //   // console.log(moveIndex);
+    //   const arrow1 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + moveIndex);
+    //   arrow1.style.display = "block";
+    //
+    //   if (players[myPlayer].index === 6) {
+    //     let go = (item + 29);
+    //     if (go === 33) go = 100;
+    //     const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go);
+    //     arrow2.style.display = "block";
+    //   }
+    //   if (players[myPlayer].index === 12) {
+    //     let go = (item + 39);
+    //     if (go === 43) go = 100;
+    //     const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go);
+    //     arrow2.style.display = "block";
+    //   }
+    // }, 0); // 상태가 업데이트된 후 바로 실행
   }
 
 
@@ -491,15 +543,35 @@ function YutPan() {
     setBuyEstateOpen(false);
 
     if (result) {
-      updatePlayer(myPlayer, {money: players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(players[myPlayer].index)).price});
-      updatePlayer(myPlayer, {
-        estate: [
-          ...players[myPlayer].estate,
-          {
-            location: players[myPlayer].index,
-            landmark: 1,
-          }]
-      });
+      client.send(
+        `/app/main/buyEstate/${roomId}`,
+        {
+          name: myPlayer,
+          location: players[myPlayer].index,
+          price : yutStates.find(states => states.YutIndex === parseInt(players[myPlayer].index)).price,
+        }, // 헤더 설정
+        JSON.stringify({message: "buy this"})
+      );
+
+      // updatePlayer(myPlayer, {money: players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(players[myPlayer].index)).price});
+      // if (players[myPlayer].estate) {
+      //   updatePlayer(myPlayer, {
+      //     estate: [
+      //       ...players[myPlayer].estate,
+      //       {
+      //         location: players[myPlayer].index,
+      //         landmark: 1,
+      //       }]
+      //   });
+      // } else {
+      //   updatePlayer(myPlayer, {
+      //     estate: [
+      //       {
+      //         location: players[myPlayer].index,
+      //         landmark: 1,
+      //       }]
+      //   });
+      // }
     }
   };
 
@@ -511,18 +583,28 @@ function YutPan() {
     setUpgradeEstateOpen(false);
 
     if (result) {
-      const updateEstate = players[myPlayer].estate.map((item) => {
-        if (item.location === players[myPlayer].index) {
-          if (item.landmark === 3) {
-            alert("toast 더 이상 업글 못함")
-            return item;
-          }
-          console.log("item.landmark : " + item.landmark);
-          return {...item, landmark: item.landmark + 1};
-        }
-        return item;
-      })
-      updatePlayer(myPlayer, {estate: updateEstate});
+      client.send(
+        `/app/main/upgradeEstate/${roomId}`,
+        {
+          name: myPlayer,
+          location: players[myPlayer].index,
+          price : yutStates.find(states => states.YutIndex === parseInt(players[myPlayer].index)).price,
+        }, // 헤더 설정
+        JSON.stringify({message: "upgrade this"})
+      );
+
+      // const updateEstate = players[myPlayer].estate.map((item) => {
+      //   if (item.location === players[myPlayer].index) {
+      //     if (item.landmark === 3) {
+      //       alert("toast 더 이상 업글 못함")
+      //       return item;
+      //     }
+      //     console.log("item.landmark : " + item.landmark);
+      //     return {...item, landmark: item.landmark + 1};
+      //   }
+      //   return item;
+      // })
+      // updatePlayer(myPlayer, {estate: updateEstate});
     }
   };
 
@@ -605,7 +687,7 @@ function YutPan() {
         </div>
 
         <div style={{fontSize: "20px", position: "absolute"}} onClick={oneMore}>한번더</div>
-        <div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={arrowDisplayFlex}>rrrrrrrrr</div>
+        <div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={passTurn}>pass turn</div>
 
 
         {Object.keys(players).map((key, index) => {
