@@ -4,7 +4,6 @@ import Stack from '@mui/material/Stack';
 
 import { config } from '@/config';
 import Lobby from "@/components/game/Lobby";
-import YutPan from "@/components/game/YutPan";
 
 
 
@@ -14,7 +13,9 @@ export const metadata = { title: `In Game | ${config.site.name}` } satisfies Met
 export default function Page(): React.JSX.Element {
   return (
     <Stack spacing={3}>
-      <YutPan/>
+
+      <Lobby/>
+
 
     </Stack>
   );

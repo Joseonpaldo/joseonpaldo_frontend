@@ -163,7 +163,7 @@ const Lobby = () => {
   useEffect(() => {
     const fetchRoomStatus = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/room/${roomId}/status`);
+        const response = await fetch(`/ws/room/${roomId}/status`);
         const roomStatus = await response.json();
 
         if (roomStatus.players.length >= 4) {
@@ -186,7 +186,7 @@ const Lobby = () => {
 
     fetchRoomStatus();
 
-    const socket = new SockJS('http://localhost:8080/ws');
+    const socket = new SockJS('/ws');
     const stompClient = Stomp.over(socket);
 
     stompClient.connect({}, () => {
