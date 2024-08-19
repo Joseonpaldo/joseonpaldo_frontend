@@ -5,6 +5,8 @@ import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './Lobby.css';
 import dynamic from 'next/dynamic';
+import YutPan from "@/components/game/YutPan";
+import Modal from "@/components/game/Modal";
 
 const characters = [
   { id: 1, src: '/image/character/bear.png', alt: 'Character 1' },
@@ -48,8 +50,22 @@ const Lobby = () => {
   const [order, setOrder] = useState([]);
   const [balloons, setBalloons] = useState({});
   const runnersRef = useRef([]);
-  const [showOptions, setShowOptions] = useState(false); // 버튼을 보여줄지 여부를 관리하는 상태
+  const [showOptions, setShowOptions] = useState(false);
   const [visibleOptions, setVisibleOptions] = useState({});
+  const [showYutPan, setShowYutPan] = useState(false);
+
+  //모달
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    window.close();  // 모달이 닫히면 창을 닫음
+  };
+
 
   const onMessageReceived = (message) => {
     if (message.type === 'JOIN') {
@@ -90,12 +106,14 @@ const Lobby = () => {
         ...prevBalloons,
         [message.sender]: trimmedContent
       }));
+
       setTimeout(() => {
         setBalloons(prevBalloons => ({
           ...prevBalloons,
           [message.sender]: null
         }));
       }, 4000);
+
     } else if (message.type === 'LEAVE') {
       setMessages(prevMessages => [...prevMessages, { content: message.content }]);
       setPlayers(prevPlayers => prevPlayers.filter(p => p.name !== message.sender));
@@ -103,34 +121,35 @@ const Lobby = () => {
     } else if (message.type === 'CHANGE_MAP') {
       setSelectedMap(message.content);
     } else if (message.type === 'START') {
-      const gameInfo = message.content.split("\n");
-      const updatedPlayers = [];
-
-      gameInfo.forEach(line => {
-        const match = line.match(/^(\d+)\.\s(\w+):\s.+,\sSpeed:\s(\d+)$/);
-        if (match) {
-          const player = match[2];
-          const speed = parseInt(match[3], 10);
-
-          // 플레이어를 찾는 로직에서 undefined를 처리
-          const playerInfo = players.find(p => p.name === player);
-          const characterSrc = playerInfo ? playerInfo.characterSrc : '/image/pinkbin.png';
-
-          const runner = runnersRef.current.find(r => r.dataset.player === player);
-          if (runner) {
-            const duration = 50 / speed;
-            runner.style.animationDuration = `${duration}s`;
-          }
-
-          updatedPlayers.push({ name: player, speed: speed, characterSrc: characterSrc });
-        }
-      });
-
-      setPlayers(updatedPlayers);
-      setShowRace(true); // 모든 플레이어가 게임 화면으로 전환되도록 설정
+      handleStartGameMessage(message);
     }
   };
 
+  const handleStartGameMessage = (message) => {
+    const gameInfo = message.content.split("\n");
+    const updatedPlayers = [];
+
+    gameInfo.forEach(line => {
+      const match = line.match(/^(\d+)\.\s(\w+):\s(.+),\sSpeed:\s(\d+)$/);
+      if (match) {
+        const player = match[2];
+        const characterSrc = match[3];
+        const speed = parseInt(match[4], 10);
+
+        const runner = runnersRef.current.find(r => r.dataset.player === player);
+        if (runner) {
+          const duration = 50 / speed;
+          runner.style.animationDuration = `${duration}s`;
+          runner.querySelector('img').src = characterSrc;
+        }
+
+        updatedPlayers.push({ name: player, speed: speed, characterSrc: characterSrc });
+      }
+    });
+
+    setPlayers(updatedPlayers);
+    setShowRace(true);
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -139,22 +158,25 @@ const Lobby = () => {
       const lastSegment = pathSegments[pathSegments.length - 1];
       setRoomId(lastSegment);
     }
+  }, []);
 
+  useEffect(() => {
     const fetchRoomStatus = async () => {
       try {
         const response = await fetch(`http://localhost:8080/room/${roomId}/status`);
         const roomStatus = await response.json();
 
-        // 방이 가득 찬 경우 처리
         if (roomStatus.players.length >= 4) {
-          alert('가득 찬 방입니다.');
-          window.close(); // 창을 닫음
+          handleOpenModal();  // 모달 열기
+
           return;
         }
 
-        const playersInfo = roomStatus.players.map((player) => {
-          return { name: player, ready: false, characterSrc: roomStatus.characters[player] || '/image/pinkbin.png' };
-        });
+        const playersInfo = roomStatus.players.map((player) => ({
+          name: player,
+          ready: false,
+          characterSrc: roomStatus.characters[player] || '/image/pinkbin.png'
+        }));
         setPlayers(playersInfo);
         setSelectedMap(roomStatus.map);
       } catch (error) {
@@ -169,16 +191,12 @@ const Lobby = () => {
 
     stompClient.connect({}, () => {
       setClient(stompClient);
+
+      // 메시지 수신을 위한 구독 설정
       stompClient.subscribe(`/topic/${roomId}`, (message) => {
         try {
           const parsedMessage = JSON.parse(message.body);
-          console.log("Received message: ", parsedMessage); // 메시지 수신 확인용 로그
-          if (parsedMessage.type === 'ERROR' && parsedMessage.content === 'Maximum number of players reached') {
-            alert('가득 찬 방입니다.');
-            window.close();
-          } else {
-            onMessageReceived(parsedMessage);
-          }
+          onMessageReceived(parsedMessage);
         } catch (error) {
           console.error('Failed to parse message:', message.body, error);
         }
@@ -241,7 +259,6 @@ const Lobby = () => {
 
   const handleOptionClick = (option) => {
     console.log(`Selected option: ${option}`);
-    // 여기서 각 옵션에 따른 동작을 추가할 수 있습니다.
   };
 
   const handleCharacterSelect = (characterId) => {
@@ -309,14 +326,14 @@ const Lobby = () => {
   };
 
   const handleEmojiClick = (emojiObject) => {
-    setInput(prevInput => prevInput + emojiObject.emoji);  // 이모지를 입력란에 추가
+    setInput(prevInput => prevInput + emojiObject.emoji);
   };
 
   const handleSendMessage = (event) => {
     event.preventDefault();
     if (input.trim() !== '') {
       client.send(`/app/chat.sendMessage/${roomId}`, {}, JSON.stringify({ sender: playerName, content: input, type: 'CHAT', roomId }));
-      setInput('');  // 메시지 전송 후 입력 필드 비우기
+      setInput('');
     }
   };
 
@@ -344,7 +361,6 @@ const Lobby = () => {
       if (runnerOffset >= finishLineOffset) {
         runner.style.animationPlayState = 'paused';
 
-        // 현재 시간을 기록하여 순위 계산
         const finishTime = new Date().getTime();
         setOrder(prevOrder => [...prevOrder, { name: players[index].name, finishTime }]);
       }
@@ -370,14 +386,21 @@ const Lobby = () => {
 
   useEffect(() => {
     if (order.length === players.length) {
-      // finishTime을 기준으로 정렬
       const sortedOrder = order.sort((a, b) => a.finishTime - b.finishTime);
       setOrder(sortedOrder);
+
+      // 3초 후에 YutPan 컴포넌트를 렌더링하도록 설정
+      setTimeout(() => {
+        setShowYutPan(true);
+      }, 15000);
     }
-  }, [order]);
+  }, [order, players.length]);
 
   return (
     <div className="backStyle">
+
+      <Modal open={isModalOpen} onClose={handleCloseModal} />
+
       {!showRace && (
         <>
           <div className="titleStyle">
@@ -409,7 +432,7 @@ const Lobby = () => {
                       <button
                         onClick={() => handleButtonClick(player.name)}
                         className="show-options-button"
-                        style={{ backgroundColor: 'skyblue' }}
+                        style={{backgroundColor: 'skyblue'}}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
                              className="bi bi-three-dots" viewBox="0 0 16 16">
@@ -419,10 +442,10 @@ const Lobby = () => {
                       </button>
                       {visibleOptions[player.name] && (
                         <div className="options-menu">
-                          <button onClick={() => handleOptionClick('Option 1')} style={{ backgroundColor: 'skyblue' }}>
+                          <button onClick={() => handleOptionClick('Option 1')} style={{backgroundColor: 'skyblue'}}>
                             정보
                           </button>
-                          <button onClick={() => handleOptionClick('Option 2')} style={{ backgroundColor: 'skyblue' }}>
+                          <button onClick={() => handleOptionClick('Option 2')} style={{backgroundColor: 'skyblue'}}>
                             친구추가
                           </button>
                         </div>
@@ -430,8 +453,8 @@ const Lobby = () => {
                     </div>
                   </div>
 
-                  <div className="player-container" style={{ position: 'relative' }}>
-                    <img src={player.characterSrc} alt={player.name} />
+                  <div className="player-container" style={{position: 'relative'}}>
+                    <img src={player.characterSrc} alt={player.name}/>
                     {balloons[player.name] && (
                       <div className={`balloon ${balloons[player.name] ? 'show' : ''}`}>
                         {balloons[player.name]}
@@ -477,7 +500,7 @@ const Lobby = () => {
 
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                style={{ backgroundColor: "white", border: 'none', cursor: 'pointer' }}
+                style={{backgroundColor: "white", border: 'none', cursor: 'pointer'}}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                      className="bi bi-emoji-neutral" viewBox="0 0 16 16">
@@ -495,16 +518,15 @@ const Lobby = () => {
             <>
               <div className="modalOverlay" onClick={() => setShowEmojiPicker(false)}></div>
               <div className="modalContainer">
-                <button className="closeButton" onClick={() => setShowEmojiPicker(false)}>X</button>
                 <Picker onEmojiClick={(event, emojiObject) => {
                   handleEmojiClick(emojiObject);
                   setShowEmojiPicker(false);
-                }} />
+                }}/>
               </div>
             </>
           )}
           <div className="game-container">
-            <b style={{ fontSize: '20px' }}>Select&nbsp;Character</b>
+            <b style={{fontSize: '20px'}}>Select&nbsp;Character</b>
 
             <div className="character-selection">
               {characters.map((character) => (
@@ -530,7 +552,7 @@ const Lobby = () => {
           </div>
 
           <div className="map-info">
-            <img src={selectedMap} alt="Map" className="map-image" />
+            <img src={selectedMap} alt="Map" className="map-image"/>
             <div className="map-details">
             </div>
             {players.length > 0 && players[0].name === playerName && (
@@ -567,11 +589,11 @@ const Lobby = () => {
               ref={(el) => {
                 runnersRef.current[index] = el;
                 if (el) {
-                  el.dataset.player = player.name;  // dataset 설정
+                  el.dataset.player = player.name;
                 }
               }}
             >
-              <img src={player.characterSrc} alt={player.name} />
+              <img src={player.characterSrc} alt={player.name}/>
               <span>{player.name}</span>
             </div>
           ))}
@@ -590,6 +612,18 @@ const Lobby = () => {
           </ul>
         </div>
       )}
+
+      {/*윳놀이판으로 이동*/}
+      {/*<div>*/}
+      {/*  {showYutPan ? (*/}
+      {/*    <YutPan roomId={roomId}/>*/}
+      {/*  ) : (*/}
+      {/*    <div>*/}
+      {/*    </div>*/}
+      {/*  )}*/}
+      {/*</div>*/}
+
+
     </div>
   );
 };
