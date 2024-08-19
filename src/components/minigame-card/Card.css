@@ -1,0 +1,52 @@
+.game-board {
+    display: grid;
+    position: absolute;
+    grid-template-columns: repeat(4, 100px); /* 4개의 칸으로 구성 */
+    grid-template-rows: repeat(3, 100px); /* 3개의 줄로 구성 */
+    grid-gap: 10px;
+    margin-top: 200px;
+    margin-left: 300px;
+    justify-content: center;
+}
+
+.card {
+    width: 70px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    background-image: url("back-card.jpg");
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.card.flipped {
+    background-color: white;
+    background-image: none; /* 카드가 뒤집힐 때 배경 이미지 제거 */
+}
+/*
+.game-board {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.card {
+    width: 100px;
+    height: 150px;
+    margin: 10px;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 24px;
+}
+
+.card.flipped {
+    background-color: #fff;
+}
+*/
