@@ -26,10 +26,8 @@ export interface Customer {
   id: string;
   avatar: string;
   name: string;
-  email: string;
-  address: { city: string; state: string; country: string; street: string };
-  phone: string;
-  createdAt: Date;
+  fourPlay: number;
+  fourPlayWin: number;
 }
 
 interface CustomersTableProps {
@@ -57,46 +55,23 @@ export function CustomersTable({
   return (
     <Card>
       <Box sx={{ overflowX: 'auto' }}>
-        <Table sx={{ minWidth: '800px' }}>
+        <Table sx={{ minWidth: '400px' }}>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  checked={selectedAll}
-                  indeterminate={selectedSome}
-                  onChange={(event) => {
-                    if (event.target.checked) {
-                      selectAll();
-                    } else {
-                      deselectAll();
-                    }
-                  }}
-                />
-              </TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Signed Up</TableCell>
+              <TableCell align={"center"}>등수</TableCell>
+              <TableCell>별명</TableCell>
+              <TableCell>승률</TableCell>
+              <TableCell>승패</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows?.map((row) => {
+            {rows?.map((row, index) => {
               const isSelected = selected?.has(row.id);
 
               return (
                 <TableRow hover key={row.id} selected={isSelected}>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={isSelected}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          selectOne(row.id);
-                        } else {
-                          deselectOne(row.id);
-                        }
-                      }}
-                    />
+                  <TableCell align={"center"}>
+                    {index+4}등
                   </TableCell>
                   <TableCell>
                     <Stack sx={{ alignItems: 'center' }} direction="row" spacing={2}>
@@ -104,28 +79,15 @@ export function CustomersTable({
                       <Typography variant="subtitle2">{row.name}</Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell>{row.email}</TableCell>
-                  <TableCell>
-                    {row.address.city}, {row.address.state}, {row.address.country}
-                  </TableCell>
-                  <TableCell>{row.phone}</TableCell>
-                  <TableCell>{dayjs(row.createdAt).format('MMM D, YYYY')}</TableCell>
+                  <TableCell>{row.fourPlayWin / row.fourPlay * 100}%</TableCell>
+                  <TableCell>{row.fourPlayWin} / {row.fourPlay}</TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
       </Box>
-      <Divider />
-      <TablePagination
-        component="div"
-        count={count}
-        onPageChange={noop}
-        onRowsPerPageChange={noop}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        rowsPerPageOptions={[5, 10, 25]}
-      />
+
     </Card>
   );
 }

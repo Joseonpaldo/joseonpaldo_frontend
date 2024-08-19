@@ -10,9 +10,8 @@ function generateToken(): string {
 
 const user = {
   id: 'USR-000',
-  avatar: '/assets/avatar.png',
-  firstName: 'Sofia',
-  lastName: 'Rivers',
+  avatar: '/assets/avatar-1.png',
+  nickname: '민석이짱',
   email: 'sofia@devias.io',
 } satisfies User;
 

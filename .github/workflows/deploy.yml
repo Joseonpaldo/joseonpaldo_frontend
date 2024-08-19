@@ -11,6 +11,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        
+      - name: Get public IP address
+        id: get_ip
+        run: |
+          PUBLIC_IP=$(curl -s https://api.ipify.org)
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
 
       - name: Get Hash
         id: get_hash
@@ -49,10 +55,27 @@ jobs:
           push: true
           tags: ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
 
-      - name: SSH and deploy
+      - name: Set up Naver CLI
+        run: |
+          cd ~
+          curl -L https://www.ncloud.com/api/support/download/files/cli/CLI_1.1.20_20240620.zip -o CLI_1.1.20_20240620.zip
+          unzip CLI_1.1.20_20240620.zip
+          cd ./CLI_1.1.20_20240620/cli_linux
+          chmod +x ncloud
+          echo "${{ secrets.NAVER_ACESSKEY }}" > input.txt
+          echo "${{ secrets.NAVER_SECRETKEY }}" >> input.txt
+          echo "" >> input.txt
+          cat input.txt | ./ncloud configure
+      
+      - name: Add ACG rule for deploy server
+        run: |
+          cd ~/CLI_1.1.20_20240620/cli_linux
+          ./ncloud vserver addAccessControlGroupInboundRule --regionCode KR --vpcNo ${{ secrets.NAVER_VPC }} --accessControlGroupNo ${{ secrets.NAVER_ACG_NO }} --accessControlGroupRuleList "protocolTypeCode='TCP', ipBlock='${{ env.PUBLIC_IP }}/32', portRange='22'"
+
+      - name: SSH and deploy 001
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: ${{ secrets.SERVER_IP_001 }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
@@ -60,4 +83,27 @@ jobs:
             docker pull ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
             docker stop joseonpaldo-front || true
             docker rm joseonpaldo-front || true
-            docker run -d -p 80:3000 --name joseonpaldo-front ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
+            docker run -d -p 3000:3000 --name joseonpaldo-front ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
+            docker images --format '{{.Repository}}:{{.Tag}}' | grep joseonpaldo-react | grep -v "${{ env.COMMIT_HASH }}" | xargs -r docker rmi || true
+            
+      - name: Wait for 90sec
+        run: sleep 90
+
+      - name: SSH and deploy 002
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP_002 }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            docker login -u ${{ secrets.NAVER_ACESSKEY }} -p ${{ secrets.NAVER_SECRETKEY }} ${{ secrets.REGISTRY_URL }}
+            docker pull ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
+            docker stop joseonpaldo-front || true
+            docker rm joseonpaldo-front || true
+            docker run -d -p 3000:3000 --name joseonpaldo-front ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
+            docker images --format '{{.Repository}}:{{.Tag}}' | grep joseonpaldo-react | grep -v "${{ env.COMMIT_HASH }}" | xargs -r docker rmi || true
+      
+      - name: Remove ACG inbound rule created
+        run: |
+          cd ~/CLI_1.1.20_20240620/cli_linux
+          ./ncloud vserver removeAccessControlGroupInboundRule --regionCode KR --vpcNo ${{ secrets.NAVER_VPC }} --accessControlGroupNo ${{ secrets.NAVER_ACG_NO }} --accessControlGroupRuleList "protocolTypeCode='TCP', ipBlock='${{ env.PUBLIC_IP }}/32', portRange='22'"
