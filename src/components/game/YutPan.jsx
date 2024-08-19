@@ -209,7 +209,7 @@ function YutPan() {
     if (myPlayer === null) {
       return;
     }
-    const socket = new SockJS('http://localhost:8080/socket'); // WebSocket 서버 URL
+    const socket = new SockJS('/ws'); // WebSocket 서버 URL
     const stompClient = Stomp.over(socket);
     stompClient.connect({}, (frame) => {
       setClient(stompClient);
