@@ -260,12 +260,16 @@ function YutPan() {
     const socket = new SockJS('/ws/'); // WebSocket 서버 URL
     const stompClient = Stomp.over(socket);
     stompClient.connect({}, (frame) => {
+      const url = socket._transport.url; // socket._transport.url 값을 가져옵니다.
+      const parts = url.split('/'); // '/'로 문자열을 나눕니다.
+      const session = parts[parts.length - 2]; // 뒤에서 두 번째 값을 가져옵니다.
+
       setClient(stompClient);
       stompClient.send(
         `/app/main/join/${roomId}`,
         {
           name: myPlayer,
-          // sessionId :
+          sessionId : session,
         },
         JSON.stringify({message: "join"})
       );
@@ -283,6 +287,8 @@ function YutPan() {
             player3: JSON.parse(getPlayers.player3),
             player4: JSON.parse(getPlayers.player4)
           };
+
+          console.log(playerObjects);
 
           Object.values(playerObjects).forEach((player, index) => {
             updatePlayer("player" + (index + 1), {
