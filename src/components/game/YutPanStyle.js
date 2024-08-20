@@ -118,11 +118,12 @@ const cardStyle = {
   borderRadius: '8px',
   padding: '16px',
   display: 'flex',
-  justifyContent: 'space-between',
+  justifyContent: 'space-evenly',
   alignItems: 'center',
   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
   gap: '16px',
-  pointerEvents: "auto"
+  pointerEvents: "auto",
+  // scale : "0.7",
 };
 
 const rankStyle = {
