@@ -6,6 +6,7 @@ import {useEffect, useRef, useState} from "react";
 import useWindowSizeCustom from "../../hooks/useWindowSizeCustom.js";
 import {yutStates} from "./YutStates.js"
 import {useParams} from "next/navigation";
+import './animation.css'
 import {
   backStyle,
   cardStyle,
@@ -38,12 +39,52 @@ function YutPan() {
 
   const [myPlayer, setMyPlayer] = useState(null);
   const [myTurn, setMyTurn] = useState(false);
+  const [nowTurn, setNowTurn] = useState(null);
   const [lastStep, setLastStep] = useState(false);
 
   const [yutThrowImageSrc, setYutThrowImageSrc] = useState("/image/yut1.gif");
   const [yutThrowImageDisplay, setYutThrowImageDisplay] = useState("none");
   const [yutThrowAble, setYutThrowAble] = useState(false);
   const windowSizeCustom = useWindowSizeCustom();
+  const [panScale, setPanScale] = useState("1.5");
+
+  // 반응형
+  useEffect(() => {
+    if (windowSizeCustom.width > 1100 || windowSizeCustom.height > 770) {
+      setPanScale("1.5")
+    }
+    if (windowSizeCustom.width <= 1100 || windowSizeCustom.height <= 770) {
+      let scale = windowSizeCustom.width / 600
+      if (windowSizeCustom.width > windowSizeCustom.height) {
+        scale = windowSizeCustom.height / 600
+      }
+      setPanScale(scale.toFixed(2));
+    }
+    if (windowSizeCustom.width <= 600) {
+      yutPanRef.current.style.transform = "translate(-55%, -100%)";
+      playerCardBaseRefs.current.style.position = "absolute"
+      playerCardBaseRefs.current.style.bottom = "0px";
+      playerCardRefs.current.forEach(div => {
+        div.style.position = "";
+        div.style.flexDirection = "";
+        div.style.padding = "3px";
+        div.style.marginBottom = "3px";
+      })
+    } else {
+      yutPanRef.current.style.transform = "translate(-50%, -50%)";
+      playerCardBaseRefs.current.style.position = ""
+      playerCardBaseRefs.current.style.bottom = "";
+      playerCardRefs.current.forEach((div, index) => {
+        div.style.position = "absolute"
+        if (index === 1 || index === 2) {
+        div.style.flexDirection = "row-reverse";
+        }
+        div.style.padding = "16px";
+        div.style.marginBottom = "";
+      })
+    }
+  }, [windowSizeCustom]);
+
 
   const [BuyEstateOpen, setBuyEstateOpen] = useState(false);
   const [UpgradeEstateOpen, setUpgradeEstateOpen] = useState(false);
@@ -192,6 +233,9 @@ function YutPan() {
   // YutState에 ref를 할당
   const yutRefs = useRef([]);
   const yutIndexRefs = useRef([]);
+  const playerCardRefs = useRef([]);
+  const playerCardBaseRefs = useRef();
+  const yutPanRef = useRef();
 
   useEffect(() => {
     yutRefs.current = yutRefs.current.slice(0, yutStates.length);
@@ -199,6 +243,10 @@ function YutPan() {
 
   useEffect(() => {
     yutIndexRefs.current = yutIndexRefs.current.slice(0, yutStates.length);
+  }, []);
+
+  useEffect(() => {
+    playerCardRefs.current = playerCardRefs.current.slice(0, playerKeys.length);
   }, []);
 
 
@@ -277,6 +325,7 @@ function YutPan() {
                 break;
             }
             if (player.myTurn) {
+              setNowTurn(player.player);
               setMyTurn(false);
               if (myPlayer == ("player" + (index + 1))) {
                 setMyTurn(true);
@@ -322,10 +371,6 @@ function YutPan() {
   }, [myPlayer]);
 
   useEffect(() => {
-    console.log("resultArr.length :" + resultArr.length);
-    console.log("myTurn :" + myTurn);
-    console.log("lastStep :" + lastStep);
-
     if (resultArr.length === 0 && !yutThrowAble && myTurn && lastStep) {
       stepOnEvent(parseInt(players[myPlayer].index, 10))
     }
@@ -621,6 +666,24 @@ function YutPan() {
     paddingBottom: "30px",
   }
 
+
+  const nowTurnStyle = {
+    position: "absolute",
+    top: -20 + 250,
+    right: 42,
+    transform: "translate(-50%, -50%)",
+    width: 100,
+    height: 110,
+    justifyContent: "center",
+    border: "3px solid #9998",
+    borderRadius: "30%",
+    zIndex: 49,
+    paddingBottom: "30px",
+    display: "flex",
+    flexWrap: "wrap",
+    fontSize: "13px",
+  }
+
   const YutPanStyle = {
     position: "absolute",
     width: 500,
@@ -628,14 +691,14 @@ function YutPan() {
     top: `${windowSizeCustom.height / 2 + 30}px`,
     left: `${windowSizeCustom.width / 2 + 30}px`,
     transform: "translate(-50%, -50%)",
-    scale: "1.5",
+    scale: panScale,
     transformOrigin: "0px 0px",
   }
 
 
   return <div style={backStyle}>
 
-    <div style={YutPanStyle}>
+    <div style={YutPanStyle} ref={yutPanRef}>
       <div style={{
         position: "absolute",
         width: 500,
@@ -644,6 +707,12 @@ function YutPan() {
         <div style={YutFanBackGroundStyle}></div>
         <div style={YutThrowImageStyle}>
           <img src={yutThrowImageSrc} alt="윷 이미지" id="yutThrowImage"/>
+        </div>
+
+        <div style={nowTurnStyle}>
+          <span>현재 턴</span>
+          <img src={players[nowTurn]?.profile} alt={players[nowTurn]?.name} style={playerNumberStyle(players[nowTurn]?.color)}/>
+          <span>{players[nowTurn]?.name}</span>
         </div>
 
         <div className="YutThrowBtn"
@@ -663,7 +732,11 @@ function YutPan() {
               style={{width: 30, height: 30}}
               onClick={() => resultUseClick(item, index)}
             >
-              <img src={`/image/yutResult.${item}.0.png`} alt="결과" width="30"/>
+              <img src={`/image/yutResult.${item}.0.png`}
+                   alt="결과"
+                   width="30"
+                   className="box"
+                   />
             </div>
           ))}
         </div>
@@ -728,7 +801,7 @@ function YutPan() {
     <div style={containerStyle}>
 
 
-      <div>
+      <div style={{width: "100%"}} ref={playerCardBaseRefs}>
         {playerKeys.map((key, index) => {
           const player = players[key];
           const positionStyle = {
@@ -740,10 +813,13 @@ function YutPan() {
           };
 
           return (
-            <div key={key} style={positionStyle} onClick={() => {
-              setResultDelIndex(null);
-              setMyPlayer(player.player);
-            }}>
+            <div key={key}
+                 ref={(el) => (playerCardRefs.current[index] = el)} // ref 할당
+                 style={positionStyle}
+                 onClick={() => {
+                   setResultDelIndex(null);
+                   setMyPlayer(player.player);
+                 }}>
               <img src={player.avatar} alt={player.name} width={50}/>
               <img src={player.profile} alt={player.name} style={playerNumberStyle(player.color)}/>
               <div>

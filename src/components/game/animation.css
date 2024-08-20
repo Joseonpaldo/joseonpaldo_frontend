@@ -1,0 +1,15 @@
+@keyframes boxShadowAnimation {
+  0% {
+    box-shadow: 0px 0 13px 5px #ffef5600;
+  }
+  50% {
+    box-shadow: 0px 0 13px 5px #ffef56;
+  }
+  100% {
+    box-shadow: 0px 0 13px 5px #ffef5600;
+  }
+}
+
+.box {
+  animation: boxShadowAnimation 1s infinite; /* 애니메이션 설정 */
+}
