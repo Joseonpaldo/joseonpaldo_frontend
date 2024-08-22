@@ -7,6 +7,10 @@ const config = {
         source: '/ws/:path*',
         destination: 'http://localhost:8081/ws/:path*',
       },
+      {
+        source: '/nws/:path*',
+        destination: 'http://localhost:4000/nws/:path*',
+      },
     ]
   },
 };
