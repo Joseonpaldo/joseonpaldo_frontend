@@ -7,7 +7,7 @@ import Viewer from './components/viewer';
 import AlienShooter from './components/AlienShooter';
 import io from 'socket.io-client';
 
-const socket = io('/nws/');
+const socket = io('https://joseonpaldo.site/nws');
 
 const App = () => {
   const [role, setRole] = useState(null);
