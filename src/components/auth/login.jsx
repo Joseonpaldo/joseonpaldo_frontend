@@ -7,9 +7,31 @@ import FacebookIcon from "/src/app/auth/sign-in/FacebookIcon.tsx";
 
 
 export default function Login() {
-  const loginWithGoogle=()=>{
-    let url="https://accounts.google.com/o/oauth2/v2/auth?client_id=260386000062-33p7dl1aeq5oj4dnm59sp05gqfmp0r8f.apps.googleusercontent.com&redirect_uri=http://localhost:8080/auth/login/callback&response_type=code&scope=email profile"
-   window.location.href=url;
+  const redirectUri="http://localhost:8080/login/oauth2/code";
+  const googleClientId=process.env.GOOGLE_CLIENT_ID;
+  const kakaoRestApiKey=process.env.KAKAO_RESTAPI_KEY;
+  const naverClientId=process.env.NAVER_CLIENT_ID;
+  const state = Math.random().toString(36).substr(2);
+
+  let googleUrl=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}/google&response_type=code&scope=email profile&state=${state}`;
+  let kakaoUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${kakaoRestApiKey}/kakao&redirect_uri=${redirectUri}`;
+  let naverUrl=`https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}/naver&redirect_uri=${redirectUri}&state=${state}`;
+
+  const loginWithSocial=(social)=>{
+    switch (social){
+      case "google":{
+        window.location.href=googleUrl;
+        break
+      }
+      case "kakao":{
+        window.location.href=kakaoUrl;
+        break
+      }
+      case "naver":{
+        window.location.href=naverUrl;
+        break
+      }
+    }
   }
 
   return <FlexBox
@@ -35,18 +57,21 @@ export default function Login() {
 
       <FlexBox justifyContent="space-between" flexWrap="wrap" my="1rem">
         <SocialIconButton
-          onClick={loginWithGoogle}
+          onClick={()=>loginWithSocial("google")}
           startIcon={<GoogleIcon sx={{mr: 1}}/>}
         >
           Google
         </SocialIconButton>
         <SocialIconButton
-          // onClick={loginWithFacebook}
-          startIcon={<FacebookIcon sx={{mr: 1}}/>}
+          onClick={()=>loginWithSocial("kakao")}
         >
-          Facebook
+          Kakao
         </SocialIconButton>
-
+        <SocialIconButton
+          onClick={()=>loginWithSocial("naver")}
+        >
+          Naver
+        </SocialIconButton>
       </FlexBox>
     </Card>
   </FlexBox>
