@@ -5,9 +5,11 @@ import Game from './components/game';
 import AlienViewer from './components/AlienViewer';
 import Viewer from './components/viewer';
 import AlienShooter from './components/AlienShooter';
-import io from 'socket.io-client';
+import {io} from 'socket.io-client';
 
-const socket = io('/nws/');
+const socket = io('http://localhost:3000/nws/', {
+  path: '/socket.io/socket.io.js',
+});
 
 const App = () => {
   const [role, setRole] = useState(null);
@@ -22,7 +24,13 @@ const App = () => {
   useEffect(() => {
     socket.on('role', (assignedRole) => {
       console.log('Assigned role:', assignedRole);
+      console.log(socket);
       setRole(assignedRole);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.log(socket);
+      console.error('Connection Error:', err);
     });
 
     return () => {
