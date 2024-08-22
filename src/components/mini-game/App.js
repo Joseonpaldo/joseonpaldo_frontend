@@ -1,13 +1,13 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import Game from './components/Game';
+import Game from './components/game';
 import AlienViewer from './components/AlienViewer';
-import Viewer from './components/Viewer';
+import Viewer from './components/viewer';
 import AlienShooter from './components/AlienShooter';
 import io from 'socket.io-client';
 
-const socket = io('http://192.168.0.43:4000/nws');
+const socket = io('/nws/');
 
 const App = () => {
   const [role, setRole] = useState(null);
