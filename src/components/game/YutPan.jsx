@@ -61,11 +61,11 @@ function YutPan() {
       setPanScale(scale.toFixed(2));
     }
     if (windowSizeCustom.width <= 600) {
-      yutPanRef.current.style.transform = "translate(-55%, -100%)";
+      yutPanRef.current.style.transform = "translate(-50%, -100%)";
       playerCardBaseRefs.current.style.position = "absolute"
       playerCardBaseRefs.current.style.bottom = "0px";
       playerCardRefs.current.forEach(div => {
-        div.style.position = "";
+        div.style.position = "relative";
         div.style.flexDirection = "";
         div.style.padding = "3px";
         div.style.marginBottom = "3px";
@@ -109,7 +109,8 @@ function YutPan() {
       rank: "1st",
       avatar: "/image/character/bear.png",
       profile: "/assets/avatar-1.png",
-      estate: []
+      estate: [],
+      connected: false,
     },
     player2: {
       player: "player2",
@@ -123,7 +124,8 @@ function YutPan() {
       rank: "1st",
       avatar: "/image/character/dragon.png",
       profile: "/assets/avatar-2.png",
-      estate: []
+      estate: [],
+      connected: false,
     },
     player3: {
       player: "player3",
@@ -137,7 +139,8 @@ function YutPan() {
       rank: "1st",
       avatar: "/image/character/monkey.png",
       profile: "/assets/avatar-3.png",
-      estate: []
+      estate: [],
+      connected: false,
     },
     player4: {
       player: "player4",
@@ -151,7 +154,8 @@ function YutPan() {
       rank: "1st",
       avatar: "/image/character/rabbit.png",
       profile: "/assets/avatar-4.png",
-      estate: []
+      estate: [],
+      connected: false,
     },
   });
 
@@ -191,6 +195,22 @@ function YutPan() {
     players.player2.index,
     players.player3.index,
     players.player4.index
+  ]);
+
+  useEffect(() => {
+    console.log(players)
+    Object.values(players).forEach((player, index) => {
+      if (player.connected){
+        playerConnectedRefs.current[index].style.display = "none"
+      }else {
+        playerConnectedRefs.current[index].style.display = "flex"
+      }
+    });
+  }, [
+    players.player1.connected,
+    players.player2.connected,
+    players.player3.connected,
+    players.player4.connected
   ]);
 
 
@@ -236,6 +256,7 @@ function YutPan() {
   const playerCardRefs = useRef([]);
   const playerCardBaseRefs = useRef();
   const yutPanRef = useRef();
+  const playerConnectedRefs = useRef([]);
 
   useEffect(() => {
     yutRefs.current = yutRefs.current.slice(0, yutStates.length);
@@ -249,6 +270,12 @@ function YutPan() {
     playerCardRefs.current = playerCardRefs.current.slice(0, playerKeys.length);
   }, []);
 
+  useEffect(() => {
+    playerConnectedRefs.current = playerConnectedRefs.current.slice(0, playerKeys.length);
+  }, []);
+
+
+
 
   const {roomId} = useParams();
 
@@ -260,12 +287,16 @@ function YutPan() {
     const socket = new SockJS('/ws/'); // WebSocket 서버 URL
     const stompClient = Stomp.over(socket);
     stompClient.connect({}, (frame) => {
+      const url = socket._transport.url; // socket._transport.url 값을 가져옵니다.
+      const parts = url.split('/'); // '/'로 문자열을 나눕니다.
+      const session = parts[parts.length - 2]; // 뒤에서 두 번째 값을 가져옵니다.
+
       setClient(stompClient);
       stompClient.send(
         `/app/main/join/${roomId}`,
         {
           name: myPlayer,
-          // sessionId :
+          sessionId : session,
         },
         JSON.stringify({message: "join"})
       );
@@ -283,6 +314,8 @@ function YutPan() {
             player3: JSON.parse(getPlayers.player3),
             player4: JSON.parse(getPlayers.player4)
           };
+
+          console.log(playerObjects);
 
           Object.values(playerObjects).forEach((player, index) => {
             updatePlayer("player" + (index + 1), {
@@ -330,6 +363,15 @@ function YutPan() {
               if (myPlayer == ("player" + (index + 1))) {
                 setMyTurn(true);
               }
+            }
+            if (player.SessionId === undefined || player.SessionId === ""){
+              updatePlayer("player" + (index + 1), {
+                connected: false
+              });
+            }else {
+              updatePlayer("player" + (index + 1), {
+                connected: true
+              });
             }
           });
         } else if (message.type === "getResult") {
@@ -686,10 +728,12 @@ function YutPan() {
 
   const YutPanStyle = {
     position: "absolute",
-    width: 500,
-    height: 500,
-    top: `${windowSizeCustom.height / 2 + 30}px`,
-    left: `${windowSizeCustom.width / 2 + 30}px`,
+    // width: 500,
+    width: 457,
+    // height: 500,
+    height: 459,
+    top: `${windowSizeCustom.height / 2}px`,
+    left: `${windowSizeCustom.width / 2}px`,
     transform: "translate(-50%, -50%)",
     scale: panScale,
     transformOrigin: "0px 0px",
@@ -829,6 +873,22 @@ function YutPan() {
               <div style={rankStyle}>
                 <span>{player.rank}</span>
               </div>
+              <div
+                ref={(el) => (playerConnectedRefs.current[index] = el)} // ref 할당
+                style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "rgba(0,0,0,0.5)",
+                fontSize: "24px",
+                borderRadius: '8px',
+                color: "#ff0000",
+                fontWeight: "900",
+                pointerEvents: "none",
+              }}>접속 끊김</div>
             </div>
           );
         })}
