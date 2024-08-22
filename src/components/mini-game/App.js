@@ -1,9 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import Game from './components/Game';
+import Game from './components/game';
 import AlienViewer from './components/AlienViewer';
-import Viewer from './components/Viewer';
+import Viewer from './components/viewer';
 import AlienShooter from './components/AlienShooter';
 import io from 'socket.io-client';
 

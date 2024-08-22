@@ -33,7 +33,6 @@ import {
 } from "./yutPanFunction"
 import {Stomp} from "@stomp/stompjs";
 import SockJS from 'sockjs-client';
-import App from "@/components/mini-game/App";
 
 
 function YutPan() {
