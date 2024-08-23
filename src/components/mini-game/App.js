@@ -5,10 +5,11 @@ import Game from './components/game';
 import AlienViewer from './components/AlienViewer';
 import Viewer from './components/viewer';
 import AlienShooter from './components/AlienShooter';
-import {io} from 'socket.io-client';
+import io from 'socket.io-client';
 
-const socket = io('http://localhost:3000/nws/', {
-  path: '/socket.io/socket.io.js',
+const socket = io('https://joseonpaldo.site/nws/', {
+  // credentials: true,
+  // path: '/nws/',
 });
 
 const App = () => {

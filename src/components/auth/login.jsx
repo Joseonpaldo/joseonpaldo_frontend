@@ -1,12 +1,22 @@
 "use client"; // 추가
 
-import {Box, Button, Card, Divider, FormControlLabel, FormHelperText, styled, Switch,} from "@mui/material";
+import {Box, Button, Card, styled,} from "@mui/material";
 import FlexBox from "/src/components/FlexBox";
 import GoogleIcon from "/src/app/auth/sign-in/GoogleIcon.tsx";
-import FacebookIcon from "/src/app/auth/sign-in/FacebookIcon.tsx";
+import KakaoIcon from "/src/app/auth/sign-in/KakaoIcon.tsx";
+import NaverIcon from "@/app/auth/sign-in/NaverIcon";
 
 
 export default function Login() {
+  const loginWithGoogle = () => {
+    location.href = "/api/login/oauth2/google"
+  }
+  const loginWithNaver = () => {
+    location.href = "/api/login/oauth2/naver"
+  }
+  const loginWithKakao = () => {
+    location.href = "/api/login/oauth2/kakao"
+  }
 
   return <FlexBox
     sx={{
@@ -16,12 +26,14 @@ export default function Login() {
       height: {sm: "100%"},
     }}
   >
-    <Card sx={{padding: 4, maxWidth: 500, boxShadow: 1, minWidth: 500,}}>
+    <Card sx={{
+      padding: 4, boxShadow: 1, width: "400px",
+    }}>
       <FlexBox
         alignItems="center"
         flexDirection="column"
         justifyContent="center"
-        mb={5}
+        mb={2}
       >
         <Box width={50}>
           <img src="/static/logo/logo.png" width="100%" alt="Uko Logo"/>
@@ -29,18 +41,26 @@ export default function Login() {
         <h1>조선팔도</h1>
       </FlexBox>
 
-      <FlexBox justifyContent="space-between" flexWrap="wrap" my="1rem">
+      <FlexBox alignItems="center" flexDirection="column" gap={2}>
         <SocialIconButton
-          // onClick={loginWithGoogle}
+          onClick={loginWithGoogle}
           startIcon={<GoogleIcon sx={{mr: 1}}/>}
         >
           Google
         </SocialIconButton>
+
         <SocialIconButton
-          // onClick={loginWithFacebook}
-          startIcon={<FacebookIcon sx={{mr: 1}}/>}
+          onClick={loginWithNaver}
+          startIcon={<NaverIcon sx={{mr: 1}}/>}
         >
-          Facebook
+          NAVER
+        </SocialIconButton>
+
+        <SocialIconButton
+          onClick={loginWithKakao}
+          startIcon={<KakaoIcon sx={{mr: 1}}/>}
+        >
+          Kakao
         </SocialIconButton>
 
       </FlexBox>
@@ -49,11 +69,11 @@ export default function Login() {
 }
 
 export const SocialIconButton = styled(Button)(({theme}) => ({
-  width: "48%",
+  width: "70%",
   height: 48,
   fontSize: 13,
   borderRadius: "6px",
-  border: "2px solid #E5EAF2",
+  border: "1.5px solid #E5EAF2",
   borderColor:
     theme.palette.mode === "light"
       ? theme.palette.text.secondary

@@ -11,6 +11,10 @@ const config = {
         source: '/nws/:path*',
         destination: 'http://localhost:4000/nws/:path*',
       },
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8080/api/:path*',
+      },
     ]
   },
 };

@@ -6,8 +6,8 @@ import Typography from '@mui/material/Typography';
 import dayjs from 'dayjs';
 
 import {config} from '@/config';
-import type {Customer} from '@/components/dashboard/customer/customers-table';
-import {CustomersTable} from '@/components/dashboard/customer/customers-table';
+import type {Customer} from '@/components/dashboard/ranking/customers-table';
+import {CustomersTable} from '@/components/dashboard/ranking/customers-table';
 import Grid from "@mui/material/Unstable_Grid2";
 import Winner from "@/components/rank/Winner";
 
