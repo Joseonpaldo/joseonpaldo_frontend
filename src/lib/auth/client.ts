@@ -35,10 +35,10 @@ export interface ResetPasswordParams {
   email: string;
 }
 
-async function getUser(id) {
-  const response = await fetch(`/api/user?user_id=${id}`);
-  return response.json();
-}
+// async function getUser(id) {
+//   const response = await fetch(`/api/user?user_id=${id}`);
+//   return response.json();
+// }
 
 class AuthClient {
 
