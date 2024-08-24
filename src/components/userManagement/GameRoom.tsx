@@ -7,14 +7,14 @@ import {FC, useState} from "react";
 import AddNewUser from "./AddNewUser";
 
 // styled component
-const StyledFlexBox = styled(FlexBox)(({ theme }) => ({
+const StyledFlexBox = styled(FlexBox)(({theme}) => ({
   justifyContent: "space-between",
   alignItems: "center",
   flexWrap: "wrap",
   marginBottom: 20,
   [theme.breakpoints.down(500)]: {
     width: "100%",
-    "& .MuiInputBase-root": { maxWidth: "100%" },
+    "& .MuiInputBase-root": {maxWidth: "100%"},
     "& .MuiButton-root": {
       width: "100%",
       marginTop: 15,
@@ -35,6 +35,7 @@ const GameRoom: FC = () => {
     setOpen(false);
   };
 
+
   return (
     <Box pb={4}>
       <StyledFlexBox>
@@ -46,17 +47,17 @@ const GameRoom: FC = () => {
       <Grid container spacing={3}>
         {userList.map((user, index) => (
           <Grid item md={4} sm={6} xs={12} key={index}>
-            <UserCard user={user} />
+            <UserCard user={user}/>
           </Grid>
         ))}
       </Grid>
       <Dialog
-          fullWidth={true}
-          maxWidth={"sm"}
-          open={open}
-          onClose={handleClose}
+        fullWidth={true}
+        maxWidth={"sm"}
+        open={open}
+        onClose={handleClose}
       >
-        <DialogTitle sx={{fontSize:"21px", padding: "20px 30px 0"}}>방 만들기</DialogTitle>
+        <DialogTitle sx={{fontSize: "21px", padding: "20px 30px 0"}}>방 만들기</DialogTitle>
         <DialogContent sx={{padding: 0}}>
           <AddNewUser/>
         </DialogContent>

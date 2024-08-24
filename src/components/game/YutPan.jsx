@@ -499,21 +499,26 @@ function YutPan() {
       case 41:
       case 45:
         console.log("미니게임~");
+        passTurn();
         break;
 
       case 0:
+        passTurn();
         break;
 
       case 6:
       case 100:
+        passTurn();
         console.log("뭐함");
         break;
 
       case 12:
+        passTurn();
         console.log("KTX");
         break;
 
       case 18:
+        passTurn();
         console.log("탐라국 ㅋㅋ");
         break;
 
@@ -785,8 +790,8 @@ function YutPan() {
           ))}
         </div>
 
-        <div style={{fontSize: "20px", position: "absolute"}} onClick={oneMore}>한번더</div>
-        <div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={passTurn}>pass turn</div>
+        {/*<div style={{fontSize: "20px", position: "absolute"}} onClick={oneMore}>한번더</div>*/}
+        {/*<div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={passTurn}>pass turn</div>*/}
 
 
         {Object.keys(players).map((key, index) => {

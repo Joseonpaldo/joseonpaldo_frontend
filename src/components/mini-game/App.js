@@ -22,7 +22,13 @@ const App = () => {
   useEffect(() => {
     socket.on('role', (assignedRole) => {
       console.log('Assigned role:', assignedRole);
+      console.log(socket);
       setRole(assignedRole);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.log(socket);
+      console.error('Connection Error:', err);
     });
 
     return () => {
