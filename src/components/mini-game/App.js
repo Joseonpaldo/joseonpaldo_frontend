@@ -7,11 +7,11 @@ import Viewer from './components/viewer';
 import AlienShooter from './components/AlienShooter';
 import io from 'socket.io-client';
 
-const socket = io('https://joseonpaldo.site/nws');
+const socket = io('https://joseonpaldo.site/nws/');
 
 const App = () => {
   const [role, setRole] = useState(null);
-  const [gameType, setGameType] = useState(null);
+  const [gameType, setGameType] = useState("platformer");
 
   useEffect(() => {
     if (gameType) {
