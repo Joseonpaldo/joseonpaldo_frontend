@@ -17,6 +17,7 @@ export default function Page(): React.JSX.Element {
     <Stack spacing={3}>
       <YutPan/>
       {/*<ChatComponent/>*/}
+{/*       <Lobby/> */}
 
     </Stack>
   );

@@ -5,8 +5,9 @@ import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './Lobby.css';
 import dynamic from 'next/dynamic';
-import YutPan from "@/components/game/YutPan";
 import Modal from "@/components/game/Modal";
+import Button from "@mui/material/Button";
+import InviteModal from "@/components/game/InviteModal";
 
 const characters = [
   { id: 1, src: '/image/character/bear.png', alt: 'Character 1' },
@@ -53,6 +54,8 @@ const Lobby = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [visibleOptions, setVisibleOptions] = useState({});
   const [showYutPan, setShowYutPan] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false); // InviteModal 상태 관리
+
 
   //모달
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,6 +69,13 @@ const Lobby = () => {
     window.close();  // 모달이 닫히면 창을 닫음
   };
 
+  const handleInviteClick = () => {
+    setIsInviteModalOpen(true); // 초대하기 모달을 열기
+  };
+
+  const handleCloseInviteModal = () => {
+    setIsInviteModalOpen(false); // 초대하기 모달을 닫기
+  };
 
   const onMessageReceived = (message) => {
     if (message.type === 'JOIN') {
@@ -396,10 +406,14 @@ const Lobby = () => {
     }
   }, [order, players.length]);
 
+
+
+
   return (
     <div className="backStyle">
 
       <Modal open={isModalOpen} onClose={handleCloseModal} />
+      <InviteModal open={isInviteModalOpen} onClose={handleCloseInviteModal} /> {/* 초대하기 모달 렌더링 */}
 
       {!showRace && (
         <>
@@ -422,59 +436,72 @@ const Lobby = () => {
             </h1>
           </div>
 
-          {players.length > 0 && (
-            <div className="formStyle">
-              {players.map((player, index) => (
+          <div className="formStyle">
+            {[...Array(4)].map((_, index) => {
+              const player = players[index];
+              return (
                 <div className="cardStyle" key={index}>
-                  <div className="player-info">
-                    <h2>{player.name}</h2>
-                    <div className="options-container">
-                      <button
-                        onClick={() => handleButtonClick(player.name)}
-                        className="show-options-button"
-                        style={{backgroundColor: 'skyblue'}}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                             className="bi bi-three-dots" viewBox="0 0 16 16">
-                          <path
-                            d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
-                        </svg>
-                      </button>
-                      {visibleOptions[player.name] && (
-                        <div className="options-menu">
-                          <button onClick={() => handleOptionClick('Option 1')} style={{backgroundColor: 'skyblue'}}>
-                            정보
-                          </button>
-                          <button onClick={() => handleOptionClick('Option 2')} style={{backgroundColor: 'skyblue'}}>
-                            친구추가
-                          </button>
+                  {player ? (
+                    <>
+                      <div className="player-info">
+                        <h2>{player.name}</h2>
+                        <div className="options-container">
+                          <Button
+                            onClick={() => handleButtonClick(player.name)}
+                            className="show-options-button"
+                            style={{backgroundColor: '#e1b389'}}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+                                 className="bi bi-three-dots" viewBox="0 0 16 16">
+                              <path
+                                d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                            </svg>
+                          </Button>
+                          {visibleOptions[player.name] && (
+                            <div className="options-menu">
+                              <button onClick={() => handleOptionClick('Option 1')} style={{backgroundColor: '#f1e7e0'}}>
+                                정보
+                              </button>
+                              <button onClick={() => handleOptionClick('Option 2')} style={{backgroundColor: '#f1e7e0'}}>
+                                친구추가
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="player-container" style={{position: 'relative'}}>
-                    <img src={player.characterSrc} alt={player.name}/>
-                    {balloons[player.name] && (
-                      <div className={`balloon ${balloons[player.name] ? 'show' : ''}`}>
-                        {balloons[player.name]}
                       </div>
-                    )}
-                  </div>
-                  {index !== 0 && (
-                    <button
+
+                      <div className="player-container" style={{position: 'relative'}}>
+                        <img src={player.characterSrc} alt={player.name}/>
+                        {balloons[player.name] && (
+                          <div className={`balloon ${balloons[player.name] ? 'show' : ''}`}>
+                            {balloons[player.name]}
+                          </div>
+                        )}
+                      </div>
+                      {index !== 0 && (
+                        <Button
+                          type="button"
+                          onClick={() => handleReadyClick(player)}
+                          className={!showOptions ? '' : 'hidden'}
+                        >
+                          {player.ready ? '준비완료' : '준비'}
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <Button
                       type="button"
-                      onClick={() => handleReadyClick(player)}
-                      className={!showOptions ? '' : 'hidden'}
+                      onClick={handleInviteClick} // 초대하기 버튼 클릭시 모달 오픈
+                      className="invite-button"
+                      style={{backgroundColor: '#e1b389', marginTop:'100px'}}
                     >
-                      {player.ready ? '준비완료' : '준비'}
-                    </button>
+                      초대하기
+                    </Button>
                   )}
                 </div>
-
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
 
           <div className="chatContainer">
             <div className="chatMessages" ref={chatMessagesRef}>
