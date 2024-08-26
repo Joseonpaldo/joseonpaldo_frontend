@@ -4,6 +4,10 @@ const config = {
   async rewrites() {
     return [
       {
+        source: '/api/:path*',
+        destination: 'http://localhost:8080/api/:path*',
+      },
+      {
         source: '/ws/:path*',
         destination: 'http://localhost:8081/ws/:path*',
       },
@@ -12,8 +16,8 @@ const config = {
         destination: 'http://localhost:4000/nws/:path*',
       },
       {
-        source: '/api/:path*',
-        destination: 'http://localhost:8080/api/:path*',
+        source: '/socket.io/:path*',
+        destination: 'http://localhost:4000/socket.io/:path*',
       },
     ]
   },
