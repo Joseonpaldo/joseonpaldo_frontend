@@ -15,9 +15,9 @@ export const metadata = { title: `In Game | ${config.site.name}` } satisfies Met
 export default function Page(): React.JSX.Element {
   return (
     <Stack spacing={3}>
-      {/*<YutPan/>*/}
+      <YutPan/>
       {/*<ChatComponent/>*/}
-      <Lobby/>
+{/*       <Lobby/> */}
 
     </Stack>
   );
