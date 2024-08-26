@@ -32,6 +32,7 @@
     "@phosphor-icons/react": "2.1.6",
     "@stomp/stompjs": "^7.0.0",
     "apexcharts": "3.49.2",
+    "axios": "^1.7.5",
     "clsx": "^2.1.1",
     "dayjs": "1.11.11",
     "emoji-picker-react": "^4.11.1",
