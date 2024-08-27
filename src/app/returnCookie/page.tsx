@@ -9,13 +9,7 @@ export default function Page(): React.JSX.Element {
   useEffect(() => {
     const cookies = document.cookie.split('; ');
     const accessToken = cookies.find(cookie => cookie.startsWith('accessToken='));
-
-    if (accessToken) {
-      const tokenValue = accessToken.split('=')[1];
-      localStorage.setItem('custom-auth-token', tokenValue);
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + tokenValue;
-
-      // 사용자 데이터 요청
+    const getUserData = () => {
       axios.get('api/user/data')
         .then(response => {
           console.log('User Data:', response.data);
@@ -23,12 +17,21 @@ export default function Page(): React.JSX.Element {
         })
         .catch(error => {
           console.error('Error fetching user data:', error);
-        });
+      });
+    }
+
+    if (accessToken) {
+      const tokenValue = accessToken.split('=')[1];
+      localStorage.setItem('custom-auth-token', tokenValue);
+      axios.defaults.headers.common['Authorization'] = 'Bearer ' + tokenValue;
+
+      // 사용자 데이터 요청
+      getUserData();
     }
     location.href = '/';
 
   }, []);
-
+  
   return (
     <div></div>
   );
