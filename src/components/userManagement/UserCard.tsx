@@ -51,7 +51,7 @@ const StyledAvatar = styled(Avatar)(({theme}) => ({
 const UserCard: FC<UserCardProps> = ({user}) => {
     return (
         <Card onClick={() => {
-            window.open(`/game/${user.roomCode}`, '_blank')
+            window.open(`/lobby/${user.roomCode}`, '_blank')
         }}>
             <ImageWrapper>
               <Typography sx={{

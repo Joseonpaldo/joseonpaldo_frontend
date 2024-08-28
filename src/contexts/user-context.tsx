@@ -32,7 +32,8 @@ export function UserProvider({ children }: UserProviderProps): React.JSX.Element
 
       if (error) {
         logger.error(error);
-        setState((prev) => ({ ...prev, user: null, error: 'Something went wrong', isLoading: false }));
+        setState((prev) => ({ ...prev, user: null, error: error, isLoading: false }));
+        await authClient.signOut();
         return;
       }
 
@@ -40,6 +41,7 @@ export function UserProvider({ children }: UserProviderProps): React.JSX.Element
     } catch (err) {
       logger.error(err);
       setState((prev) => ({ ...prev, user: null, error: 'Something went wrong', isLoading: false }));
+      await authClient.signOut();
     }
   }, []);
 
