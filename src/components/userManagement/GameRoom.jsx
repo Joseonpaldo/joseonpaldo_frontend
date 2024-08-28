@@ -5,7 +5,7 @@ import FlexBox from "../FlexBox";
 import UserCard from "./UserCard";
 import { useState, useEffect } from "react";
 import AddNewUser from "./AddNewUser";
-import axios from "axios";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 // styled component
 const StyledFlexBox = styled(FlexBox)(({ theme }) => ({
@@ -36,7 +36,7 @@ const GameRoom = () => {
   };
 
   useEffect(() => {
-    axios.get('/api/game/room/ready')
+    apiAxiosInstance.get('/game/room/ready')
       .then(response => {
         const data = response.data; // 응답 데이터 가져오기
         console.log('게임방 데이터:', data);

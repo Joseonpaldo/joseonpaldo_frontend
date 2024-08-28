@@ -8,11 +8,12 @@ import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 async function getUserData(jwt) {
   try {
-    const response = await axios.get(`/api/user/${jwt}`);
+    const response = await apiAxiosInstance.get(`/user/${jwt}`);
+    console.log(response);
     return response.data; // 응답 데이터 반환
   } catch (error) {
     console.error('사용자 데이터를 가져오는 중 오류 발생:', error);
@@ -25,7 +26,7 @@ export default function AccountInfo() {
 
   useEffect(() => {
     const jwt = localStorage.getItem('custom-auth-token');
-    if (jwt) {
+    if (jwt !== null) {
       getUserData(jwt)
         .then(data => setUserData(data))
         .catch(error => console.error('사용자 데이터 로드 실패:', error));

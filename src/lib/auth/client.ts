@@ -1,5 +1,5 @@
 import type {User} from '@/types/user';
-import axios from "axios";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 
 const user = {
@@ -20,7 +20,8 @@ async function getUserData() {
   if (jwt == null){
     return null;
   }
-  const response = await axios.get(`/api/user/${jwt}`);
+  const response = await apiAxiosInstance.get(`/user/${jwt}`);
+  console.log(response);
   return response.data; // 응답 데이터 반환
 }
 
