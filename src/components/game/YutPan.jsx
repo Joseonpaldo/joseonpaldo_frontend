@@ -283,7 +283,11 @@ function YutPan() {
     let token = localStorage.getItem("custom-auth-token");
     try {
       const response = await apiAxiosInstance.get(`/game/data/player?roomName=${roomId}&jwt=${token}`);
-      setMyPlayer("player" + response.data);
+      if (response.status === 200 && response.data !== null) {
+        setMyPlayer("player" + response.data);
+      } else{
+        setMyPlayer("player")
+      }
     } catch (error) {
       console.error('Error creating game room:', error);
     }

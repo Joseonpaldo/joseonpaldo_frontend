@@ -11,11 +11,13 @@ import {useRouter} from "next/navigation";
 export const metadata = { title: `놀이방 | ${config.site.name}` } satisfies Metadata;
 
 export default function Page(): React.JSX.Element {
+  const handleClickOpen = () => {
+    location.href = '/game-room'
+  }
 
   return (
     <Stack spacing={3}>
       <Typography variant="h4">놀이방</Typography>
-
       {/*<div>*/}
       {/*  <Typography variant="h4">Settings</Typography>*/}
       {/*</div>*/}
