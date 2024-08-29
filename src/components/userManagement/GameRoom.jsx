@@ -6,6 +6,7 @@ import UserCard from "./UserCard";
 import { useState, useEffect } from "react";
 import AddNewUser from "./AddNewUser";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
+import {usePathname} from "next/navigation";
 
 // styled component
 const StyledFlexBox = styled(FlexBox)(({ theme }) => ({
@@ -23,9 +24,22 @@ const StyledFlexBox = styled(FlexBox)(({ theme }) => ({
   },
 }));
 
+
+
 const GameRoom = () => {
   const [open, setOpen] = useState(false);
   const [userList, setUserList] = useState([]);
+  const [apiURL, setApiURL] = useState(null);
+
+  const path = usePathname();
+// 경로가 변경될 때 apiURL을 업데이트
+  useEffect(() => {
+    if (path === "/start-game-room") {
+      setApiURL('/game/room/start');
+    } else {
+      setApiURL('/game/room/ready');
+    }
+  }, [path]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -36,7 +50,8 @@ const GameRoom = () => {
   };
 
   useEffect(() => {
-    apiAxiosInstance.get('/game/room/ready')
+    if (apiURL === null) return;
+    apiAxiosInstance.get(apiURL)
       .then(response => {
         const data = response.data; // 응답 데이터 가져오기
         console.log('게임방 데이터:', data);
@@ -56,14 +71,17 @@ const GameRoom = () => {
       .catch(error => {
         console.error('문제가 발생했습니다:', error);
       });
-  }, []);
+  }, [apiURL]);
 
   return (
     <Box pb={4}>
       <StyledFlexBox>
-        <Button fullWidth={true} variant="contained" onClick={handleClickOpen}>
-          방 만들기
-        </Button>
+        {/* path가 "/start-game-room"이 아닐 때만 버튼을 표시 */}
+        {path !== "/start-game-room" && (
+          <Button fullWidth={true} variant="contained" onClick={handleClickOpen}>
+            방 만들기
+          </Button>
+        )}
       </StyledFlexBox>
 
       <Grid container spacing={3}>

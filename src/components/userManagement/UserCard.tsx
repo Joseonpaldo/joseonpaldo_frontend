@@ -1,8 +1,9 @@
 import {Box, Card, Divider, Grid, styled} from "@mui/material";
 import {H3, H5, Small, Tiny} from "../Typography";
-import React, {FC} from "react";
+import React, {FC, useEffect, useState} from "react";
 import Avatar from "@mui/material/Avatar";
 import Typography from "@mui/material/Typography";
+import {usePathname} from "next/navigation";
 
 // component props interface
 interface UserCardProps {
@@ -49,9 +50,21 @@ const StyledAvatar = styled(Avatar)(({theme}) => ({
 
 
 const UserCard: FC<UserCardProps> = ({user}) => {
+  const [goURL, setGoURL] = useState('');
+
+  const path = usePathname();
+// 경로가 변경될 때 apiURL을 업데이트
+  useEffect(() => {
+    if (path === "/start-game-room") {
+      setGoURL('/game/');
+    } else {
+      setGoURL('/lobby/');
+    }
+  }, [path]);
+
     return (
         <Card onClick={() => {
-            window.open(`/lobby/${user.roomCode}`, '_blank')
+            window.open(`${goURL}${user.roomCode}`, '_blank')
         }}>
             <ImageWrapper>
               <Typography sx={{
