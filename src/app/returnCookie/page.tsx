@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import {useEffect} from "react";
-import axios from "axios";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 
 export default function Page(): React.JSX.Element {
@@ -10,7 +10,7 @@ export default function Page(): React.JSX.Element {
     const cookies = document.cookie.split('; ');
     const accessToken = cookies.find(cookie => cookie.startsWith('accessToken='));
     const getUserData = () => {
-      axios.get('api/user/data')
+      apiAxiosInstance.get('/user/data')
         .then(response => {
           console.log('User Data:', response.data);
           // 여기서 추가적인 데이터 처리 로직을 구현할 수 있습니다.
@@ -23,7 +23,6 @@ export default function Page(): React.JSX.Element {
     if (accessToken) {
       const tokenValue = accessToken.split('=')[1];
       localStorage.setItem('custom-auth-token', tokenValue);
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + tokenValue;
 
       // 사용자 데이터 요청
       getUserData();
@@ -31,7 +30,7 @@ export default function Page(): React.JSX.Element {
     location.href = '/';
 
   }, []);
-  
+
   return (
     <div></div>
   );

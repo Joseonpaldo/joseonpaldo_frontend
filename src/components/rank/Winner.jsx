@@ -1,4 +1,8 @@
+"use client"
+
+
 import * as React from "react";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 export default function Winner() {
 
@@ -62,6 +66,18 @@ export default function Winner() {
       fourPlayWin: 12
     },
   ];
+
+
+  async function getTop3User() {
+    try {
+      // const response = await apiAxiosInstance.get(`/rank/top3`);
+      return response.data; // 응답 데이터 반환
+    } catch (error) {
+      console.error('사용자 데이터를 가져오는 중 오류 발생:', error);
+      throw error; // 오류를 다시 던져서 호출자에게 알림
+    }
+  }
+
 
   return <div style={containerStyle}>
     <div style={{...cardStyle}}>

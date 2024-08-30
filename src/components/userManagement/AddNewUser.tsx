@@ -5,7 +5,7 @@ import React, {FC} from "react";
 import * as Yup from "yup";
 import LightSelect from "../../components/LightSelect";
 import {Box} from "@mui/system";
-import axios from "axios";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 // styled components
 
@@ -30,7 +30,7 @@ const AddNewUser: FC = () => {
     onSubmit: async () => {
       let token = localStorage.getItem("custom-auth-token");
       try {
-        const response = await axios.post(`/api/game/room`, null, {
+        const response = await apiAxiosInstance.post(`/game/room`, null, {
           params: {
             roomName: values.roomName,
             budget: values.startBudget,
