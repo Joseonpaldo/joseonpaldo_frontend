@@ -307,15 +307,6 @@ function YutPan() {
 
       setClient(stompClient);
 
-      stompClient.send(
-        `/app/main/join/${roomId}`,
-        {
-          name: myPlayer,
-          sessionId: session,
-        },
-        JSON.stringify({message: "join"})
-      );
-
 
       // 플레이어 정보 가져오기
       stompClient.subscribe(`/topic/main-game/${roomId}`, (msg) => {
@@ -419,12 +410,24 @@ function YutPan() {
           if (JSON.parse(message.message)) {
             setYutThrowAble(true);
           }
-        } else {
+        } else if (message.type === "error") {
+          console.log(JSON.parse(message.message));
+        }  else {
           console.log("error : " + JSON.parse(message.message).toString());
         }
 
       });
 
+
+
+      stompClient.send(
+        `/app/main/join/${roomId}`,
+        {
+          name: myPlayer,
+          sessionId: session,
+        },
+        JSON.stringify({message: "join"})
+      );
 
     });
   }, [myPlayer]);
