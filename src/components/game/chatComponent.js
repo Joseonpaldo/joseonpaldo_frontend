@@ -17,6 +17,8 @@ export default function ChatComponent() {
   const chattingBaseRef = useRef(null);
   const chattingIconRef = useRef(null);
 
+  const chatAreaRef = useRef(null);
+
 
   const inputSend2 = () => {
     const inputElement = inputRef.current?.querySelector("input");
@@ -78,6 +80,71 @@ export default function ChatComponent() {
     borderRadius: "20%",
   }
 
+  const OpponentChatLog = ({profile, nickname, chat, index}) => {
+    return (
+      <div style={{display: 'flex', alignItems: 'flex-start', gap: '12px'}} key={`opponentChatLog${index}`}>
+        <Box
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            backgroundColor: colors.brown["300"],
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
+          <img src={profile} alt={nickname} width="100%"/>
+        </Box>
+        <div style={{
+          backgroundColor: colors.brown["400"],
+          color: 'white',
+          padding: '8px 14px', // px-4 py-2
+          borderRadius: '8px', // rounded-lg
+          maxWidth: '75%',
+        }}>
+          <p style={{fontWeight: '700', margin: 0,}}>{nickname}</p>
+          <p style={{margin: 0,}}>{chat}</p>
+        </div>
+      </div>
+    );
+  };
+
+
+  const MyChatLog = ({profile, nickname, chat, index}) => {
+    return (
+      <div style={{display: 'flex', alignItems: 'flex-start', gap: '12px', justifyContent: 'flex-end'}}
+           key={`myChatLog${index}`}>
+        <div style={{
+          backgroundColor: colors.brown["100"],
+          color: '#1a202c', // text-gray-900
+          padding: '8px 14px', // px-4 py-2
+          borderRadius: '8px', // rounded-lg
+          maxWidth: '75%',
+        }}>
+          <p style={{fontWeight: '700', margin: 0,}}>{nickname}</p>
+          <p style={{margin: 0,}}>{chat}</p>
+        </div>
+        <Box
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            backgroundColor: colors.brown["300"],
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: "hidden"
+          }}>
+          <img src={profile} alt={nickname} width="100%"/>
+        </Box>
+      </div>
+    );
+  };
+
+
   return (
     <div>
       <div style={chatStyle} ref={chattingBaseRef}>
@@ -106,56 +173,10 @@ export default function ChatComponent() {
               display: "flex",
               gap: "12px",
               flexDirection: "column",
-            }}>
-              <div style={{display: 'flex', alignItems: 'flex-start', gap: '12px'}}>
-                <Box
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    backgroundColor: colors.brown["300"],
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                </Box>
-                <div style={{
-                  backgroundColor: colors.brown["400"],
-                  color: 'white',
-                  padding: '8px 16px', // px-4 py-2
-                  borderRadius: '8px', // rounded-lg
-                  maxWidth: '75%',
-                }}>
-                  <p style={{fontWeight: '700', margin: 0,}}>상대 이름</p>
-                  <p style={{margin: 0,}}>상대 채팅~~~~</p>
-                </div>
-              </div>
-
-              <div style={{display: 'flex', alignItems: 'flex-start', gap: '12px', justifyContent: 'flex-end'}}>
-                <div style={{
-                  backgroundColor: colors.brown["100"],
-                  color: '#1a202c', // text-gray-900
-                  padding: '8px 16px', // px-4 py-2
-                  borderRadius: '8px', // rounded-lg
-                  maxWidth: '75%',
-                }}>
-                  <p style={{fontWeight: '700', margin: 0,}}>내 이름</p>
-                  <p style={{margin: 0,}}>내 채팅~~~~</p>
-                </div>
-                <Box
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    backgroundColor: colors.brown["300"],
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                </Box>
-              </div>
+              fontSize: "14px"
+            }}
+                 ref={chatAreaRef}
+            >
 
 
             </div>
@@ -191,7 +212,8 @@ export default function ChatComponent() {
           </div>
         </div>
       </div>
-      <div style={chattingIcon} ref={chattingIconRef} onClick={chattingOpen}><ChatCircleDots size={45} color="white" weight="fill"/></div>
+      <div style={chattingIcon} ref={chattingIconRef} onClick={chattingOpen}><ChatCircleDots size={45} color="white"
+                                                                                             weight="fill"/></div>
     </div>
   )
 

@@ -285,7 +285,7 @@ function YutPan() {
       const response = await apiAxiosInstance.get(`/game/data/player?roomName=${roomId}&jwt=${token}`);
       if (response.status === 200 && response.data !== null) {
         setMyPlayer("player" + response.data);
-      } else{
+      } else {
         setMyPlayer("player")
       }
     } catch (error) {
@@ -411,13 +411,21 @@ function YutPan() {
             setYutThrowAble(true);
           }
         } else if (message.type === "error") {
-          console.log(JSON.parse(message.message));
-        }  else {
+          if ("not found room" === message.message){
+            stompClient.send(
+              `/app/main/start/${roomId}`,
+              {
+                name: myPlayer,
+                sessionId: session,
+              },
+              JSON.stringify({message: "join"})
+            );
+          }
+        } else {
           console.log("error : " + JSON.parse(message.message).toString());
         }
 
       });
-
 
 
       stompClient.send(

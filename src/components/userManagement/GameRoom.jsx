@@ -61,11 +61,11 @@ const GameRoom = () => {
 
         const users = data.map(item => ({
           name: item.user.nickname,
-          roomName: item.room_name,
+          roomName: item.roomName,
           seedMoney: item.budget,
-          fullMember: item.tot_player,
-          currentMember: item.curr_player,
-          roomCode: item.room_id,
+          fullMember: item.totPlayer,
+          currentMember: item.currPlayer,
+          roomCode: item.roomId,
           cover: item.user.profilePicture,
         }));
 
