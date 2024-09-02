@@ -23,6 +23,7 @@ export default function Page(): React.JSX.Element {
     if (accessToken) {
       const tokenValue = accessToken.split('=')[1];
       localStorage.setItem('custom-auth-token', tokenValue);
+      console.log("access token is " + accessToken);
 
       // 사용자 데이터 요청
       getUserData();
