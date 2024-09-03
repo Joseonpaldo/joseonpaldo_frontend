@@ -311,7 +311,7 @@ function YutPan() {
     if (myPlayer === null) {
       return;
     }
-    const socket = new SockJS('/ws/'); // WebSocket 서버 URL
+    const socket = new SockJS('https://joseonpaldo.site//ws/'); // WebSocket 서버 URL
     const stompClient = Stomp.over(socket);
     stompClient.connect({}, (frame) => {
       const url = socket._transport.url; // socket._transport.url 값을 가져옵니다.
