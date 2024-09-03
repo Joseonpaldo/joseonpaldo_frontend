@@ -4,9 +4,7 @@
 import * as React from "react";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
-export default function Winner() {
-
-
+export default function Winner(props) {
   const containerStyle = {
     display: 'flex',
     justifyContent: 'center',
@@ -42,42 +40,27 @@ export default function Winner() {
     color: '#000',
     marginBottom: '10px',
   };
-  const players = [
-    {
-      id: 'USR-010',
-      name: 'Alcides Antonio',
-      avatar: '/assets/avatar-10.png',
-      fourPlay: 60,
-      fourPlayWin: 12
 
-    },
-    {
-      id: 'USR-009',
-      name: 'Marcus Finn',
-      avatar: '/assets/avatar-9.png',
-      fourPlay: 60,
-      fourPlayWin: 12
-    },
-    {
-      id: 'USR-008',
-      name: 'Jie Yan',
-      avatar: '/assets/avatar-8.png',
-      fourPlay: 60,
-      fourPlayWin: 12
-    },
-  ];
+  const [players, setPlayers] = React.useState([]);
 
+  useEffect(() => {
+    apiAxiosInstance.get(`/api/ranking/${props.type}/top3`)
+      .then(response => {
+        const data = response.data;
+        
+        const list = [];
 
-  async function getTop3User() {
-    try {
-      // const response = await apiAxiosInstance.get(`/rank/top3`);
-      return response.data; // 응답 데이터 반환
-    } catch (error) {
-      console.error('사용자 데이터를 가져오는 중 오류 발생:', error);
-      throw error; // 오류를 다시 던져서 호출자에게 알림
-    }
-  }
+        data.map((player, index) => { 
+          list.push({
+            name: player.name,
+            avatar: player.profileImage,
+            winrate: player.winrate
+          })
+        });
 
+        setPlayers([...players, ...list]);
+      })
+  }, [props.type])
 
   return <div style={containerStyle}>
     <div style={{...cardStyle}}>

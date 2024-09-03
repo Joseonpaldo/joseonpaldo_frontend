@@ -4,53 +4,47 @@ import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Checkbox from '@mui/material/Checkbox';
-import Divider from '@mui/material/Divider';
-import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
+import Stack from '@mui/material/Stack';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
-import dayjs from 'dayjs';
-
-import { useSelection } from '@/hooks/use-selection';
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 function noop(): void {
   // do nothing
 }
 
-export interface Customer {
-  id: string;
-  avatar: string;
-  name: string;
-  fourPlay: number;
-  fourPlayWin: number;
-}
-
 interface CustomersTableProps {
-  count?: number;
-  page?: number;
-  rows?: Customer[];
-  rowsPerPage?: number;
+  type?: String;
 }
 
-export function CustomersTable({
-  count = 0,
-  rows = [],
-  page = 0,
-  rowsPerPage = 0,
-}: CustomersTableProps): React.JSX.Element {
-  const rowIds = React.useMemo(() => {
-    return rows?.map((customer) => customer.id);
-  }, [rows]);
+interface User {
+  id: string;
+  name: string;
+  profileImage: string;
+  winrate: number;
+  play: number;
+}
 
-  const { selectAll, deselectAll, selectOne, deselectOne, selected } = useSelection(rowIds);
+export function CustomersTable(props: CustomersTableProps): React.JSX.Element {
+  const [fourToTen, setFourToTen] = React.useState<User[]>([]);
 
-  const selectedSome = (selected?.size ?? 0) > 0 && (selected?.size ?? 0) < rows?.length;
-  const selectedAll = rows?.length > 0 && selected?.size === rows?.length;
+  React.useEffect(() => {
+      if(props.type == '2p' || props.type == '4p') {
+      apiAxiosInstance.get(`/api/ranking/${props.type}/fourToTen`)
+      .then(response => {
+        const data: User[] = response.data; // 응답 데이터 가져오기
+
+        setFourToTen([...data]);
+      })
+      .catch(error => {
+        console.error('문제가 발생했습니다:', error);
+      });
+    }
+  }, [props.type]);
 
   return (
     <Card>
@@ -61,33 +55,30 @@ export function CustomersTable({
               <TableCell align={"center"}>등수</TableCell>
               <TableCell>별명</TableCell>
               <TableCell>승률</TableCell>
-              <TableCell>승패</TableCell>
+              <TableCell>총 게임수</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows?.map((row, index) => {
-              const isSelected = selected?.has(row.id);
-
+            {fourToTen.map((user, index) => {
               return (
-                <TableRow hover key={row.id} selected={isSelected}>
+                <TableRow hover key={user.id}>
                   <TableCell align={"center"}>
                     {index+4}등
                   </TableCell>
                   <TableCell>
                     <Stack sx={{ alignItems: 'center' }} direction="row" spacing={2}>
-                      <Avatar src={row.avatar} />
-                      <Typography variant="subtitle2">{row.name}</Typography>
+                      <Avatar src={user.profileImage} />
+                      <Typography variant="subtitle2">{user.name}</Typography>
                     </Stack>
                   </TableCell>
-                  <TableCell>{row.fourPlayWin / row.fourPlay * 100}%</TableCell>
-                  <TableCell>{row.fourPlayWin} / {row.fourPlay}</TableCell>
+                  <TableCell>{user.winrate}%</TableCell>
+                  <TableCell>{user.play}</TableCell>
                 </TableRow>
               );
             })}
           </TableBody>
         </Table>
       </Box>
-
     </Card>
   );
 }
