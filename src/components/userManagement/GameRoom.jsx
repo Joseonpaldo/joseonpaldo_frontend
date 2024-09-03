@@ -80,17 +80,20 @@ const GameRoom = () => {
   return (
     <Box pb={4}>
       <StyledFlexBox>
+        {
+          <input type="text" placeholder="검색어를 입력하세요" onChange={(e) => setSearchKeyword(e.target.value)}/>
+        }
         {/* path가 "/start-game-room"이 아닐 때만 버튼을 표시 */}
         {path !== "/start-game-room" && (
           <>
             <Button fullWidth={true} variant="contained" onClick={handleClickOpen}>
               방 만들기
             </Button>
-            <input type="text" placeholder="검색어를 입력하세요" onChange={(e) => setSearchKeyword(e.target.value)}/>
             <Button variant="contained" onClick={() => router.push('/start-game-room')}
                     sx={{position: "absolute", right: "26px", top: "90px"}}>진행 중</Button>
           </>
         )}
+
 
 
       </StyledFlexBox>
