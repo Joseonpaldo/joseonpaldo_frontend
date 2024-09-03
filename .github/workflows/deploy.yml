@@ -86,8 +86,8 @@ jobs:
             docker run -d -p 3000:3000 --name joseonpaldo-front ${{ secrets.REGISTRY_URL }}/joseonpaldo-react:${{ env.COMMIT_HASH }}
             docker images --format '{{.Repository}}:{{.Tag}}' | grep joseonpaldo-react | grep -v "${{ env.COMMIT_HASH }}" | xargs -r docker rmi || true
             
-      - name: Wait for 90sec
-        run: sleep 90
+      # - name: Wait for 90sec
+      #   run: sleep 90
 
       - name: SSH and deploy 002
         uses: appleboy/ssh-action@master

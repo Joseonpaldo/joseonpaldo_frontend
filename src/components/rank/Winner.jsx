@@ -58,8 +58,8 @@ export default function Winner(props) {
           })
         });
 
-        setPlayers([...players, ...list]);
-      })
+      setPlayers([...players, ...list]);
+    })
   }, [props.type])
 
   return <div style={containerStyle}>
