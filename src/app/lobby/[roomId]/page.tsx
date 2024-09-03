@@ -8,7 +8,7 @@ import Lobby from "@/components/game/Lobby";
 
 
 
-export const metadata = { title: `In Game | ${config.site.name}` } satisfies Metadata;
+export const metadata = { title: `Lobby | ${config.site.name}` } satisfies Metadata;
 
 export default function Page(): React.JSX.Element {
   return (
