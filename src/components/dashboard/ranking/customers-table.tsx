@@ -33,7 +33,6 @@ export function CustomersTable(props: CustomersTableProps): React.JSX.Element {
   const [fourToTen, setFourToTen] = useState<User[]>([]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && (props.type == '2p' || props.type == '4p')) {
       apiAxiosInstance.get(`/api/ranking/${props.type}/fourToTen`)
       .then(response => {
         const data: User[] = response.data; // 응답 데이터 가져오기
@@ -43,7 +42,6 @@ export function CustomersTable(props: CustomersTableProps): React.JSX.Element {
       .catch(error => {
         console.error('문제가 발생했습니다:', error);
       });
-    }
   }, [props.type]);
 
   return (
