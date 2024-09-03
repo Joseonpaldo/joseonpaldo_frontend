@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -30,10 +30,10 @@ interface User {
 }
 
 export function CustomersTable(props: CustomersTableProps): React.JSX.Element {
-  const [fourToTen, setFourToTen] = React.useState<User[]>([]);
+  const [fourToTen, setFourToTen] = useState<User[]>([]);
 
-  React.useEffect(() => {
-      if(props.type == '2p' || props.type == '4p') {
+  useEffect(() => {
+    if (typeof window !== "undefined" && (props.type == '2p' || props.type == '4p')) {
       apiAxiosInstance.get(`/api/ranking/${props.type}/fourToTen`)
       .then(response => {
         const data: User[] = response.data; // 응답 데이터 가져오기
