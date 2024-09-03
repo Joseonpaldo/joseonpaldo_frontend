@@ -31,6 +31,7 @@ const GameRoom = () => {
   const [open, setOpen] = useState(false);
   const [userList, setUserList] = useState([]);
   const [apiURL, setApiURL] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
   const router = useRouter();
 
@@ -79,6 +80,9 @@ const GameRoom = () => {
   return (
     <Box pb={4}>
       <StyledFlexBox>
+        {
+          <input type="text" placeholder="검색어를 입력하세요" onChange={(e) => setSearchKeyword(e.target.value)}/>
+        }
         {/* path가 "/start-game-room"이 아닐 때만 버튼을 표시 */}
         {path !== "/start-game-room" && (
           <>
@@ -91,14 +95,19 @@ const GameRoom = () => {
         )}
 
 
+
       </StyledFlexBox>
 
       <Grid container spacing={3}>
-        {userList.map((user, index) => (
-          <Grid item md={4} sm={6} xs={12} key={index}>
-            <UserCard user={user}/>
-          </Grid>
-        ))}
+        {
+          userList.filter((e) => {
+            return e.name.toLowerCase().includes(searchKeyword.toLowerCase()) || e.roomName.toLowerCase().includes(searchKeyword.toLowerCase());
+          }).map((user, index) => (
+            <Grid item md={4} sm={6} xs={12} key={index}>
+              <UserCard user={user}/>
+            </Grid>
+          ))
+        }
       </Grid>
       <Dialog
         fullWidth={true}
