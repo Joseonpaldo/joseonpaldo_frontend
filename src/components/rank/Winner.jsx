@@ -58,6 +58,7 @@ export default function Winner(props) {
         });
 
       setPlayers([...players, ...list]);
+      console.log("data : " + players);
     })
   }, [props.type])
 
