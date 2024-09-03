@@ -34,6 +34,7 @@ import {
 import {Stomp} from "@stomp/stompjs";
 import SockJS from 'sockjs-client';
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
+import ChatComponent from "@/components/game/chatComponent";
 
 
 function YutPan() {
@@ -43,6 +44,18 @@ function YutPan() {
   const [nowTurn, setNowTurn] = useState(null);
   const [lastStep, setLastStep] = useState(false);
   const [loading, setLoading] = useState("flex");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading === "flex") {
+        window.location.reload(); // 페이지 리로드
+      }
+    }, 5000); // 10초 (10000ms)
+
+    // 컴포넌트 언마운트 시 타이머 클리어
+    return () => clearTimeout(timer);
+  }, [loading]); // loading이 변경될 때마다 실행
+
 
   const [yutThrowImageSrc, setYutThrowImageSrc] = useState("/image/yut1.gif");
   const [yutThrowImageDisplay, setYutThrowImageDisplay] = useState("none");
@@ -411,7 +424,7 @@ function YutPan() {
             setYutThrowAble(true);
           }
         } else if (message.type === "error") {
-          if ("not found room" === message.message){
+          if ("not found room" === message.message) {
             stompClient.send(
               `/app/main/start/${roomId}`,
               {
@@ -782,6 +795,7 @@ function YutPan() {
 
 
   return <div style={backStyle}>
+    {client != null ? <ChatComponent socket={client}/> : null}
 
     <div style={YutPanStyle} ref={yutPanRef}>
       <div style={{
