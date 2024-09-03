@@ -29,9 +29,9 @@ export function RankingPage(): React.JSX.Element {
             </Stack>
             <Stack spacing={3}>
             <Grid container spacing={3}>
-                <Grid lg={6} xs={12}>
+                {/* <Grid lg={6} xs={12}>
                 <Winner type={rankType}/>
-                </Grid>
+                </Grid> */}
     
                 <Grid lg={6} xs={12}>
                 <CustomersTable type={rankType} />
