@@ -2,28 +2,84 @@
 
 import {Button, colors, Input} from "@mui/material";
 import useWindowSizeCustom from "../../hooks/useWindowSizeCustom.js";
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useParams} from "next/navigation";
 import {Box} from "@mui/system";
 import {ChatCircleDots, X} from "@phosphor-icons/react";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
-export default function ChatComponent() {
+export default function ChatComponent({socket}) {
 
   const {roomId} = useParams();
   const inputRef = useRef(null);
+  const inputElement = inputRef.current?.querySelector("input");
 
-  const [socket, setSocket] = useState(null);
+  const [myPlayer, setMyPlayer] = useState(null);
+  const [messages, setMessages] = useState([]);
 
   const chattingBaseRef = useRef(null);
   const chattingIconRef = useRef(null);
 
   const chatAreaRef = useRef(null);
 
+  useEffect(() => {
+    if (myPlayer === null) {
+      return;
+    }
+    console.log("rerender " + socket);
+    socket.send(
+      `/app/main/chatLog/join/${roomId}`,
+      {
+        name: myPlayer
+      },
+      JSON.stringify({message: "join"})
+    );
 
-  const inputSend2 = () => {
-    const inputElement = inputRef.current?.querySelector("input");
+    socket.subscribe(`/topic/main-game/log/${roomId}`, (msg) => {
+      const message = JSON.parse(msg.body)
+      if (message.type === "chatLog") {
+        if (JSON.parse(message.message).length === undefined) {
+          //댓글 적을때
+          setMessages((prevMessage) => ([...prevMessage, JSON.parse(message.message)]));
+        } else {
+          //처음 댓글 가져올떄
+          setMessages(JSON.parse(message.message));
+        }
+        inputElement.value = "";
+      }
+    });
+  }, [socket, myPlayer]);
+
+  useEffect(() => {
+    const ele = chatAreaRef.current;
+    ele.scrollTop = ele.firstChild.scrollHeight;
+  }, [messages]);
+
+
+  useEffect(async () => {
+    let token = localStorage.getItem("custom-auth-token");
+    try {
+      const response = await apiAxiosInstance.get(`/game/data/player?roomName=${roomId}&jwt=${token}`);
+      if (response.status === 200 && response.data !== null) {
+        setMyPlayer("player" + response.data);
+      } else {
+        setMyPlayer("player")
+      }
+    } catch (error) {
+      console.error('Error creating game room:', error);
+    }
+  }, []);
+
+
+  const inputSend = () => {
     const value = inputElement.value;
-    inputElement.value = ""; // 입력 필드의 값을 직접 변경
+    socket.send(
+      `/app/main/chatLog/${roomId}`,
+      {
+        name: myPlayer
+      },
+      value
+    );
   };
 
   const chattingClose = () => {
@@ -168,16 +224,22 @@ export default function ChatComponent() {
             flex: 1,
             overflowY: "auto",
             padding: "1rem", // p-4는 1rem에 해당
-          }}>
+          }}
+               ref={chatAreaRef}
+          >
             <div style={{
               display: "flex",
               gap: "12px",
               flexDirection: "column",
               fontSize: "14px"
             }}
-                 ref={chatAreaRef}
             >
-
+              {messages.map((message, index) => (
+                message.player.player === myPlayer ?
+                  <MyChatLog chat={message.message} nickname={message.player.name} profile={message.player.profile}
+                             key={index}/> : <OpponentChatLog chat={message.message} nickname={message.player.name}
+                                                              profile={message.player.profile} key={index}/>
+              ))}
 
             </div>
           </div>
@@ -206,7 +268,7 @@ export default function ChatComponent() {
                       color: "white",
                       marginLeft: "0.5rem",
                     }}
-                    onClick={inputSend2}>
+                    onClick={inputSend}>
               Send
             </Button>
           </div>
