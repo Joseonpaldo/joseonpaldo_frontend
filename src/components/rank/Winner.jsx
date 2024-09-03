@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 export default function Winner(props) {
@@ -40,7 +40,7 @@ export default function Winner(props) {
     marginBottom: '10px',
   };
 
-  const [players, setPlayers] = React.useState([]);
+  const [players, setPlayers] = useState([]);
 
   useEffect(() => {
     apiAxiosInstance.get(`/ranking/${props.type}/top3`)
