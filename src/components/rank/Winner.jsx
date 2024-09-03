@@ -1,7 +1,6 @@
-"use client"
+"use client";
 
-
-import * as React from "react";
+import { useEffect } from "react";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 export default function Winner(props) {
