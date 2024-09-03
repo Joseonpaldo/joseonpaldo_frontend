@@ -57,40 +57,44 @@ export default function Winner(props) {
           })
         });
 
-      setPlayers([...players, ...list]);
+      setPlayers([...list]);
       console.log("data : " + players);
     })
   }, [props.type])
 
   return <div style={containerStyle}>
-    <div style={{...cardStyle}}>
-      <img
-        src={`${players[1].avatar}`}
-        alt={"win2"}
-        style={{...avatarStyle, border: '10px solid #C0C0C0',}}
-      />
-      <h3>{`${players[1].name}`}</h3>
-      <div style={rankStyle}>{2}</div>
-    </div>
+    {
+      players.length !== 0 &&
+      (<>
+      <div style={{...cardStyle}}>
+        <img
+          src={`${players[1].avatar}`}
+          alt={"win2"}
+          style={{...avatarStyle, border: '10px solid #C0C0C0',}}
+        />
+        <h3>{`${players[1].name}`}</h3>
+        <div style={rankStyle}>{2}</div>
+      </div>
 
-    <div style={{...cardStyle}}>
-      <img
-        src={`${players[0].avatar}`}
-        alt={"win1"}
-        style={{...avatarStyle, border: '10px solid #FFD700',}}
-      />
-      <h3>{`${players[0].name}`}</h3>
-      <div style={rankStyle}>{1}</div>
-    </div>
+      <div style={{...cardStyle}}>
+        <img
+          src={`${players[0].avatar}`}
+          alt={"win1"}
+          style={{...avatarStyle, border: '10px solid #FFD700',}}
+        />
+        <h3>{`${players[0].name}`}</h3>
+        <div style={rankStyle}>{1}</div>
+      </div>
 
-    <div style={{...cardStyle}}>
-      <img
-        src={`${players[2].avatar}`}
-        alt={"win3"}
-        style={{...avatarStyle, border: '10px solid #cd7f32',}}
-      />
-      <h3>{`${players[2].name}`}</h3>
-      <div style={rankStyle}>{3}</div>
-    </div>
+      <div style={{...cardStyle}}>
+        <img
+          src={`${players[2].avatar}`}
+          alt={"win3"}
+          style={{...avatarStyle, border: '10px solid #cd7f32',}}
+        />
+        <h3>{`${players[2].name}`}</h3>
+        <div style={rankStyle}>{3}</div>
+      </div></>)
+    }
   </div>
 }
