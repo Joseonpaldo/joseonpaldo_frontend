@@ -1,7 +1,5 @@
-'use client';
-
 import type {User} from '@/types/user';
-import axios from "axios";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 
 const user = {
@@ -15,18 +13,15 @@ const user = {
   win_2p: 0,
   win_4p: 0,
 } satisfies User;
-//
-// async function getUserData(id) {
-//   const response = await fetch(`/api/user?user_id=${id}`);
-//   return response.json();
-// }
 
 async function getUserData() {
   let jwt = localStorage.getItem('custom-auth-token');
+  console.log("jwt : " + jwt)
   if (jwt == null){
     return null;
   }
-  const response = await axios.get(`/api/user/${jwt}`);
+  const response = await apiAxiosInstance.get(`/user/${jwt}`);
+  console.log(response);
   return response.data; // 응답 데이터 반환
 }
 
@@ -49,7 +44,7 @@ class AuthClient {
     // We do not handle the API, so just check if we have a token in localStorage.
     const token = localStorage.getItem('custom-auth-token');
 
-    if (!token) {
+    if (!token || user.id == null) {
       return {data: null};
     }
 

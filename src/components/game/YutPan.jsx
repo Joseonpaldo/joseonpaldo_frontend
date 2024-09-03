@@ -33,6 +33,7 @@ import {
 } from "./yutPanFunction"
 import {Stomp} from "@stomp/stompjs";
 import SockJS from 'sockjs-client';
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 
 function YutPan() {
@@ -41,6 +42,7 @@ function YutPan() {
   const [myTurn, setMyTurn] = useState(false);
   const [nowTurn, setNowTurn] = useState(null);
   const [lastStep, setLastStep] = useState(false);
+  const [loading, setLoading] = useState("flex");
 
   const [yutThrowImageSrc, setYutThrowImageSrc] = useState("/image/yut1.gif");
   const [yutThrowImageDisplay, setYutThrowImageDisplay] = useState("none");
@@ -77,7 +79,7 @@ function YutPan() {
       playerCardRefs.current.forEach((div, index) => {
         div.style.position = "absolute"
         if (index === 1 || index === 2) {
-        div.style.flexDirection = "row-reverse";
+          div.style.flexDirection = "row-reverse";
         }
         div.style.padding = "16px";
         div.style.marginBottom = "";
@@ -200,9 +202,9 @@ function YutPan() {
   useEffect(() => {
     console.log(players)
     Object.values(players).forEach((player, index) => {
-      if (player.connected){
+      if (player.connected) {
         playerConnectedRefs.current[index].style.display = "none"
-      }else {
+      } else {
         playerConnectedRefs.current[index].style.display = "flex"
       }
     });
@@ -275,9 +277,21 @@ function YutPan() {
   }, []);
 
 
-
-
   const {roomId} = useParams();
+
+  useEffect(async () => {
+    let token = localStorage.getItem("custom-auth-token");
+    try {
+      const response = await apiAxiosInstance.get(`/game/data/player?roomName=${roomId}&jwt=${token}`);
+      if (response.status === 200 && response.data !== null) {
+        setMyPlayer("player" + response.data);
+      } else {
+        setMyPlayer("player")
+      }
+    } catch (error) {
+      console.error('Error creating game room:', error);
+    }
+  }, []);
 
 
   useEffect(() => {
@@ -292,14 +306,7 @@ function YutPan() {
       const session = parts[parts.length - 2]; // 뒤에서 두 번째 값을 가져옵니다.
 
       setClient(stompClient);
-      stompClient.send(
-        `/app/main/join/${roomId}`,
-        {
-          name: myPlayer,
-          sessionId : session,
-        },
-        JSON.stringify({message: "join"})
-      );
+
 
       // 플레이어 정보 가져오기
       stompClient.subscribe(`/topic/main-game/${roomId}`, (msg) => {
@@ -364,16 +371,17 @@ function YutPan() {
                 setMyTurn(true);
               }
             }
-            if (player.SessionId === undefined || player.SessionId === ""){
+            if (player.SessionId === undefined || player.SessionId === "") {
               updatePlayer("player" + (index + 1), {
                 connected: false
               });
-            }else {
+            } else {
               updatePlayer("player" + (index + 1), {
                 connected: true
               });
             }
           });
+          setLoading("none")
         } else if (message.type === "getResult") {
           let resultNum = JSON.parse(message.message);
           setYutThrowImageDisplay("flex")
@@ -402,12 +410,32 @@ function YutPan() {
           if (JSON.parse(message.message)) {
             setYutThrowAble(true);
           }
+        } else if (message.type === "error") {
+          if ("not found room" === message.message){
+            stompClient.send(
+              `/app/main/start/${roomId}`,
+              {
+                name: myPlayer,
+                sessionId: session,
+              },
+              JSON.stringify({message: "join"})
+            );
+          }
         } else {
           console.log("error : " + JSON.parse(message.message).toString());
         }
 
       });
 
+
+      stompClient.send(
+        `/app/main/join/${roomId}`,
+        {
+          name: myPlayer,
+          sessionId: session,
+        },
+        JSON.stringify({message: "join"})
+      );
 
     });
   }, [myPlayer]);
@@ -484,6 +512,13 @@ function YutPan() {
       );
     }
   };
+
+  // const start = () => {
+  //   client.send(
+  //     `/app/main/start/${roomId}`,
+  //     JSON.stringify({message: "move this"})
+  //   );
+  // };
 
   const stepOnEvent = (index) => {
     console.log("last step index " + index);
@@ -721,14 +756,15 @@ function YutPan() {
     transform: "translate(-50%, -50%)",
     width: 100,
     height: 110,
-    justifyContent: "center",
     border: "3px solid #9998",
     borderRadius: "30%",
     zIndex: 49,
     paddingBottom: "30px",
     display: "flex",
-    flexWrap: "wrap",
     fontSize: "13px",
+    justifyContent: "flex-start",
+    flexDirection: "column",
+    alignItems: "center",
   }
 
   const YutPanStyle = {
@@ -760,7 +796,8 @@ function YutPan() {
 
         <div style={nowTurnStyle}>
           <span>현재 턴</span>
-          <img src={players[nowTurn]?.profile} alt={players[nowTurn]?.name} style={playerNumberStyle(players[nowTurn]?.color)}/>
+          <img src={players[nowTurn]?.profile} alt={players[nowTurn]?.name}
+               style={playerNumberStyle(players[nowTurn]?.color)}/>
           <span>{players[nowTurn]?.name}</span>
         </div>
 
@@ -785,12 +822,12 @@ function YutPan() {
                    alt="결과"
                    width="30"
                    className="box"
-                   />
+              />
             </div>
           ))}
         </div>
 
-        {/*<div style={{fontSize: "20px", position: "absolute"}} onClick={oneMore}>한번더</div>*/}
+        {/*<div style={{fontSize: "20px", position: "absolute"}} onClick={start}>한번더</div>*/}
         {/*<div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={passTurn}>pass turn</div>*/}
 
 
@@ -865,10 +902,11 @@ function YutPan() {
             <div key={key}
                  ref={(el) => (playerCardRefs.current[index] = el)} // ref 할당
                  style={positionStyle}
-                 onClick={() => {
-                   setResultDelIndex(null);
-                   setMyPlayer(player.player);
-                 }}>
+              // onClick={() => {
+              //   setResultDelIndex(null);
+              //   setMyPlayer(player.player);
+              // }}
+            >
               <img src={player.avatar} alt={player.name} width={50}/>
               <img src={player.profile} alt={player.name} style={playerNumberStyle(player.color)}/>
               <div>
@@ -881,19 +919,20 @@ function YutPan() {
               <div
                 ref={(el) => (playerConnectedRefs.current[index] = el)} // ref 할당
                 style={{
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                background: "rgba(0,0,0,0.5)",
-                fontSize: "24px",
-                borderRadius: '8px',
-                color: "#ff0000",
-                fontWeight: "900",
-                pointerEvents: "none",
-              }}>접속 끊김</div>
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  background: "rgba(0,0,0,0.5)",
+                  fontSize: "24px",
+                  borderRadius: '8px',
+                  color: "#ff0000",
+                  fontWeight: "900",
+                  pointerEvents: "none",
+                }}>접속 끊김
+              </div>
             </div>
           );
         })}
@@ -905,6 +944,18 @@ function YutPan() {
     <BuyEstateConfirmDialog open={BuyEstateOpen} onClose={BuyEstateHandleClose}/>
 
     <UpgradeEstateConfirmDialog open={UpgradeEstateOpen} onClose={UpgradeEstateHandleClose} level={UpgradeLevel}/>
+
+    <div style={{
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.22)",
+      display: loading,
+      justifyContent: "center",
+      alignItems: "center",
+    }}>
+      <div className="loader"></div>
+    </div>
 
   </div>
 }
