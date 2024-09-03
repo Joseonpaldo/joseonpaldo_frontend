@@ -43,7 +43,7 @@ export default function Winner(props) {
   const [players, setPlayers] = React.useState([]);
 
   useEffect(() => {
-    apiAxiosInstance.get(`/api/ranking/${props.type}/top3`)
+    apiAxiosInstance.get(`/ranking/${props.type}/top3`)
       .then(response => {
         const data = response.data;
         

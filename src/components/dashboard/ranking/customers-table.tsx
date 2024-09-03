@@ -33,7 +33,7 @@ export function CustomersTable(props: CustomersTableProps): React.JSX.Element {
   const [fourToTen, setFourToTen] = useState<User[]>([]);
 
   useEffect(() => {
-      apiAxiosInstance.get(`/api/ranking/${props.type}/fourToTen`)
+      apiAxiosInstance.get(`/ranking/${props.type}/fourToTen`)
       .then(response => {
         const data: User[] = response.data; // 응답 데이터 가져오기
 
