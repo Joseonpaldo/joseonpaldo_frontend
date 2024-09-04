@@ -4,10 +4,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Stomp } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import './Lobby.css';
-import dynamic from 'next/dynamic';
-import Modal from "@/components/game/Modal";
+import dynamic from 'next/dynamic'
 import Button from "@mui/material/Button";
+import YutPan from "@/components/game/YutPan";
+import RankAnimation from "@/components/game/RankAnimation";
+import Modal from "@/components/game/Modal";
 import InviteModal from "@/components/game/InviteModal";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
 const characters = [
   { id: 1, src: '/image/character/bear.png', alt: 'Character 1' },
@@ -38,128 +41,40 @@ const Lobby = () => {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [selectedMap, setSelectedMap] = useState(maps[0].src);
   const [selectedCharacters, setSelectedCharacters] = useState([]);
-  const playerName = React.useMemo(() => `${Math.random().toString(36).substring(7)}`, []);
+  const [userData, setUserData] = useState(null);
   const [messages, setMessages] = useState([]);
   const chatMessagesRef = useRef(null);
   const [input, setInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [countdown, setCountdown] = useState(3);
-  const [showCountdown, setShowCountdown] = useState(false);
   const [roomId, setRoomId] = useState('');
-  const [allPlayersReady, setAllPlayersReady] = useState(false);
-  const [showRace, setShowRace] = useState(false);
-  const [order, setOrder] = useState([]);
   const [balloons, setBalloons] = useState({});
-  const runnersRef = useRef([]);
   const [showOptions, setShowOptions] = useState(false);
   const [visibleOptions, setVisibleOptions] = useState({});
   const [showYutPan, setShowYutPan] = useState(false);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false); // InviteModal 상태 관리
-
-
-  //모달
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHost, setIsHost] = useState(false);
+  const [order, setOrder] = useState([]);
+  const [showGameResult, setShowGameResult] = useState(false);
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    window.close();  // 모달이 닫히면 창을 닫음
-  };
-
-  const handleInviteClick = () => {
-    setIsInviteModalOpen(true); // 초대하기 모달을 열기
-  };
-
-  const handleCloseInviteModal = () => {
-    setIsInviteModalOpen(false); // 초대하기 모달을 닫기
-  };
-
-  const onMessageReceived = (message) => {
-    if (message.type === 'JOIN') {
-      setMessages(prevMessages => [...prevMessages, { content: message.content }]);
-    } else if (message.type === 'UPDATE') {
-      const playersInfo = message.content.split(",");
-      const newPlayers = playersInfo.map((info) => {
-        const [name, characterSrc] = info.split(":");
-        return { name: name, ready: false, characterSrc: characterSrc || '/image/pinkbin.png' };
-      });
-      setPlayers(newPlayers);
-
-      const selectedChars = newPlayers.map(player => player.characterSrc).filter(src => src !== '/image/pinkbin.png');
-      setSelectedCharacters(selectedChars);
-    } else if (message.type === 'READY') {
-      setReadyStates(prevStates => ({
-        ...prevStates,
-        [message.sender]: message.ready
-      }));
-      setPlayers(prevPlayers => prevPlayers.map(p => p.name === message.sender ? { ...p, ready: message.ready } : p));
-    } else if (message.type === 'SELECT') {
-      setPlayers(prevPlayers => prevPlayers.map(p => p.name === message.sender ? { ...p, characterSrc: message.content } : p));
-      setSelectedCharacters(prevSelected => [...prevSelected, message.content]);
-    } else if (message.type === 'DESELECT') {
-      setPlayers(prevPlayers => prevPlayers.map(p => p.name === message.sender ? { ...p, characterSrc: '/image/pinkbin.png' } : p));
-      setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== message.content));
-    } else if (message.type === 'ERROR' && message.content === 'Character already selected') {
-      alert('The character has already been selected by another player.');
-    } else if (message.type === 'CHAT') {
-      setMessages(prevMessages => [...prevMessages, { sender: message.sender, content: message.content }]);
-
-      const maxLength = 9;
-      const trimmedContent = message.content.length > maxLength
-        ? message.content.substring(0, maxLength) + '...'
-        : message.content;
-
-      setBalloons(prevBalloons => ({
-        ...prevBalloons,
-        [message.sender]: trimmedContent
-      }));
-
-      setTimeout(() => {
-        setBalloons(prevBalloons => ({
-          ...prevBalloons,
-          [message.sender]: null
-        }));
-      }, 4000);
-
-    } else if (message.type === 'LEAVE') {
-      setMessages(prevMessages => [...prevMessages, { content: message.content }]);
-      setPlayers(prevPlayers => prevPlayers.filter(p => p.name !== message.sender));
-      setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== message.content));
-    } else if (message.type === 'CHANGE_MAP') {
-      setSelectedMap(message.content);
-    } else if (message.type === 'START') {
-      handleStartGameMessage(message);
+  async function getUserData(jwt) {
+    try {
+      const response = await apiAxiosInstance.get(`/user/${jwt}`);
+      return response.data;
+    } catch (error) {
+      console.error('사용자 데이터를 가져오는 중 오류 발생:', error);
+      throw error;
     }
-  };
+  }
 
-  const handleStartGameMessage = (message) => {
-    const gameInfo = message.content.split("\n");
-    const updatedPlayers = [];
-
-    gameInfo.forEach(line => {
-      const match = line.match(/^(\d+)\.\s(\w+):\s(.+),\sSpeed:\s(\d+)$/);
-      if (match) {
-        const player = match[2];
-        const characterSrc = match[3];
-        const speed = parseInt(match[4], 10);
-
-        const runner = runnersRef.current.find(r => r.dataset.player === player);
-        if (runner) {
-          const duration = 50 / speed;
-          runner.style.animationDuration = `${duration}s`;
-          runner.querySelector('img').src = characterSrc;
-        }
-
-        updatedPlayers.push({ name: player, speed: speed, characterSrc: characterSrc });
-      }
-    });
-
-    setPlayers(updatedPlayers);
-    setShowRace(true);
-  };
+  useEffect(() => {
+    const jwt = localStorage.getItem('custom-auth-token');
+    if (jwt) {
+      getUserData(jwt)
+        .then(data => setUserData(data))
+        .catch(error => console.error('사용자 데이터 로드 실패:', error));
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -171,38 +86,12 @@ const Lobby = () => {
   }, []);
 
   useEffect(() => {
-    const fetchRoomStatus = async () => {
-      try {
-        const response = await fetch(`/ws/room/${roomId}/status`);
-        const roomStatus = await response.json();
-
-        if (roomStatus.players.length >= 4) {
-          handleOpenModal();  // 모달 열기
-
-          return;
-        }
-
-        const playersInfo = roomStatus.players.map((player) => ({
-          name: player,
-          ready: false,
-          characterSrc: roomStatus.characters[player] || '/image/pinkbin.png'
-        }));
-        setPlayers(playersInfo);
-        setSelectedMap(roomStatus.map);
-      } catch (error) {
-        console.error('Failed to fetch room status:', error);
-      }
-    };
-
-    fetchRoomStatus();
-
-    const socket = new SockJS('/ws');
+    const socket = new SockJS('/ws/');
     const stompClient = Stomp.over(socket);
 
     stompClient.connect({}, () => {
       setClient(stompClient);
 
-      // 메시지 수신을 위한 구독 설정
       stompClient.subscribe(`/topic/${roomId}`, (message) => {
         try {
           const parsedMessage = JSON.parse(message.body);
@@ -212,16 +101,17 @@ const Lobby = () => {
         }
       });
 
-      stompClient.send(`/app/chat.addUser/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'JOIN', roomId }));
-
-      const heartbeatInterval = setInterval(() => {
-        if (stompClient.connected) {
-          stompClient.send(`/app/chat.heartbeat/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'HEARTBEAT', roomId }));
-        }
-      }, 3000);
+      if (userData) {
+        stompClient.send(`/app/chat.addUser/${roomId}`, {}, JSON.stringify({
+          sender: userData.nickname,
+          type: 'JOIN',
+          roomId,
+          userId: userData.user_id,
+          content: userData.profilePicture
+        }));
+      }
 
       window.addEventListener('beforeunload', (event) => {
-        clearInterval(heartbeatInterval);
         leaveUser();
         event.preventDefault();
         event.returnValue = '';
@@ -233,11 +123,15 @@ const Lobby = () => {
         stompClient.disconnect();
       }
     };
-  }, [playerName, roomId]);
+  }, [roomId, userData]);
 
   const leaveUser = () => {
-    if (client && client.connected) {
-      client.send(`/app/chat.leaveUser/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'LEAVE', roomId }));
+    if (client && client.connected && userData) {
+      client.send(`/app/chat.leaveUser/${roomId}`, {}, JSON.stringify({
+        sender: userData.nickname,
+        type: 'LEAVE',
+        roomId
+      }));
     }
   };
 
@@ -245,18 +139,29 @@ const Lobby = () => {
     checkAllReady();
   }, [players]);
 
+  useEffect(() => {
+    if (players.length > 0 && players[0].name === userData.nickname) {
+      setIsHost(true);
+    }
+  }, [players, userData]);
+
   const checkAllReady = () => {
     if (players.length > 1 && players.slice(1).every(player => player.ready)) {
-      setAllPlayersReady(true);
+      setAllReady(true);
     } else {
-      setAllPlayersReady(false);
+      setAllReady(false);
     }
   };
 
   const handleReadyClick = (player) => {
     if (client && client.connected) {
       const updatedReadyState = !player.ready;
-      client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({ sender: player.name, type: 'READY', ready: updatedReadyState, roomId }));
+      client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({
+        sender: player.name,
+        type: 'READY',
+        ready: updatedReadyState,
+        roomId
+      }));
     }
   };
 
@@ -284,24 +189,37 @@ const Lobby = () => {
 
     setSelectedCharacter(characterId);
     setPlayers(prevPlayers => prevPlayers.map(player =>
-      player.name === playerName ? { ...player, characterSrc: characterSrc } : player
+      player.name === userData.nickname ? { ...player, characterSrc: characterSrc } : player
     ));
 
     setSelectedCharacters(prevSelected => [...prevSelected, characterSrc]);
     if (client && client.connected) {
-      client.send(`/app/chat.selectCharacter/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'SELECT', content: characterSrc, roomId }));
+      client.send(`/app/chat.selectCharacter/${roomId}`, {}, JSON.stringify({
+        sender: userData.nickname,
+        type: 'SELECT',
+        content: characterSrc,
+        roomId
+      }));
     }
   };
 
   const handleCharacterDeselect = (characterId) => {
     const characterSrc = characters.find(c => c.id === characterId).src;
     setSelectedCharacter(null);
+
     setPlayers(prevPlayers => prevPlayers.map(player =>
-      player.name === playerName ? { ...player, characterSrc: '/image/pinkbin.png' } : player
+      player.name === userData.nickname ? { ...player, characterSrc: userData.profilePicture } : player
     ));
+
     setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== characterSrc));
+
     if (client && client.connected) {
-      client.send(`/app/chat.deselectCharacter/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'DESELECT', content: characterSrc, roomId }));
+      client.send(`/app/chat.deselectCharacter/${roomId}`, {}, JSON.stringify({
+        sender: userData.nickname,
+        type: 'DESELECT',
+        content: userData.profilePicture,
+        roomId
+      }));
     }
   };
 
@@ -312,7 +230,12 @@ const Lobby = () => {
     setSelectedMap(newSelectedMap);
 
     if (client && client.connected) {
-      client.send(`/app/chat.changeMap/${roomId}`, {}, JSON.stringify({ sender: playerName, type: 'CHANGE_MAP', content: newSelectedMap, roomId }));
+      client.send(`/app/chat.changeMap/${roomId}`, {}, JSON.stringify({
+        sender: userData.nickname,
+        type: 'CHANGE_MAP',
+        content: newSelectedMap,
+        roomId
+      }));
     }
   };
 
@@ -325,7 +248,7 @@ const Lobby = () => {
   const sendMessage = () => {
     if (input.trim() !== '') {
       const chatMessage = {
-        sender: playerName,
+        sender: userData.nickname,
         content: input,
         type: 'CHAT',
         roomId: roomId
@@ -335,17 +258,20 @@ const Lobby = () => {
     }
   };
 
-  const handleEmojiClick = (emojiObject) => {
-    setInput(prevInput => prevInput + emojiObject.emoji);
-  };
+  const handleEmojiClick = (event, emojiObject) => {
+    const emoji = emojiObject.emoji; // 선택된 이모지를 가져옴
 
-  const handleSendMessage = (event) => {
-    event.preventDefault();
-    if (input.trim() !== '') {
-      client.send(`/app/chat.sendMessage/${roomId}`, {}, JSON.stringify({ sender: playerName, content: input, type: 'CHAT', roomId }));
-      setInput('');
+    if (emoji) {
+      setInput(prevInput => prevInput + emoji);
+    } else {
+      console.error("Emoji data is undefined or incorrect");
     }
   };
+
+
+
+
+
 
   useEffect(() => {
     if (chatMessagesRef.current) {
@@ -355,85 +281,165 @@ const Lobby = () => {
 
   const handleStartGame = () => {
     if (client && client.connected) {
+      // 현재 사용자가 선택한 캐릭터 이미지를 가져옴
+      const selectedCharacterSrc = players.find(player => player.name === userData.nickname)?.characterSrc;
+
       client.send(`/app/chat.startGame/${roomId}`, {}, JSON.stringify({
-        sender: playerName,
+        sender: userData.nickname,
         type: 'START',
         roomId: roomId,
+        character: selectedCharacterSrc // 선택한 캐릭터 이미지를 함께 전송
       }));
+      setShowGameResult(true); // 결과 화면을 표시하도록 설정
     }
   };
 
-  useEffect(() => {
-    const handleAnimationEnd = (runner, index) => {
-      const finishLineOffset = document.querySelector('.finishLine').offsetLeft;
-      const runnerOffset = runner.getBoundingClientRect().left + runner.offsetWidth;
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
 
-      if (runnerOffset >= finishLineOffset) {
-        runner.style.animationPlayState = 'paused';
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    window.close();
+  };
 
-        const finishTime = new Date().getTime();
-        setOrder(prevOrder => [...prevOrder, { name: players[index].name, finishTime }]);
-      }
-    };
+  const handleInviteClick = () => {
+    setIsInviteModalOpen(true);
+  };
 
-    runnersRef.current.forEach((runner, index) => {
-      runner.addEventListener('animationiteration', () => handleAnimationEnd(runner, index));
-    });
+  const handleCloseInviteModal = () => {
+    setIsInviteModalOpen(false);
+  };
 
-    return () => {
-      runnersRef.current.forEach((runner) => {
-        runner.removeEventListener('animationiteration', handleAnimationEnd);
+  const onMessageReceived = (message) => {
+    if (message.type === 'JOIN') {
+      setMessages(prevMessages => [...prevMessages, { content: message.content }]);
+    } else if (message.type === 'UPDATE') {
+      const playersInfo = message.content.split(",");
+      const newPlayers = playersInfo.map((info) => {
+        const [name, characterSrc] = info.split(":");
+        return { name: name, ready: false, characterSrc: characterSrc || userData.profilePicture };
       });
-    };
-  }, [players]);
+      setPlayers(newPlayers);
 
-  useEffect(() => {
-    if (showRace) {
-      const finishOrder = players.slice().sort((a, b) => b.speed - a.speed);
-      setOrder(finishOrder);
-    }
-  }, [showRace, players]);
+      const selectedChars = newPlayers.map(player => player.characterSrc).filter(src => src !== null && src !== undefined);
+      setSelectedCharacters(selectedChars);
+    } else if (message.type === 'READY') {
+      setReadyStates(prevStates => ({
+        ...prevStates,
+        [message.sender]: message.ready
+      }));
+      setPlayers(prevPlayers => prevPlayers.map(p => p.name === message.sender ? { ...p, ready: message.ready } : p));
+    } else if (message.type === 'SELECT') {
+      setPlayers(prevPlayers => prevPlayers.map(p => p.name === message.sender ? {
+        ...p,
+        characterSrc: message.content
+      } : p));
+      setSelectedCharacters(prevSelected => [...prevSelected, message.content]);
+    } else if (message.type === 'DESELECT') {
+      setPlayers(prevPlayers => prevPlayers.map(p => p.name === message.sender ? {
+        ...p,
+        characterSrc: message.content
+      } : p));
+      setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== message.content));
+    } else if (message.type === 'ERROR' && message.content === 'Character already selected') {
+      alert('The character has already been selected by another player.');
+    } else if (message.type === 'CHAT') {
+      setMessages(prevMessages => [...prevMessages, { sender: message.sender, content: message.content }]);
 
-  useEffect(() => {
-    if (order.length === players.length) {
-      const sortedOrder = order.sort((a, b) => a.finishTime - b.finishTime);
-      setOrder(sortedOrder);
+      const maxLength = 9;
+      const trimmedContent = message.content.length > maxLength
+        ? message.content.substring(0, maxLength) + '...'
+        : message.content;
+      setBalloons(prevBalloons => ({
+        ...prevBalloons,
+        [message.sender]: trimmedContent
+      }));
 
-      // 3초 후에 YutPan 컴포넌트를 렌더링하도록 설정
       setTimeout(() => {
-        setShowYutPan(true);
-      }, 15000);
+        setBalloons(prevBalloons => ({
+          ...prevBalloons,
+          [message.sender]: null
+        }));
+      }, 4000);
+
+    } else if (message.type === 'LEAVE') {
+      setMessages(prevMessages => [...prevMessages, { content: message.content }]);
+      setPlayers(prevPlayers => prevPlayers.filter(p => p.name !== message.sender));
+      setSelectedCharacters(prevSelected => prevSelected.filter(src => src !== message.content));
+    } else if (message.type === 'CHANGE_MAP') {
+      setSelectedMap(message.content);
+    } else if (message.type === 'START') {
+      const gameInfo = message.content.split("\n");
+      const playersData = [];
+
+      gameInfo.forEach(line => {
+        const match = line.match(/^(.+?):\s(.+?),\sSpeed:\s(\d+)$/);
+        if (match) {
+          const playerName = match[1].trim();
+          const characterSrc = match[2].trim();
+          const speed = parseInt(match[3], 10);
+
+          playersData.push({ name: playerName, characterSrc: characterSrc, speed: speed });
+        }
+      });
+
+      // 순서를 유지한 채로 playersData를 사용
+      setOrder(playersData); // 순서대로 저장된 정보를 그대로 사용
+      setShowGameResult(true); // 결과 화면 표시
+    } else if (message.type === 'END_GAME') {
+      // setShowYutPan(true);
     }
-  }, [order, players.length]);
+  };
+
+
+  useEffect(() => {
+    if (showGameResult) {
+      console.log('Order updated:', order); // 디버깅용
+
+      let delay = 1000; // 각 순위가 나타나는 시간 간격 (밀리초)
+
+      // 순번을 순차적으로 추가
+      const tempOrder = [];
+      order.forEach((player, index) => {
+        setTimeout(() => {
+          tempOrder.push(player);
+          setOrder([...tempOrder]); // 새로운 배열로 설정하여 재렌더링
+        }, delay * (index + 1));
+      });
+    }
+  }, [showGameResult]); // order가 아니라 showGameResult가 변경될 때만 실행되도록 수정
 
 
 
 
   return (
     <div className="backStyle">
-
-      <Modal open={isModalOpen} onClose={handleCloseModal} />
-      <InviteModal open={isInviteModalOpen} onClose={handleCloseInviteModal} /> {/* 초대하기 모달 렌더링 */}
-
-      {!showRace && (
+      {showYutPan ? (
+        <YutPan roomId={roomId} />
+      ) : showGameResult ? (
+        <RankAnimation players={order} userData={userData} />
+      ) : (
         <>
+          <Modal open={isModalOpen} onClose={handleCloseModal}/>
+          <InviteModal open={isInviteModalOpen} onClose={handleCloseInviteModal}/>
+
           <div className="titleStyle">
-            <h1>Room {players.length}/4
-              <button type="button" onClick={() => {
-                leaveUser();
-                window.close();
-              }}>
-                <b>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
-                       className="bi bi-box-arrow-right" viewBox="0 0 16 16">
-                    <path
-                      d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-                    <path
-                      d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                  </svg>
-                </b>
-              </button>
-            </h1>
+            <h1>Room {players.length}/4</h1>
+            <button type="button" onClick={() => {
+              leaveUser();
+              window.close();
+            }}>
+              <b>
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
+                     className="bi bi-box-arrow-right" viewBox="0 0 16 16">
+                  <path
+                    d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z" />
+                  <path
+                    d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z" />
+                </svg>
+              </b>
+            </button>
           </div>
 
           <div className="formStyle">
@@ -449,20 +455,22 @@ const Lobby = () => {
                           <Button
                             onClick={() => handleButtonClick(player.name)}
                             className="show-options-button"
-                            style={{backgroundColor: '#e1b389'}}
+                            style={{ backgroundColor: '#e1b389' }}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
                                  className="bi bi-three-dots" viewBox="0 0 16 16">
                               <path
-                                d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                d="M3 9.5a1.5.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5.5 0 1 1 0-3 1.5.5 0 0 1 0 3m5 0a.5.5 0 1 1 0-3 1.5.5 0 0 1 0 3" />
                             </svg>
                           </Button>
                           {visibleOptions[player.name] && (
                             <div className="options-menu">
-                              <button onClick={() => handleOptionClick('Option 1')} style={{backgroundColor: '#f1e7e0'}}>
+                              <button onClick={() => handleOptionClick('Option 1')}
+                                      style={{ backgroundColor: '#f1e7e0' }}>
                                 정보
                               </button>
-                              <button onClick={() => handleOptionClick('Option 2')} style={{backgroundColor: '#f1e7e0'}}>
+                              <button onClick={() => handleOptionClick('Option 2')}
+                                      style={{ backgroundColor: '#f1e7e0' }}>
                                 친구추가
                               </button>
                             </div>
@@ -470,8 +478,8 @@ const Lobby = () => {
                         </div>
                       </div>
 
-                      <div className="player-container" style={{position: 'relative'}}>
-                        <img src={player.characterSrc} alt={player.name}/>
+                      <div className="player-container" style={{ position: 'relative' }}>
+                        <img src={player.characterSrc} alt={player.name} />
                         {balloons[player.name] && (
                           <div className={`balloon ${balloons[player.name] ? 'show' : ''}`}>
                             {balloons[player.name]}
@@ -491,9 +499,9 @@ const Lobby = () => {
                   ) : (
                     <Button
                       type="button"
-                      onClick={handleInviteClick} // 초대하기 버튼 클릭시 모달 오픈
+                      onClick={handleInviteClick}
                       className="invite-button"
-                      style={{backgroundColor: '#e1b389', marginTop:'100px'}}
+                      style={{ backgroundColor: '#e1b389', marginTop: '100px' }}
                     >
                       초대하기
                     </Button>
@@ -525,17 +533,17 @@ const Lobby = () => {
                 placeholder="Type your message..."
               />
 
-              <button
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                style={{backgroundColor: "white", border: 'none', cursor: 'pointer'}}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                     className="bi bi-emoji-neutral" viewBox="0 0 16 16">
-                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                  <path
-                    d="M4 10.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5m3-4C7 5.672 6.552 5 6 5s-1 .672-1 1.5S5.448 8 6 8s1-.672 1-1.5m4 0c0-.828-.448-1.5-1-1.5s-1 .672-1 1.5S9.448 8 10 8s1-.672 1-1.5"/>
-                </svg>
-              </button>
+              {/*<button*/}
+              {/*  onClick={() => setShowEmojiPicker(!showEmojiPicker)}*/}
+              {/*  style={{ backgroundColor: "white", border: 'none', cursor: 'pointer' }}*/}
+              {/*>*/}
+              {/*  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"*/}
+              {/*       className="bi bi-emoji-neutral" viewBox="0 0 16 16">*/}
+              {/*    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />*/}
+              {/*    <path*/}
+              {/*      d="M4 10.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5m3-4C7 5.672 6.552 5 6 5s-1 .672-1 1.5S5.448 8 6 8s1-.672 1-1.5m4 0c0-.828-.448-1.5-1-1.5s-1 .672-1 1.5S9.448 8 10 8s1-.672 1-1.5" />*/}
+              {/*  </svg>*/}
+              {/*</button>*/}
               <button onClick={sendMessage} className="chatSendButton">
                 Send
               </button>
@@ -545,15 +553,17 @@ const Lobby = () => {
             <>
               <div className="modalOverlay" onClick={() => setShowEmojiPicker(false)}></div>
               <div className="modalContainer">
-                <Picker onEmojiClick={(event, emojiObject) => {
-                  handleEmojiClick(emojiObject);
+                <Picker onEmojiClick={(event) => {
+                  handleEmojiClick(event);
                   setShowEmojiPicker(false);
-                }}/>
+                }} />
+
+
               </div>
             </>
           )}
           <div className="game-container">
-            <b style={{fontSize: '20px'}}>Select&nbsp;Character</b>
+            <b style={{ fontSize: '20px' }}>Select&nbsp;Character</b>
 
             <div className="character-selection">
               {characters.map((character) => (
@@ -579,78 +589,24 @@ const Lobby = () => {
           </div>
 
           <div className="map-info">
-            <img src={selectedMap} alt="Map" className="map-image"/>
+            <img src={selectedMap} alt="Map" className="map-image" />
             <div className="map-details">
             </div>
-            {players.length > 0 && players[0].name === playerName && (
+            {players.length > 0 && players[0].name === userData.nickname && (
               <button className="map-select-button" onClick={handleMapSelect}>맵 변경</button>
             )}
           </div>
-
-          {players.length > 0 && players[0].name === playerName && (
+          {players.length > 0 && players[0].name === userData.nickname && (
             <div className="start-button-section">
-              <button className="start-button" onClick={handleStartGame} disabled={!allPlayersReady}>
+              <button className="start-button" onClick={handleStartGame} disabled={!allReady}>
                 시작
               </button>
             </div>
           )}
 
-          {showCountdown && (
-            <div className="countdown">
-              <h2>{countdown}</h2>
-            </div>
-          )}
+
         </>
       )}
-
-      {showRace && (
-        <div className="raceTrack">
-          {players.map((player, index) => (
-            <div
-              key={index}
-              className={`runner runner-${index}`}
-              style={{
-                top: `${index * 25}%`,
-                animationDuration: `${50 / player.speed}s`
-              }}
-              ref={(el) => {
-                runnersRef.current[index] = el;
-                if (el) {
-                  el.dataset.player = player.name;
-                }
-              }}
-            >
-              <img src={player.characterSrc} alt={player.name}/>
-              <span>{player.name}</span>
-            </div>
-          ))}
-
-          <div className="finishLine"></div>
-        </div>
-      )}
-
-      {order.length > 0 && (
-        <div className="order">
-          <h2>순번 결과</h2>
-          <ul>
-            {order.map((player, index) => (
-              <li key={index}>{index + 1}. {player.name}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/*윳놀이판으로 이동*/}
-      {/*<div>*/}
-      {/*  {showYutPan ? (*/}
-      {/*    <YutPan roomId={roomId}/>*/}
-      {/*  ) : (*/}
-      {/*    <div>*/}
-      {/*    </div>*/}
-      {/*  )}*/}
-      {/*</div>*/}
-
-
     </div>
   );
 };

@@ -1,0 +1,99 @@
+.rank-animation-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.ball-mixing-container {
+  margin-bottom: 20px;
+}
+
+.rank-display-container {
+  display: flex;
+  flex-direction: row; /* 가로 방향으로 설정 */
+  align-items: center;
+  justify-content: center;
+  gap: 20px; /* 공 사이의 간격 */
+}
+
+.rank-ball {
+  width: 100px;
+  height: 100px;
+  background-color: #f0c040; /* 공의 색상 */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0);
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.rank-text {
+  font-size: 16px;
+  color: #fff;
+}
+
+@keyframes reveal {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+.raceTrack {
+  position: relative;
+  width: 700px; /* 트랙의 가로 길이 */
+  height: 400px; /* 트랙의 높이 */
+  margin: 50px auto;
+  border: 2px solid #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: white;
+  background-image: url('/image/track.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.runner {
+  position: absolute;
+  display: flex;
+  flex-direction: column; /* 이미지와 이름을 세로로 배치 */
+  align-items: center;
+  animation-name: run;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-play-state: paused; /* 초기 상태에서는 애니메이션이 일시 정지 */
+  left: 0; /* 가로로 출발점 */
+  margin-top: 10px;
+}
+
+.runner img {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 5px; /* 이미지와 이름 사이의 간격 */
+}
+
+.runner span {
+  color: white;
+  font-weight: bold;
+  text-align: center; /* 이름을 이미지 아래 중앙에 정렬 */
+}
+
+@keyframes run {
+  0% { left: 0; }
+  100% { left: 95%; } /* 끝 지점 */
+}
+
+.finishLine {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background-color: red;
+}
