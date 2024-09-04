@@ -17,4 +17,17 @@ apiAxiosInstance.interceptors.request.use(
   error => Promise.reject(error)
 );
 
+apiAxiosInstance.interceptors.response.use(
+  response => {
+    if (typeof window !== 'undefined') {
+      const accessToken = response.headers['accessToken'];
+      if (accessToken) {
+        localStorage.setItem('custom-auth-token', accessToken);
+      }
+    }
+    return response;
+  },
+  error => Promise.reject(error)
+);
+
 export default apiAxiosInstance;
