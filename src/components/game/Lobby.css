@@ -73,13 +73,11 @@
 }
 
 .cardStyle h2 {
-  margin: 10px;
 }
 
 .cardStyle img {
   width: 100px;
   height: 100px;
-  margin-bottom: 10px;
 }
 
 .cardStyle button {
@@ -337,6 +335,7 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  height: 50px;
   padding: 0 10px;
   position: relative;
 }

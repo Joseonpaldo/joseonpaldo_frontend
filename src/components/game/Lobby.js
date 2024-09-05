@@ -35,7 +35,6 @@ const Picker = dynamic(() => import('emoji-picker-react'), {ssr: false});
 
 const Lobby = () => {
   const [players, setPlayers] = useState([]);
-  console.log(players);
   const [readyStates, setReadyStates] = useState({});
   const [allReady, setAllReady] = useState(false);
   const [client, setClient] = useState(null);
@@ -59,6 +58,8 @@ const Lobby = () => {
   const [showGameResult, setShowGameResult] = useState(false);
 
   const [loading, setLoading] = useState("flex");
+
+  console.log(messages);
 
   async function getUserData(jwt) {
     try {
@@ -259,6 +260,7 @@ const Lobby = () => {
     if (input.trim() !== '') {
       const chatMessage = {
         sender: userData.user_id,
+        nickname: userData.nickname,
         content: input,
         type: 'CHAT',
         roomId: roomId
@@ -327,7 +329,12 @@ const Lobby = () => {
       setLoading("none");
       const newPlayers = playersInfo.map((info) => {
         const [user_id, characterSrc, nickname] = info.split("|");
-        return {user_id: user_id, ready: false, characterSrc: characterSrc || userData.profilePicture, nickname: nickname};
+        return {
+          user_id: user_id,
+          ready: false,
+          characterSrc: characterSrc || userData.profilePicture,
+          nickname: nickname
+        };
       });
       setPlayers(newPlayers);
       const selectedChars = newPlayers.map(player => player.characterSrc).filter(src => src !== null && src !== undefined);
@@ -353,7 +360,11 @@ const Lobby = () => {
     } else if (message.type === 'ERROR' && message.content === 'Character already selected') {
       alert('The character has already been selected by another player.');
     } else if (message.type === 'CHAT') {
-      setMessages(prevMessages => [...prevMessages, {sender: message.user_id, content: message.content}]);
+      setMessages(prevMessages => [...prevMessages, {
+        sender: message.sender,
+        content: message.content,
+        nickname: message.nickname
+      }]);
 
       const maxLength = 9;
       const trimmedContent = message.content.length > maxLength
@@ -379,24 +390,24 @@ const Lobby = () => {
       setSelectedMap(message.content);
     } else if (message.type === 'START') {
       const gameInfo = message.content.split("\n");
+      console.log("gameInfo " + gameInfo[1]);
       const playersData = [];
 
       gameInfo.forEach(line => {
-        const match = line.match(/^(.+?):\s(.+?),\sSpeed:\s(\d+)$/);
-        if (match) {
-          const playerName = match[1].trim();
-          const characterSrc = match[2].trim();
-          const speed = parseInt(match[3], 10);
-
-          playersData.push({user_id: playerName, characterSrc: characterSrc, speed: speed});
+        const match = line.split("|");
+        if (match.length === 4) {
+          let [user_id, characterSrc, speed, nickname] = line.split("|");
+          speed = parseInt(speed, 10);
+          playersData.push({user_id: user_id, characterSrc: characterSrc, speed: speed, nickname: nickname});
         }
       });
+      console.log('playersData', playersData);
 
       // 순서를 유지한 채로 playersData를 사용
       setOrder(playersData); // 순서대로 저장된 정보를 그대로 사용
       setShowGameResult(true); // 결과 화면 표시
     } else if (message.type === 'END_GAME') {
-      // setShowYutPan(true);
+      location.href = `/game/${roomId}`;
     }
   };
 
@@ -405,7 +416,7 @@ const Lobby = () => {
     if (showGameResult) {
       console.log('Order updated:', order); // 디버깅용
 
-      let delay = 1000; // 각 순위가 나타나는 시간 간격 (밀리초)
+      let delay = 100; // 각 순위가 나타나는 시간 간격 (밀리초)
 
       // 순번을 순차적으로 추가
       const tempOrder = [];
@@ -413,7 +424,7 @@ const Lobby = () => {
         setTimeout(() => {
           tempOrder.push(player);
           setOrder([...tempOrder]); // 새로운 배열로 설정하여 재렌더링
-        }, delay * (index + 1));
+        }, delay + (index + 100));
       });
     }
   }, [showGameResult]); // order가 아니라 showGameResult가 변경될 때만 실행되도록 수정
@@ -424,7 +435,7 @@ const Lobby = () => {
       {showYutPan ? (
         <YutPan roomId={roomId}/>
       ) : showGameResult ? (
-        <RankAnimation players={order} userData={userData}/>
+        <RankAnimation players={order} userData={userData} client={client}/>
       ) : (
         <>
           <Modal open={isModalOpen} onClose={handleCloseModal}/>
@@ -456,7 +467,7 @@ const Lobby = () => {
                   {player ? (
                     <>
                       <div className="player-info">
-                        <h6>{player.nickname}</h6>
+                        <h3>{player.nickname}</h3>
                         <div className="options-container">
                           <Button
                             onClick={() => handleButtonClick(player.user_id)}
@@ -493,13 +504,15 @@ const Lobby = () => {
                         )}
                       </div>
                       {index !== 0 && (
-                        <Button
-                          type="button"
-                          onClick={() => handleReadyClick(player)}
-                          className={!showOptions ? '' : 'hidden'}
-                        >
-                          {player.ready ? '준비완료' : '준비'}
-                        </Button>
+                        <div style={{padding: 10, width: "100%"}}>
+                          <Button
+                            type="button"
+                            onClick={() => handleReadyClick(player)}
+                            className={!showOptions ? '' : 'hidden'}
+                          >
+                            {player.ready ? '준비완료' : '준비'}
+                          </Button>
+                        </div>
                       )}
                     </>
                   ) : (
@@ -521,7 +534,7 @@ const Lobby = () => {
             <div className="chatMessages" ref={chatMessagesRef}>
               {messages.map((msg, index) => (
                 <div key={index}>
-                  {msg.user_id ? <b>{msg.user_id}: </b> : null}{msg.content}
+                  <b>{msg.nickname}: </b> {msg.content}
                 </div>
               ))}
             </div>
