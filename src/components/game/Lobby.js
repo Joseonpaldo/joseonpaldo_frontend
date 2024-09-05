@@ -11,6 +11,7 @@ import RankAnimation from "@/components/game/RankAnimation";
 import Modal from "@/components/game/Modal";
 import InviteModal from "@/components/game/InviteModal";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
+import InforModal from "@/components/game/InforModal";
 
 const characters = [
   {id: 1, src: '/image/character/bear.png', alt: 'Character 1'},
@@ -53,11 +54,15 @@ const Lobby = () => {
   const [showYutPan, setShowYutPan] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInforModalOpen, setIsInforModalOpen] = useState(false); // 정보 모달 상태
   const [isHost, setIsHost] = useState(false);
   const [order, setOrder] = useState([]);
   const [showGameResult, setShowGameResult] = useState(false);
-
+  const [roomName, setRoomName] = useState('');
   const [loading, setLoading] = useState("flex");
+  const [selectedUserId, setSelectedUserId] = useState(null); // 선택된 유저 ID 저장
+  const [selectedUserNickname, setSelectedUserNickname] = useState(null); // 선택된 유저 닉네임 저장
+
 
   console.log(messages);
 
@@ -80,6 +85,7 @@ const Lobby = () => {
     }
   }, []);
 
+  //roomId
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlPath = window.location.pathname;
@@ -88,6 +94,23 @@ const Lobby = () => {
       setRoomId(lastSegment);
     }
   }, []);
+
+  //방 제목
+  useEffect(() => {
+    const fetchRoomName = async () => {
+      try {
+        const response = await apiAxiosInstance.get(`/roomName/${roomId}`);
+        setRoomName(response.data); // 서버에서 반환된 roomName 설정
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    if (roomId) {
+      fetchRoomName();
+    }
+  }, [roomId]);
+
 
   useEffect(() => {
     const socket = new SockJS('/ws/');
@@ -176,12 +199,13 @@ const Lobby = () => {
     }
   };
 
-  const handleButtonClick = (name) => {
+  const handleButtonClick = (user_id) => {
     setVisibleOptions((prevState) => ({
       ...prevState,
-      [name]: !prevState[name]
+      [user_id]: !prevState[user_id] // user_id를 기준으로 상태 업데이트
     }));
   };
+
 
   const handleOptionClick = (option) => {
     console.log(`Selected option: ${option}`);
@@ -253,7 +277,8 @@ const Lobby = () => {
   useEffect(() => {
     document.body.style.backgroundImage = `url(${selectedMap})`;
     document.body.style.backgroundRepeat = 'no-repeat';
-    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundSize = '100% 100%';
+    document.body.style.backgroundPosition = 'center';
   }, [selectedMap]);
 
   const sendMessage = () => {
@@ -318,25 +343,44 @@ const Lobby = () => {
   const handleCloseInviteModal = () => {
     setIsInviteModalOpen(false);
   };
+  const handleInforClick = (user_id) => {
+
+    console.log("usss"+ user_id);
+    setSelectedUserId(user_id);
+    setIsInforModalOpen(true);
+  };
+
+  const handleCloseInforModal = () => {
+    setIsInforModalOpen(false); // 모달 닫기
+  };
 
   const onMessageReceived = (message) => {
     if (message.type === 'JOIN') {
       setMessages(prevMessages => [...prevMessages, {content: message.content}]);
     } else if (message.type === 'UPDATE') {
       const playersInfo = message.content.split(",");
-      console.log("playersInfo")
-      console.log(playersInfo)
+      console.log("playersInfo");
+      console.log(playersInfo);
       setLoading("none");
+
       const newPlayers = playersInfo.map((info) => {
         const [user_id, characterSrc, nickname] = info.split("|");
+
+        // 올바르게 user_id, characterSrc, nickname을 매핑하는지 확인
+        console.log("user_id:", user_id);
+        console.log("characterSrc:", characterSrc);
+        console.log("nickname:", nickname);
+
         return {
-          user_id: user_id,
+          user_id: user_id, // 첫 번째 값은 user_id
           ready: false,
-          characterSrc: characterSrc || userData.profilePicture,
-          nickname: nickname
+          characterSrc: characterSrc || userData.profilePicture, // 두 번째 값은 캐릭터 이미지
+          nickname: nickname // 세 번째 값은 nickname
         };
       });
+
       setPlayers(newPlayers);
+
       const selectedChars = newPlayers.map(player => player.characterSrc).filter(src => src !== null && src !== undefined);
       setSelectedCharacters(selectedChars);
     } else if (message.type === 'READY') {
@@ -440,9 +484,14 @@ const Lobby = () => {
         <>
           <Modal open={isModalOpen} onClose={handleCloseModal}/>
           <InviteModal open={isInviteModalOpen} onClose={handleCloseInviteModal}/>
+          <InforModal
+            open={isInforModalOpen}
+            onClose={handleCloseInforModal}
+            userId={selectedUserId}  // userId만 전달
+          />
 
           <div className="titleStyle">
-            <h1>Room {players.length}/4</h1>
+            <h1>{roomName} {players.length}/4</h1>
             <button type="button" onClick={() => {
               leaveUser();
               window.close();
@@ -482,10 +531,12 @@ const Lobby = () => {
                           </Button>
                           {visibleOptions[player.user_id] && (
                             <div className="options-menu">
-                              <button onClick={() => handleOptionClick('Option 1')}
-                                      style={{backgroundColor: '#f1e7e0'}}>
-                                정보
-                              </button>
+                              <Button
+                                onClick={() => handleInforClick(player.user_id)}
+                                style={{ backgroundColor: '#f1e7e0' }}
+                              >
+                              정보
+                              </Button>
                               <button onClick={() => handleOptionClick('Option 2')}
                                       style={{backgroundColor: '#f1e7e0'}}>
                                 친구추가
