@@ -390,24 +390,24 @@ const Lobby = () => {
       setSelectedMap(message.content);
     } else if (message.type === 'START') {
       const gameInfo = message.content.split("\n");
+      console.log("gameInfo " + gameInfo[1]);
       const playersData = [];
 
       gameInfo.forEach(line => {
-        const match = line.match(/^(.+?):\s(.+?),\sSpeed:\s(\d+)$/);
-        if (match) {
-          const playerName = match[1].trim();
-          const characterSrc = match[2].trim();
-          const speed = parseInt(match[3], 10);
-
-          playersData.push({user_id: playerName, characterSrc: characterSrc, speed: speed});
+        const match = line.split("|");
+        if (match.length === 4) {
+          let [user_id, characterSrc, speed, nickname] = line.split("|");
+          speed = parseInt(speed, 10);
+          playersData.push({user_id: user_id, characterSrc: characterSrc, speed: speed, nickname: nickname});
         }
       });
+      console.log('playersData', playersData);
 
       // 순서를 유지한 채로 playersData를 사용
       setOrder(playersData); // 순서대로 저장된 정보를 그대로 사용
       setShowGameResult(true); // 결과 화면 표시
     } else if (message.type === 'END_GAME') {
-      // setShowYutPan(true);
+      location.href = `/game/${roomId}`;
     }
   };
 
@@ -416,7 +416,7 @@ const Lobby = () => {
     if (showGameResult) {
       console.log('Order updated:', order); // 디버깅용
 
-      let delay = 1000; // 각 순위가 나타나는 시간 간격 (밀리초)
+      let delay = 100; // 각 순위가 나타나는 시간 간격 (밀리초)
 
       // 순번을 순차적으로 추가
       const tempOrder = [];
@@ -424,7 +424,7 @@ const Lobby = () => {
         setTimeout(() => {
           tempOrder.push(player);
           setOrder([...tempOrder]); // 새로운 배열로 설정하여 재렌더링
-        }, delay * (index + 1));
+        }, delay + (index + 100));
       });
     }
   }, [showGameResult]); // order가 아니라 showGameResult가 변경될 때만 실행되도록 수정
@@ -435,7 +435,7 @@ const Lobby = () => {
       {showYutPan ? (
         <YutPan roomId={roomId}/>
       ) : showGameResult ? (
-        <RankAnimation players={order} userData={userData}/>
+        <RankAnimation players={order} userData={userData} client={client}/>
       ) : (
         <>
           <Modal open={isModalOpen} onClose={handleCloseModal}/>
