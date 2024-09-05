@@ -35,7 +35,6 @@ const Picker = dynamic(() => import('emoji-picker-react'), {ssr: false});
 
 const Lobby = () => {
   const [players, setPlayers] = useState([]);
-  console.log(players);
   const [readyStates, setReadyStates] = useState({});
   const [allReady, setAllReady] = useState(false);
   const [client, setClient] = useState(null);
@@ -59,6 +58,8 @@ const Lobby = () => {
   const [showGameResult, setShowGameResult] = useState(false);
 
   const [loading, setLoading] = useState("flex");
+
+  console.log(messages);
 
   async function getUserData(jwt) {
     try {
@@ -259,6 +260,7 @@ const Lobby = () => {
     if (input.trim() !== '') {
       const chatMessage = {
         sender: userData.user_id,
+        nickname: userData.nickname,
         content: input,
         type: 'CHAT',
         roomId: roomId
@@ -327,7 +329,12 @@ const Lobby = () => {
       setLoading("none");
       const newPlayers = playersInfo.map((info) => {
         const [user_id, characterSrc, nickname] = info.split("|");
-        return {user_id: user_id, ready: false, characterSrc: characterSrc || userData.profilePicture, nickname: nickname};
+        return {
+          user_id: user_id,
+          ready: false,
+          characterSrc: characterSrc || userData.profilePicture,
+          nickname: nickname
+        };
       });
       setPlayers(newPlayers);
       const selectedChars = newPlayers.map(player => player.characterSrc).filter(src => src !== null && src !== undefined);
@@ -353,7 +360,11 @@ const Lobby = () => {
     } else if (message.type === 'ERROR' && message.content === 'Character already selected') {
       alert('The character has already been selected by another player.');
     } else if (message.type === 'CHAT') {
-      setMessages(prevMessages => [...prevMessages, {sender: message.user_id, content: message.content}]);
+      setMessages(prevMessages => [...prevMessages, {
+        sender: message.sender,
+        content: message.content,
+        nickname: message.nickname
+      }]);
 
       const maxLength = 9;
       const trimmedContent = message.content.length > maxLength
@@ -456,7 +467,7 @@ const Lobby = () => {
                   {player ? (
                     <>
                       <div className="player-info">
-                        <h6>{player.nickname}</h6>
+                        <h3>{player.nickname}</h3>
                         <div className="options-container">
                           <Button
                             onClick={() => handleButtonClick(player.user_id)}
@@ -493,13 +504,15 @@ const Lobby = () => {
                         )}
                       </div>
                       {index !== 0 && (
-                        <Button
-                          type="button"
-                          onClick={() => handleReadyClick(player)}
-                          className={!showOptions ? '' : 'hidden'}
-                        >
-                          {player.ready ? '준비완료' : '준비'}
-                        </Button>
+                        <div style={{padding: 10, width: "100%"}}>
+                          <Button
+                            type="button"
+                            onClick={() => handleReadyClick(player)}
+                            className={!showOptions ? '' : 'hidden'}
+                          >
+                            {player.ready ? '준비완료' : '준비'}
+                          </Button>
+                        </div>
                       )}
                     </>
                   ) : (
@@ -521,7 +534,7 @@ const Lobby = () => {
             <div className="chatMessages" ref={chatMessagesRef}>
               {messages.map((msg, index) => (
                 <div key={index}>
-                  {msg.user_id ? <b>{msg.user_id}: </b> : null}{msg.content}
+                  <b>{msg.nickname}: </b> {msg.content}
                 </div>
               ))}
             </div>
