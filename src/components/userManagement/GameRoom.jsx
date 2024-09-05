@@ -8,6 +8,9 @@ import {useEffect, useState} from "react";
 import AddNewUser from "./AddNewUser";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import {usePathname, useRouter} from "next/navigation";
+import SearchInput from "@/components/SearchInput";
+import Typography from "@mui/material/Typography";
+import {light} from "@mui/material/styles/createPalette";
 
 
 // styled component
@@ -15,13 +18,11 @@ const StyledFlexBox = styled(FlexBox)(({theme}) => ({
   justifyContent: "space-between",
   alignItems: "center",
   flexWrap: "wrap",
-  marginBottom: 20,
   [theme.breakpoints.down(500)]: {
     width: "100%",
     "& .MuiInputBase-root": {maxWidth: "100%"},
     "& .MuiButton-root": {
       width: "100%",
-      marginTop: 15,
     },
   },
 }));
@@ -32,18 +33,19 @@ const GameRoom = () => {
   const [userList, setUserList] = useState([]);
   const [apiURL, setApiURL] = useState(null);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [btnVariant, setBtnVariant] = useState("outlined"); //contained
+  const [roomStatus, setRoomStatus] = useState(true); //contained
 
   const router = useRouter();
 
-  const path = usePathname();
 // 경로가 변경될 때 apiURL을 업데이트
   useEffect(() => {
-    if (path === "/start-game-room") {
-      setApiURL('/game/room/start');
-    } else {
+    if (roomStatus) {
       setApiURL('/game/room/ready');
+    } else {
+      setApiURL('/game/room/start');
     }
-  }, [path]);
+  }, [roomStatus]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -52,6 +54,17 @@ const GameRoom = () => {
   const handleClose = () => {
     setOpen(false);
   };
+
+  const playingRoomShow = () => {
+    if (roomStatus) {
+      setRoomStatus(false);
+      setBtnVariant("contained");
+    } else {
+      setRoomStatus(true);
+      setBtnVariant("outlined");
+    }
+
+  }
 
   useEffect(() => {
     if (apiURL === null) return;
@@ -79,32 +92,24 @@ const GameRoom = () => {
 
   return (
     <Box pb={4}>
-      <StyledFlexBox>
-        {
-          <input type="text" placeholder="검색어를 입력하세요" onChange={(e) => setSearchKeyword(e.target.value)}/>
-        }
-        {/* path가 "/start-game-room"이 아닐 때만 버튼을 표시 */}
-        {path !== "/start-game-room" && (
-          <>
-            <Button fullWidth={true} variant="contained" onClick={handleClickOpen}>
-              방 만들기
-            </Button>
-            <Button variant="contained" onClick={() => router.push('/start-game-room')}
-                    sx={{position: "absolute", right: "26px", top: "90px"}}>진행 중</Button>
-          </>
-        )}
-
-
-
-      </StyledFlexBox>
-
+      <div style={{display: "flex", justifyContent: "space-between"}}>
+        <Typography variant="h4">놀이방</Typography>
+        <StyledFlexBox style={{display: "flex", justifyContent: "space-between", flexWrap: "nowrap", flexDirection: "row"}}>
+          <Button variant={btnVariant} onClick={playingRoomShow}
+                  sx={{width: "110px", marginRight: "20px"}}>진행 중</Button>
+          <SearchInput placeholder="검색어를 입력하세요" onChange={(e) => setSearchKeyword(e.target.value)}/>
+        </StyledFlexBox>
+      </div>
+      <Button fullWidth={true} variant="contained" onClick={handleClickOpen} sx={{marginY: 2}}>
+        방 만들기
+      </Button>
       <Grid container spacing={3}>
         {
           userList.filter((e) => {
             return e.name.toLowerCase().includes(searchKeyword.toLowerCase()) || e.roomName.toLowerCase().includes(searchKeyword.toLowerCase());
           }).map((user, index) => (
             <Grid item md={4} sm={6} xs={12} key={index}>
-              <UserCard user={user}/>
+              <UserCard user={user} roomStatus={roomStatus}/>
             </Grid>
           ))
         }

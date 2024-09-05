@@ -49,18 +49,17 @@ const StyledAvatar = styled(Avatar)(({theme}) => ({
 }));
 
 
-const UserCard: FC<UserCardProps> = ({user}) => {
+const UserCard: FC<UserCardProps> = ({user,roomStatus}) => {
   const [goURL, setGoURL] = useState('');
 
-  const path = usePathname();
 // 경로가 변경될 때 apiURL을 업데이트
   useEffect(() => {
-    if (path === "/start-game-room") {
-      setGoURL('/game/');
-    } else {
+    if (roomStatus) {
       setGoURL('/lobby/');
+    } else {
+      setGoURL('/game/');
     }
-  }, [path]);
+  }, [roomStatus]);
 
     return (
         <Card onClick={() => {
