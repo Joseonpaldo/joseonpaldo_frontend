@@ -14,8 +14,6 @@ const InforModal = ({ open, onClose, userId }) => {
       const fetchUserInfo = async () => {
         try {
           const response = await apiAxiosInstance.get(`/userinfor/${userId}`);
-          console.log("User ID: " + userId);
-          console.log('API Response:', response); // 서버 응답 확인
           if (response.data) {
             setUserStats(response.data);  // 유저 정보 설정
           } else {
@@ -34,7 +32,7 @@ const InforModal = ({ open, onClose, userId }) => {
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{userStats ? `${userStats.nickname}님의 정보` : '유저 정보'}</DialogTitle> {/* 조건부 렌더링 */}
+      <DialogTitle><h3>{userStats ? `${userStats.nickname}님의 정보` : '유저 정보'}</h3></DialogTitle> {/* 조건부 렌더링 */}
       <DialogContent>
         {loading ? (
           <DialogContentText>데이터를 불러오는 중입니다...</DialogContentText>
@@ -44,16 +42,17 @@ const InforModal = ({ open, onClose, userId }) => {
               <h3>2인 플레이</h3>
               <table className="informodal-table">
                 <tr>
-                  <td className="informodal-td-label">총 플레이:</td>
-                  <td className="informodal-td-value">{userStats.tot2p}</td>
+                  <td className="informodal-td-label">승리: {userStats.win2p}</td>
+                </tr>
+
+                <tr>
+                  <td className="informodal-td-label">패배: {userStats.tot2p - userStats.win2p}</td>
                 </tr>
                 <tr>
-                  <td className="informodal-td-label">승리 횟수:</td>
-                  <td className="informodal-td-value">{userStats.win2p}</td>
+                  <td className="informodal-td-label">승률: {userStats.winRate2p}%</td>
                 </tr>
                 <tr>
-                  <td className="informodal-td-label">승률:</td>
-                  <td className="informodal-td-value">{userStats.winRate2p}</td>
+                  <td className="informodal-td-label">총 플레이: {userStats.tot2p}</td>
                 </tr>
               </table>
             </div>
@@ -62,16 +61,16 @@ const InforModal = ({ open, onClose, userId }) => {
               <h3>4인 플레이</h3>
               <table className="informodal-table">
                 <tr>
-                  <td className="informodal-td-label">총 플레이:</td>
-                  <td className="informodal-td-value">{userStats.tot4p}</td>
+                  <td className="informodal-td-label">승리: {userStats.win4p}</td>
                 </tr>
                 <tr>
-                  <td className="informodal-td-label">승리 횟수:</td>
-                  <td className="informodal-td-value">{userStats.win4p}</td>
+                  <td className="informodal-td-label">패배: {userStats.tot4p - userStats.win4p}</td>
                 </tr>
                 <tr>
-                  <td className="informodal-td-label">승률:</td>
-                  <td className="informodal-td-value">{userStats.winRate4p}</td>
+                  <td className="informodal-td-label">승률: {userStats.winRate4p}%</td>
+                </tr>
+                <tr>
+                  <td className="informodal-td-label">총 플레이: {userStats.tot4p}</td>
                 </tr>
               </table>
             </div>
@@ -81,9 +80,14 @@ const InforModal = ({ open, onClose, userId }) => {
         )}
       </DialogContent>
 
+      <DialogActions>
+        <Button onClick={onClose}
+                style={{backgroundColor: '#ff8a65', color: 'white'}}>친구추가</Button>
+      </DialogActions>
 
       <DialogActions>
-        <Button onClick={onClose} color="primary">닫기</Button>
+        <Button onClick={onClose}
+        style={{backgroundColor: '#ff8a65', color: 'white'}}>닫기</Button>
       </DialogActions>
     </Dialog>
   );

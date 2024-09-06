@@ -336,9 +336,11 @@ const Lobby = () => {
     window.close();
   };
 
-  const handleInviteClick = () => {
+  const handleInviteClick = (user_id) => {
+    setSelectedUserId(user_id);  // 선택된 유저 ID 설정
     setIsInviteModalOpen(true);
   };
+
 
   const handleCloseInviteModal = () => {
     setIsInviteModalOpen(false);
@@ -483,7 +485,12 @@ const Lobby = () => {
       ) : (
         <>
           <Modal open={isModalOpen} onClose={handleCloseModal}/>
-          <InviteModal open={isInviteModalOpen} onClose={handleCloseInviteModal}/>
+          <InviteModal
+            open={isInviteModalOpen}
+            onClose={handleCloseInviteModal}
+            userId={selectedUserId}  // userId 전달
+          />
+
           <InforModal
             open={isInforModalOpen}
             onClose={handleCloseInforModal}
@@ -521,7 +528,7 @@ const Lobby = () => {
                           <Button
                             onClick={() => handleButtonClick(player.user_id)}
                             className="show-options-button"
-                            style={{backgroundColor: '#e1b389'}}
+                            style={{ backgroundColor: '#e1b389', display: player.user_id === userData.user_id ? 'none' : 'block' }}  // 자신에게는 보이지 않도록 설정
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
                                  className="bi bi-three-dots" viewBox="0 0 16 16">
@@ -535,14 +542,16 @@ const Lobby = () => {
                                 onClick={() => handleInforClick(player.user_id)}
                                 style={{ backgroundColor: '#f1e7e0' }}
                               >
-                              정보
+                                정보
                               </Button>
-                              <button onClick={() => handleOptionClick('Option 2')}
-                                      style={{backgroundColor: '#f1e7e0'}}>
-                                친구추가
-                              </button>
+                              {player.user_id != userData.user_id && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
+                                <button onClick={() => handleOptionClick('Option 2')} style={{ backgroundColor: '#f1e7e0' }}>
+                                  친구추가
+                                </button>
+                              )}
                             </div>
                           )}
+
                         </div>
                       </div>
 
@@ -569,7 +578,7 @@ const Lobby = () => {
                   ) : (
                     <Button
                       type="button"
-                      onClick={handleInviteClick}
+                      onClick={() => handleInviteClick(userData.user_id)}
                       className="invite-button"
                       style={{backgroundColor: '#e1b389', marginTop: '100px'}}
                     >
