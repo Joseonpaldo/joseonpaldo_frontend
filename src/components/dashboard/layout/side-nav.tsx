@@ -18,6 +18,8 @@ import { Logo } from '@/components/core/logo';
 
 import { navItems } from './config';
 import { navIcons } from './nav-icons';
+import List from '@/components/friend-list/list';
+
 
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
@@ -71,8 +73,10 @@ export function SideNav(): React.JSX.Element {
         {renderNavItems({ pathname, items: navItems })}
       </Box>
       <Divider sx={{ borderColor: 'var(--mui-palette-neutral-700)' }} />
-
+      
+      <List></List>
     </Box>
+
   );
 }
 
@@ -149,6 +153,7 @@ function NavItem({ disabled, external, href, icon, matcher, pathname, title }: N
           </Typography>
         </Box>
       </Box>
+      
     </li>
   );
 }
