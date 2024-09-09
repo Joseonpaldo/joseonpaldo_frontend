@@ -3,6 +3,8 @@ import apiAxiosInstance from '@/hooks/apiAxiosInstance';
 import React, { useEffect, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from "@stomp/stompjs";
+import InviteModal from '../game/InviteModal';
+import Accept from "@/components/game/Accept"; // 초대 모달 컴포넌트 추가
 
 export default function FriendList() {
   const jwt = localStorage.getItem('custom-auth-token');
@@ -14,6 +16,11 @@ export default function FriendList() {
   const [unreadMessages, setUnreadMessages] = useState({});
   const [stompClient, setStompClient] = useState(null);
   const [messages, setMessages] = useState([]);
+
+  // 초대 모달 관련 상태
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviter, setInviter] = useState('');
+  const [inviteRoomId, setInviteRoomId] = useState('');
 
   async function getUserData(jwt) {
     try {
@@ -29,76 +36,11 @@ export default function FriendList() {
     if (jwt != null) {
       await apiAxiosInstance.get(`/friend/list/${jwt}`)
         .then(res => {
-          console.log('친구 목록 데이터:', res.data);
           if (Array.isArray(res.data)) {
             setFriendList([...res.data]);
-          } else {
-            console.error("친구 목록 데이터가 배열이 아닙니다.", res.data);
           }
         })
         .catch(e => console.error("친구 목록 가져오기 실패", e));
-    }
-  }
-
-  function friendButton(friend) {
-    console.log("선택한 친구 데이터:", friend);
-    if (!friend.chatRoomId) {
-      apiAxiosInstance.post('/chat/createOrGetChatRoom', {
-        userId1: userData.user_id,
-        userId2: friend.userId
-      })
-        .then(res => {
-          const chatRoomId = res.data.roomId;
-          console.log('채팅방 생성 또는 조회 성공:', chatRoomId);
-
-          setOneFriend({
-            ...friend,
-            chatRoomId: chatRoomId
-          });
-
-          setIsChatRoom(true);
-
-          apiAxiosInstance.get(`/room/${chatRoomId}/messages`)
-            .then(res => {
-              if (res.headers['content-type'].includes('application/json')) {
-                if (Array.isArray(res.data)) {
-                  const loadedMessages = res.data.map(msg => ({
-                    senderId: msg.sender.userId,
-                    senderNickname: msg.sender.nickname,
-                    content: msg.messageContent,
-                    timestamp: msg.sentAt,
-                  }));
-                  setMessages(loadedMessages);
-                } else {
-                  console.error("메시지 데이터가 배열이 아닙니다.", res.data);
-                }
-              } else {
-                console.error("메시지 조회 실패: 인증이 필요합니다.");
-              }
-            })
-            .catch(error => {
-              console.error('메시지 조회 실패:', error);
-            });
-        })
-        .catch(error => console.error('채팅방 생성 또는 조회 실패:', error));
-    } else {
-      setOneFriend(friend);
-      setIsChatRoom(true);
-      apiAxiosInstance.get(`/room/${friend.chatRoomId}/messages`)
-        .then(res => {
-          if (Array.isArray(res.data)) {
-            const loadedMessages = res.data.map(msg => ({
-              senderId: msg.sender.userId,
-              senderNickname: msg.sender.nickname,
-              content: msg.messageContent,
-              timestamp: msg.sentAt,
-            }));
-            setMessages(loadedMessages);
-          } else {
-            console.error("메시지 데이터가 배열이 아닙니다.", res.data);
-          }
-        })
-        .catch(error => console.error('메시지 내역 불러오기 실패:', error));
     }
   }
 
@@ -118,82 +60,56 @@ export default function FriendList() {
       const socket = new SockJS('/ws/');
       const stompClient = Stomp.over(socket);
 
-      stompClient.connect({}, (frame) => {
-        console.log('WebSocket 연결 성공: ' + frame);
+      setStompClient(stompClient);
 
-        const subscribeUrl = `/user/${userData.user_id}/queue/messages`;
-        console.log('WebSocket 구독 경로:', subscribeUrl);
+      stompClient.connect({}, (frame) => {
+        const subscribeUrl = `/topic/${userData.user_id}`;  // 클라이언트는 이 경로를 구독해야 함
 
         stompClient.subscribe(subscribeUrl, (message) => {
-          const newMessage = JSON.parse(message.body);
-          console.log("새 메시지 수신:", newMessage);
-
-          setMessages(prevMessages => [
-            ...prevMessages,
-            {
-              senderId: newMessage.senderId,
-              content: newMessage.messageContent,
-              timestamp: newMessage.timestamp
-            }
-          ]);
+          try {
+            const parsedMessage = JSON.parse(message.body);
+            receivedMessage(parsedMessage);  // 메시지 수신 처리
+          } catch (error) {
+            console.error('Failed to parse message:', message.body, error);
+          }
         });
       }, (error) => {
-        console.error('WebSocket 연결 실패:', error);
-        setTimeout(() => {
-          console.log("WebSocket 재연결 시도 중...");
-          stompClient.connect();
-        }, 5000);
+        console.error('WebSocket connection error:', error);
       });
-
-      setStompClient(stompClient);
 
       return () => {
         if (stompClient) {
-          stompClient.disconnect(() => {
-            console.log('WebSocket 연결 해제');
-          });
+          stompClient.disconnect();
         }
       };
     }
   }, [userData]);
 
-  function sendMessage(messageContent) {
-    if (stompClient && stompClient.connected && messageContent.trim() !== '') {
-      // 데이터 로그 확인
-      console.log("senderId:", userData.user_id); // senderId 확인
-      console.log("receiverId:", oneFriend.userId); // receiverId 확인
-      console.log("userId1:", userData.user_id); // userId1 확인
-      console.log("userId2:", oneFriend.userId); // userId2 확인
-
-      if (!userData.user_id || !oneFriend.userId) {
-        console.error('필수 값이 누락되었습니다. senderId, receiverId, 또는 userId1, userId2가 null입니다.');
-        return;
-      }
-
-      const chatMessage = {
-        senderId: userData.user_id,
-        receiverId: oneFriend.userId,
-        userId1: userData.user_id, // userId1을 sender로 설정
-        userId2: oneFriend.userId, // userId2를 receiver로 설정
-        messageContent: messageContent,
-        timestamp: new Date().toISOString(),
-      };
-
-      stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
-
-      // 내가 보낸 메시지를 화면에 추가
-      setMessages(prevMessages => [
-        ...prevMessages,
-        { senderId: userData.user_id, content: messageContent, timestamp: new Date().toISOString() }
-      ]);
+// 메시지 수신 처리 함수
+  const receivedMessage = (message) => {
+    if (message.type === 'INVITE') {
+      console.log(message);
+      setInviteRoomId(message.roomId);
+      setInviter(message.nickname);  // 초대한 사람의 ID나 이름 설정
+      setIsInviteModalOpen(true);
     }
-  }
+  };
 
-  function closeChatRoom() {
-    setIsChatRoom(false);
-    setOneFriend(null);
-    setMessages([]);
-  }
+
+  const handleAcceptInvite = () => {
+    // 초대 수락 시 해당 방으로 이동
+    window.location.href = `/lobby/${inviteRoomId}`;
+  };
+
+  const handleCloseInviteModal = () => {
+    setIsInviteModalOpen(false); // 초대 모달 닫기
+  };
+
+  // friendButton 함수 정의
+  const friendButton = (friend) => {
+    setOneFriend(friend);
+    setIsChatRoom(true); // 선택된 친구와의 채팅 화면으로 이동
+  };
 
   return (
     <>
@@ -214,7 +130,7 @@ export default function FriendList() {
         </div>
       ) : (
         <div className="chat-room">
-          <button onClick={closeChatRoom} className="button">친구 목록으로 돌아가기</button>
+          <button onClick={() => setIsChatRoom(false)} className="button">친구 목록으로 돌아가기</button>
           <h3>{oneFriend.nickname}님과의 채팅</h3>
           <div className="chat-messages">
             {messages.map((msg, idx) => (
@@ -245,6 +161,15 @@ export default function FriendList() {
           </div>
         </div>
       )}
+
+      {/* 초대 모달 */}
+      <Accept
+        open={isInviteModalOpen}
+        onClose={handleCloseInviteModal}
+        inviter={inviter} // 초대한 사용자 정보 전달
+        onAccept={handleAcceptInvite} // 초대 수락 핸들러 전달
+        roomId={inviteRoomId}
+      />
     </>
   );
 }

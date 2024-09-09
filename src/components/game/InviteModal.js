@@ -1,9 +1,10 @@
+"use client";
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid } from "@mui/material";
 import Button from "@mui/material/Button";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
-const Modal = ({ open, onClose, userId }) => {
+const InviteModal = ({ open, onClose, userId, client, roomId }) => {
   const jwt = localStorage.getItem('custom-auth-token');
   const [userData, setUserData] = useState(null);
   const [friendList, setFriendList] = useState([]);
@@ -45,8 +46,20 @@ const Modal = ({ open, onClose, userId }) => {
   // 초대하기 버튼 클릭 시 실행할 함수
   const handleInviteClick = (friendId) => {
     console.log(`초대된 사용자 ID: ${friendId}`);
-    // 여기서 초대 요청 등을 처리하는 로직을 추가할 수 있습니다.
+
+    if (client && client.connected) {
+      // 초대 메시지를 서버로 전송
+      client.send(`/app/chat.inviteUser/${friendId}`, {}, JSON.stringify({
+        sender: userData.user_id,   // 초대한 사용자 ID
+        type: 'INVITE',             // 메시지 타입은 초대
+        roomId: roomId,             // 방 ID
+        invitedUserId: friendId,    // 초대받는 사용자 ID (여기서 friendId가 null이 아니어야 함)
+      }));
+
+    }
   };
+
+
 
   return (
     <Dialog
@@ -140,4 +153,4 @@ const Modal = ({ open, onClose, userId }) => {
   );
 };
 
-export default Modal;
+export default InviteModal;

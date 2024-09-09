@@ -117,12 +117,13 @@ const Lobby = () => {
     const stompClient = Stomp.over(socket);
 
     stompClient.connect({}, () => {
-      const url = socket._transport.url; // socket._transport.url 값을 가져옵니다.
-      const parts = url.split('/'); // '/'로 문자열을 나눕니다.
-      const session = parts[parts.length - 2]; // 뒤에서 두 번째 값을 가져옵니다.
+      const url = socket._transport.url;
+      const parts = url.split('/');
+      const session = parts[parts.length - 2];
 
       setClient(stompClient);
 
+      // 기존 룸 메시지 구독
       stompClient.subscribe(`/topic/${roomId}`, (message) => {
         try {
           const parsedMessage = JSON.parse(message.body);
@@ -131,6 +132,7 @@ const Lobby = () => {
           console.error('Failed to parse message:', message.body, error);
         }
       });
+
 
       if (userData) {
         stompClient.send(`/app/chat.addUser/${roomId}`, {}, JSON.stringify({
@@ -156,6 +158,8 @@ const Lobby = () => {
       }
     };
   }, [roomId, userData]);
+
+
 
   const leaveUser = () => {
     if (client && client.connected && userData) {
@@ -488,8 +492,11 @@ const Lobby = () => {
           <InviteModal
             open={isInviteModalOpen}
             onClose={handleCloseInviteModal}
-            userId={selectedUserId}  // userId 전달
+            userId={selectedUserId}
+            client={client}  // client 객체를 전달
+            roomId={roomId}
           />
+
 
           <InforModal
             open={isInforModalOpen}
