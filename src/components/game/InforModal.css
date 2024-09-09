@@ -1,0 +1,63 @@
+/* 모달 컨텐츠 */
+.informodal-content {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+/* 테이블 스타일 */
+.informodal-stats-table {
+  width: 45%;
+  background-color: #f0f4f8;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 테이블 및 텍스트 스타일 */
+.informodal-table {
+  width: 100%;
+  margin-top: 10px;
+  table-layout: fixed; /* 테이블 너비를 고정하여 한 줄에 나오도록 */
+}
+
+.informodal-td {
+  padding: 12px;
+  text-align: left; /* 텍스트를 왼쪽 정렬 */
+  font-size: 16px;
+  color: #333;
+}
+
+.informodal-td-label {
+  font-weight: bold;
+  font-size: 18px;
+  color: #007bff;
+}
+
+.informodal-td-value {
+  font-size: 18px;
+  color: #333;
+}
+
+/* 타이틀 */
+h3 {
+  text-align: center;
+  font-size: 20px;
+  color: #333;
+}
+
+/* 버튼 스타일 */
+.informodal-button {
+  margin-top: 20px;
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+}
+
+.informodal-button:hover {
+  background-color: #218838;
+}

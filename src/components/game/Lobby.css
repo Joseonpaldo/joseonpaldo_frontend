@@ -19,6 +19,8 @@
   box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.3);
   font-family: 'Press Start 2P', cursive;
   border-radius: 15px;
+  display: flex;
+  justify-content: center;
 }
 
 .titleStyle h1 {
@@ -206,18 +208,6 @@
   color: white;
 }
 
-.game-container {
-  width: 500px;
-  height: 445px;
-  padding: 20px;
-  background-color: white;
-  border-radius: 10px;
-  color: black;
-  text-align: center;
-  position: absolute;
-  right: 5%;
-  box-shadow: 5px 5px 5px gray;
-}
 
 .character-selection {
   display: grid;

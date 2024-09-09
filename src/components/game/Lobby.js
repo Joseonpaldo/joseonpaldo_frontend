@@ -11,6 +11,10 @@ import RankAnimation from "@/components/game/RankAnimation";
 import Modal from "@/components/game/Modal";
 import InviteModal from "@/components/game/InviteModal";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
+import {useParams} from "next/navigation";
+import FriendFrom from "@/components/game/FriendFrom";
+import InforModal from "@/components/game/InforModal";
+import FriendTo from "@/components/game/FriendTo";
 
 const characters = [
   {id: 1, src: '/image/character/bear.png', alt: 'Character 1'},
@@ -46,20 +50,29 @@ const Lobby = () => {
   const chatMessagesRef = useRef(null);
   const [input, setInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [roomId, setRoomId] = useState('');
   const [balloons, setBalloons] = useState({});
   const [showOptions, setShowOptions] = useState(false);
   const [visibleOptions, setVisibleOptions] = useState({});
   const [showYutPan, setShowYutPan] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInforModalOpen, setIsInforModalOpen] = useState(false); // 정보 모달 상태
   const [isHost, setIsHost] = useState(false);
   const [order, setOrder] = useState([]);
   const [showGameResult, setShowGameResult] = useState(false);
-
+  const [roomName, setRoomName] = useState('');
   const [loading, setLoading] = useState("flex");
+  const [selectedUserId, setSelectedUserId] = useState(null); // 선택된 유저 ID 저장
+  const [selectedUserNickname, setSelectedUserNickname] = useState(null); // 선택된 유저 닉네임 저장
 
-  console.log(messages);
+  const [senderNickname, setSenderNickname] = useState(''); // 친구 요청을 보낸 유저 닉네임
+  const [isFriendFromModalOpen, setIsFriendFromModalOpen] = useState(false); // 친구 추가 요청 모달 상태
+  const [isFriendToModalOpen, setIsFriendToModalOpen] = useState(false); // 친구 요청 받은 모달 상태
+  const [receiver, setReciver] = useState(''); // 친구 요청을 보낸 유저 닉네임
+  const [sender, setSender] = useState(''); // 친구 요청을 보낸 유저 닉네임
+
+  const {roomId} = useParams();
+
 
   async function getUserData(jwt) {
     try {
@@ -80,26 +93,31 @@ const Lobby = () => {
     }
   }, []);
 
+  //방 제목
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlPath = window.location.pathname;
-      const pathSegments = urlPath.split('/');
-      const lastSegment = pathSegments[pathSegments.length - 1];
-      setRoomId(lastSegment);
+    const fetchRoomName = async () => {
+        const response = await apiAxiosInstance.get(`/roomName/${roomId}`);
+        setRoomName(response.data); // 서버에서 반환된 roomName 설정
+    };
+
+    if (roomId) {
+      fetchRoomName();
     }
-  }, []);
+  }, [roomId]);
+
 
   useEffect(() => {
     const socket = new SockJS('/ws/');
     const stompClient = Stomp.over(socket);
 
     stompClient.connect({}, () => {
-      const url = socket._transport.url; // socket._transport.url 값을 가져옵니다.
-      const parts = url.split('/'); // '/'로 문자열을 나눕니다.
-      const session = parts[parts.length - 2]; // 뒤에서 두 번째 값을 가져옵니다.
+      const url = socket._transport.url;
+      const parts = url.split('/');
+      const session = parts[parts.length - 2];
 
       setClient(stompClient);
 
+      // 기존 룸 메시지 구독
       stompClient.subscribe(`/topic/${roomId}`, (message) => {
         try {
           const parsedMessage = JSON.parse(message.body);
@@ -108,6 +126,7 @@ const Lobby = () => {
           console.error('Failed to parse message:', message.body, error);
         }
       });
+
 
       if (userData) {
         stompClient.send(`/app/chat.addUser/${roomId}`, {}, JSON.stringify({
@@ -134,6 +153,8 @@ const Lobby = () => {
     };
   }, [roomId, userData]);
 
+
+
   const leaveUser = () => {
     if (client && client.connected && userData) {
       client.send(`/app/chat.leaveUser/${roomId}`, {}, JSON.stringify({
@@ -155,7 +176,7 @@ const Lobby = () => {
   }, [players, userData]);
 
   const checkAllReady = () => {
-    if (players.length > 1 && players.slice(1).every(player => player.ready)) {
+    if (players.length === 4 && players.slice(1).every(player => player.ready)) {
       setAllReady(true);
     } else {
       setAllReady(false);
@@ -164,14 +185,18 @@ const Lobby = () => {
 
   const handleReadyClick = (player) => {
     if (player?.user_id == userData?.user_id) {
-      if (client && client.connected) {
-        const updatedReadyState = !player.ready;
-        client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({
-          sender: player.user_id,
-          type: 'READY',
-          ready: updatedReadyState,
-          roomId
-        }));
+      if (player.characterSrc.startsWith('/image')) {
+        if (client && client.connected) {
+          const updatedReadyState = !player.ready;
+          client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({
+            sender: player.user_id,
+            type: 'READY',
+            ready: updatedReadyState,
+            roomId
+          }));
+        }
+      } else {
+        alert("캐릭터 선택을 해주십시오.")
       }
     }
   };
@@ -182,6 +207,7 @@ const Lobby = () => {
       [name]: !prevState[name]
     }));
   };
+
 
   const handleOptionClick = (option) => {
     console.log(`Selected option: ${option}`);
@@ -253,7 +279,8 @@ const Lobby = () => {
   useEffect(() => {
     document.body.style.backgroundImage = `url(${selectedMap})`;
     document.body.style.backgroundRepeat = 'no-repeat';
-    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundSize = '100% 100%';
+    document.body.style.backgroundPosition = 'center';
   }, [selectedMap]);
 
   const sendMessage = () => {
@@ -281,6 +308,52 @@ const Lobby = () => {
   };
 
 
+// 친구 추가 요청 보내기
+  const handleSendFriendRequest = (user_id) => {
+    if (client && client.connected) {
+      client.send(`/app/chat.friendRequest/${user_id}`, {}, JSON.stringify({
+        sender: userData.user_id,
+        receiver: user_id,
+        type: 'FRIEND_REQUEST',
+        nickname: userData.nickname, // 친구 요청 보낸 사람의 닉네임
+      }));
+    }
+    setIsFriendFromModalOpen(true); // 모달 닫기
+  };
+
+
+
+  useEffect(() => {
+    if (client && userData) {
+      client.subscribe(`/topic/friendRequest/${userData.user_id}`, (message) => {
+        const parsedMessage = JSON.parse(message.body);
+        console.log('Received dddd:', parsedMessage); // 수신된 메시지 확인
+
+        if (parsedMessage.type === 'FRIEND_REQUEST') {
+          console.log("Setting modal state to true"); // 상태 업데이트 확인
+          setSenderNickname(parsedMessage.nickname);
+          setSender(parsedMessage.sender)
+          setReciver(parsedMessage.receiver)
+          setIsFriendToModalOpen(true); // 친구 요청 받은 모달 열기
+        }
+      });
+    }
+  }, [client, userData]);
+
+
+
+  // 친구 추가 요청 수락 로직 구현
+  const handleAcceptInvite = (userId) => {
+    if (client && client.connected) {
+      client.send(`/app/chat.acceptFriend/${roomId}`, {}, JSON.stringify({
+        sender: userData.user_id,
+        receiver: userId, // 수락한 유저 ID를 전송
+        type: 'ACCEPT_FRIEND',
+      }));
+    }
+    setIsFriendToModalOpen(false); // 모달 닫기
+  };
+
   useEffect(() => {
     if (chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
@@ -288,6 +361,11 @@ const Lobby = () => {
   }, [messages]);
 
   const handleStartGame = () => {
+    if (players.some(player => !player.characterSrc.startsWith("/image"))) {
+      alert("캐릭터 선택을 해야 시작 가능합니다.");
+      return;
+    }
+
     if (client && client.connected) {
       // 현재 사용자가 선택한 캐릭터 이미지를 가져옴
       const selectedCharacterSrc = players.find(player => player.name === userData.nickname)?.characterSrc;
@@ -311,12 +389,23 @@ const Lobby = () => {
     window.close();
   };
 
-  const handleInviteClick = () => {
+  const handleInviteClick = (user_id) => {
+    setSelectedUserId(user_id);  // 선택된 유저 ID 설정
     setIsInviteModalOpen(true);
   };
 
+
   const handleCloseInviteModal = () => {
     setIsInviteModalOpen(false);
+  };
+  const handleInforClick = (user_id) => {
+
+    setSelectedUserId(user_id);
+    setIsInforModalOpen(true);
+  };
+
+  const handleCloseInforModal = () => {
+    setIsInforModalOpen(false); // 모달 닫기
   };
 
   const onMessageReceived = (message) => {
@@ -324,9 +413,10 @@ const Lobby = () => {
       setMessages(prevMessages => [...prevMessages, {content: message.content}]);
     } else if (message.type === 'UPDATE') {
       const playersInfo = message.content.split(",");
-      console.log("playersInfo")
-      console.log(playersInfo)
+      console.log("playersInfo");
+      console.log(playersInfo);
       setLoading("none");
+
       const newPlayers = playersInfo.map((info) => {
         const [user_id, characterSrc, nickname] = info.split("|");
         return {
@@ -390,7 +480,6 @@ const Lobby = () => {
       setSelectedMap(message.content);
     } else if (message.type === 'START') {
       const gameInfo = message.content.split("\n");
-      console.log("gameInfo " + gameInfo[1]);
       const playersData = [];
 
       gameInfo.forEach(line => {
@@ -439,10 +528,44 @@ const Lobby = () => {
       ) : (
         <>
           <Modal open={isModalOpen} onClose={handleCloseModal}/>
-          <InviteModal open={isInviteModalOpen} onClose={handleCloseInviteModal}/>
+          <InviteModal
+            open={isInviteModalOpen}
+            onClose={handleCloseInviteModal}
+            userId={selectedUserId}
+            client={client}  // client 객체를 전달
+            roomId={roomId}
+          />
+
+
+          <InforModal
+            open={isInforModalOpen}
+            onClose={handleCloseInforModal}
+            userId={selectedUserId}  // userId만 전달
+          />
+
+          {/* 친구 추가 요청 모달 (보낸 사람) */}
+          <FriendFrom
+            open={isFriendFromModalOpen}
+            onClose={() => setIsFriendFromModalOpen(false)}
+            onSendRequest={() => handleSendFriendRequest(selectedUserId)}
+            senderNickname={senderNickname}
+          />
+
+          {/* 친구 추가 요청 모달 (받은 사람) */}
+          <FriendTo
+            open={isFriendToModalOpen} // 상태에 따라 모달이 열림
+            onClose={() => setIsFriendToModalOpen(false)}
+            senderNickname={senderNickname}
+            userId={receiver} // 수신자의 ID
+            friendId={sender} // 친구 요청을 보낸 사람의 ID
+          />
+
+
+
+
 
           <div className="titleStyle">
-            <h1>Room {players.length}/4</h1>
+            <h1>{roomName} {players.length}/4</h1>
             <button type="button" onClick={() => {
               leaveUser();
               window.close();
@@ -472,7 +595,7 @@ const Lobby = () => {
                           <Button
                             onClick={() => handleButtonClick(player.user_id)}
                             className="show-options-button"
-                            style={{backgroundColor: '#e1b389'}}
+                            style={{ backgroundColor: '#e1b389', display: player.user_id === userData.user_id ? 'none' : 'block' }}  // 자신에게는 보이지 않도록 설정
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
                                  className="bi bi-three-dots" viewBox="0 0 16 16">
@@ -482,14 +605,20 @@ const Lobby = () => {
                           </Button>
                           {visibleOptions[player.user_id] && (
                             <div className="options-menu">
-                              <button onClick={() => handleOptionClick('Option 1')}
-                                      style={{backgroundColor: '#f1e7e0'}}>
+                              <Button
+                                onClick={() => handleInforClick(player.user_id)}
+                                style={{ backgroundColor: '#f1e7e0' }}
+                              >
                                 정보
-                              </button>
-                              <button onClick={() => handleOptionClick('Option 2')}
-                                      style={{backgroundColor: '#f1e7e0'}}>
-                                친구추가
-                              </button>
+                              </Button>
+                              {player.user_id != userData.user_id && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
+                                <Button
+                                  onClick={() => handleSendFriendRequest(player.user_id)} // 친구 추가 버튼 클릭 시 모달 열기
+                                  style={{ backgroundColor: '#f1e7e0' }}
+                                >
+                                  친추
+                                </Button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -518,7 +647,7 @@ const Lobby = () => {
                   ) : (
                     <Button
                       type="button"
-                      onClick={handleInviteClick}
+                      onClick={() => handleInviteClick(userData.user_id)}
                       className="invite-button"
                       style={{backgroundColor: '#e1b389', marginTop: '100px'}}
                     >
@@ -581,7 +710,18 @@ const Lobby = () => {
               </div>
             </>
           )}
-          <div className="game-container">
+          <div style={{
+            width: "500px",
+            height: "445px",
+            padding: "20px",
+            backgroundColor: "white",
+            borderRadius: "10px",
+            color: "black",
+            textAlign: "center",
+            position: "absolute",
+            right: "5%",
+            boxShadow: "5px 5px 5px gray"
+          }}>
             <b style={{fontSize: '20px'}}>Select&nbsp;Character</b>
 
             <div className="character-selection">
@@ -592,6 +732,7 @@ const Lobby = () => {
                     alt={character.alt}
                     className={`character ${selectedCharacter === character.id ? 'selected' : ''}`}
                     onClick={() => {
+                      //캐릭터 선택
                       if (selectedCharacter === character.id) {
                         handleCharacterDeselect(character.id);
                       } else if (!selectedCharacters.includes(character.src)) {

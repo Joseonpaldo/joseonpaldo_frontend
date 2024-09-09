@@ -1,0 +1,116 @@
+.friend-list-container {
+  padding: 20px;
+}
+
+.button {
+  padding: 10px 20px;
+  background-color: #dca371;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #dd8b44;
+}
+
+.friend-list {
+  list-style: none;
+  padding: 0;
+}
+
+.friend-list-item {
+  margin-bottom: 10px;
+}
+
+.friend-button {
+  padding: 10px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.friend-button:hover {
+  background-color: #e1b389; /* 좋아하는 색상으로 변경 */
+}
+
+.chat-room {
+  padding: 20px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background-color: #f4d3a1; /* 더 부드러운 배경색 */
+}
+.chat-room h3{
+  color: black;
+}
+
+.chat-messages {
+  width: 400px;
+  height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #efe9e3; /* 메시지 영역 배경 흰색 */
+  border-radius: 10px;
+}
+
+.chat-message {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  max-width: 70%;
+}
+
+.chat-message.sent {
+  background-color: #e1b389; /* 보낸 메시지 배경 */
+  margin-left: auto;
+  text-align: right;
+  color: white;
+}
+
+.chat-message.received {
+  background-color: #f1f1f1; /* 받은 메시지 배경 */
+  text-align: left;
+}
+
+.chat-message p {
+  margin: 0;
+}
+
+.chat-input {
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  outline: none;
+  font-size: 14px;
+  transition: border-color 0.3s;
+  width: 300px;
+}
+
+.input:focus {
+  border-color: #007bff;
+}
+
+.send-button {
+  padding: 10px 20px;
+  background-color: #8B6B4F;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 20px;
+  transition: background-color 0.3s;
+}
+
+.send-button:hover {
+  background-color: #218838;
+}
