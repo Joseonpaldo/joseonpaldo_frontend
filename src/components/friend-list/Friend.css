@@ -4,7 +4,7 @@
 
 .button {
   padding: 10px 20px;
-  background-color: #007bff;
+  background-color: #dca371;
   color: white;
   border: none;
   border-radius: 5px;
@@ -12,7 +12,7 @@
 }
 
 .button:hover {
-  background-color: #0056b3;
+  background-color: #dd8b44;
 }
 
 .friend-list {
@@ -41,19 +41,20 @@
   padding: 20px;
   border: 2px solid #ddd;
   border-radius: 10px;
-  background-color: #f0f0f5; /* 더 부드러운 배경색 */
+  background-color: #f4d3a1; /* 더 부드러운 배경색 */
 }
 .chat-room h3{
   color: black;
 }
 
 .chat-messages {
+  width: 400px;
   height: 300px;
   overflow-y: auto;
   border: 1px solid #ddd;
   padding: 10px;
   margin-bottom: 10px;
-  background-color: white; /* 메시지 영역 배경 흰색 */
+  background-color: #efe9e3; /* 메시지 영역 배경 흰색 */
   border-radius: 10px;
 }
 
@@ -86,12 +87,13 @@
 
 .input {
   flex: 1;
-  padding: 12px;
+  padding: 8px;
   border: 1px solid #ddd;
   border-radius: 5px;
   outline: none;
-  font-size: 16px;
+  font-size: 14px;
   transition: border-color 0.3s;
+  width: 300px;
 }
 
 .input:focus {
@@ -100,12 +102,12 @@
 
 .send-button {
   padding: 10px 20px;
-  background-color: #28a745;
+  background-color: #8B6B4F;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin-left: 10px;
+  margin-left: 20px;
   transition: background-color 0.3s;
 }
 

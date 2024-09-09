@@ -1,9 +1,8 @@
-import './Friend.css';  // CSS 파일을 불러옵니다
+import './Friend.css';
 import apiAxiosInstance from '@/hooks/apiAxiosInstance';
 import React, { useEffect, useRef, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from "@stomp/stompjs";
-import InviteModal from '../game/InviteModal';
 import Accept from "@/components/game/Accept"; // 초대 모달 컴포넌트 추가
 
 export default function FriendList() {
@@ -195,73 +194,87 @@ export default function FriendList() {
 
   return (
     <div style={{position:'absolute', bottom:'0'}}>
-    <>
-      {!isChatRoom ? (
-        <div className="friend-list-container">
-          <button onClick={toggleFriendList} className="button">친구 목록 보기</button>
+      <>
+        {!isChatRoom ? (
+          <div className="friend-list-container">
+            <button onClick={toggleFriendList} className="button">친구 목록</button>
 
-          {showFriendList && ( // 친구 목록을 토글하여 표시
-            <ul className="friend-list">
-            {friendList.map((item, idx) => (
-              <li key={idx} className="friend-list-item">
-                <button onClick={() => friendButton(item)} className="friend-button">
-                  {item.userId} : {item.nickname}
-                </button>
-              </li>
-            ))}
-          </ul>
-          )}
+            {showFriendList && ( // 친구 목록을 토글하여 표시
+              <ul className="friend-list">
+                {friendList.map((item, idx) => (
+                  <li key={idx} className="friend-list-item">
+                    <button onClick={() => friendButton(item)} className="friend-button">
+                      {item.userId} : {item.nickname}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-        </div>
-      ) : (
-        <div className="chat-room">
-          <button onClick={() => setIsChatRoom(false)} className="button">친구 목록으로 돌아가기</button>
-          <h3>{oneFriend.nickname}님과의 채팅</h3>
-          <div className="chat-messages" ref={chatMessagesRef} style={{ maxHeight: '400px', overflowY: 'auto' }}>
-            {messages.map((msg, idx) => {
-              const isSender = msg.senderId === userData.user_id;
-              const friend = friendList.find(f => f.userId === (isSender ? msg.receiverId : msg.senderId));
-              const displayName = isSender ? '나' : (friend ? friend.nickname : '알 수 없음');
-
-              return (
-                <div key={idx} style={{ textAlign: isSender ? 'right' : 'left' }}>
-                  <p style={{ color: 'black' }}>
-                    <strong>{displayName}:</strong> {msg.content}
-                  </p>
-                  <p style={{ fontSize: '12px', color: 'gray' }}>{new Date(msg.timestamp).toLocaleTimeString()}</p>
-                </div>
-              );
-            })}
           </div>
+        ) : (
+          <div className="chat-room">
+            {/* X 버튼 추가 */}
+            <button onClick={() => setIsChatRoom(false)} className="close-button" style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              background: 'none',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer'
+            }}>✕</button>
 
-          <div className="chat-input">
-            <input
-              type="text"
-              placeholder="메시지를 입력하세요"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  sendMessage(e.target.value);
-                  e.target.value = ''; // 입력란 비우기
-                }
-              }}
-              className="input"
-            />
-            <button onClick={() => sendMessage(document.querySelector('.chat-input input').value)} className="send-button">
-              전송
-            </button>
+            <h3>{oneFriend.nickname}님과의 채팅</h3>
+            <div className="chat-messages" ref={chatMessagesRef} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {messages.map((msg, idx) => {
+                const isSender = msg.senderId === userData.user_id;
+                const friend = friendList.find(f => f.userId === (isSender ? msg.receiverId : msg.senderId));
+                const displayName = isSender ? '나' : (friend ? friend.nickname : '알 수 없음');
+
+                return (
+                  <div key={idx} style={{textAlign: isSender ? 'right' : 'left'}}>
+                    <p style={{color: 'black'}}>
+                      <strong>{displayName} :</strong> {msg.content}
+                      <span style={{fontSize: '10px', color: 'gray', marginLeft: '10px'}}>
+                       {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                      </span>
+                    </p>
+                  </div>
+
+                );
+              })}
+            </div>
+
+            <div className="chat-input">
+              <input
+                type="text"
+                placeholder="Type your message..."
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    sendMessage(e.target.value);
+                    e.target.value = ''; // 입력란 비우기
+                  }
+                }}
+                className="input"
+              />
+              <button onClick={() => sendMessage(document.querySelector('.chat-input input').value)} className="send-button">
+                전송
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* 초대 모달 */}
-      <Accept
-        open={isInviteModalOpen}
-        onClose={handleCloseInviteModal}
-        inviter={inviter}
-        onAccept={handleAcceptInvite}
-        roomId={inviteRoomId}
-      />
-    </>
+        {/* 초대 모달 */}
+        <Accept
+          open={isInviteModalOpen}
+          onClose={handleCloseInviteModal}
+          inviter={inviter}
+          onAccept={handleAcceptInvite}
+          roomId={inviteRoomId}
+        />
+      </>
     </div>
   );
+
 }

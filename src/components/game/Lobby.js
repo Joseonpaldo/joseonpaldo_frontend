@@ -12,6 +12,8 @@ import Modal from "@/components/game/Modal";
 import InviteModal from "@/components/game/InviteModal";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import InforModal from "@/components/game/InforModal";
+import FriendTo from "@/components/game/FriendTo";
+import FriendFrom from "@/components/game/FriendFrom";
 
 const characters = [
   {id: 1, src: '/image/character/bear.png', alt: 'Character 1'},
@@ -63,8 +65,12 @@ const Lobby = () => {
   const [selectedUserId, setSelectedUserId] = useState(null); // 선택된 유저 ID 저장
   const [selectedUserNickname, setSelectedUserNickname] = useState(null); // 선택된 유저 닉네임 저장
 
+  const [senderNickname, setSenderNickname] = useState(''); // 친구 요청을 보낸 유저 닉네임
+  const [isFriendFromModalOpen, setIsFriendFromModalOpen] = useState(false); // 친구 추가 요청 모달 상태
+  const [isFriendToModalOpen, setIsFriendToModalOpen] = useState(false); // 친구 요청 받은 모달 상태
+  const [receiver, setReciver] = useState(''); // 친구 요청을 보낸 유저 닉네임
+  const [sender, setSender] = useState(''); // 친구 요청을 보낸 유저 닉네임
 
-  console.log(messages);
 
   async function getUserData(jwt) {
     try {
@@ -310,6 +316,52 @@ const Lobby = () => {
   };
 
 
+// 친구 추가 요청 보내기
+  const handleSendFriendRequest = (user_id) => {
+    if (client && client.connected) {
+      client.send(`/app/chat.friendRequest/${user_id}`, {}, JSON.stringify({
+        sender: userData.user_id,
+        receiver: user_id,
+        type: 'FRIEND_REQUEST',
+        nickname: userData.nickname, // 친구 요청 보낸 사람의 닉네임
+      }));
+    }
+    setIsFriendFromModalOpen(true); // 모달 닫기
+  };
+
+
+
+  useEffect(() => {
+    if (client && userData) {
+      client.subscribe(`/topic/friendRequest/${userData.user_id}`, (message) => {
+        const parsedMessage = JSON.parse(message.body);
+        console.log('Received dddd:', parsedMessage); // 수신된 메시지 확인
+
+        if (parsedMessage.type === 'FRIEND_REQUEST') {
+          console.log("Setting modal state to true"); // 상태 업데이트 확인
+          setSenderNickname(parsedMessage.nickname);
+          setSender(parsedMessage.sender)
+          setReciver(parsedMessage.receiver)
+          setIsFriendToModalOpen(true); // 친구 요청 받은 모달 열기
+        }
+      });
+    }
+  }, [client, userData]);
+
+
+
+  // 친구 추가 요청 수락 로직 구현
+  const handleAcceptInvite = (userId) => {
+    if (client && client.connected) {
+      client.send(`/app/chat.acceptFriend/${roomId}`, {}, JSON.stringify({
+        sender: userData.user_id,
+        receiver: userId, // 수락한 유저 ID를 전송
+        type: 'ACCEPT_FRIEND',
+      }));
+    }
+    setIsFriendToModalOpen(false); // 모달 닫기
+  };
+
   useEffect(() => {
     if (chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
@@ -351,7 +403,6 @@ const Lobby = () => {
   };
   const handleInforClick = (user_id) => {
 
-    console.log("usss"+ user_id);
     setSelectedUserId(user_id);
     setIsInforModalOpen(true);
   };
@@ -456,8 +507,6 @@ const Lobby = () => {
       // 순서를 유지한 채로 playersData를 사용
       setOrder(playersData); // 순서대로 저장된 정보를 그대로 사용
       setShowGameResult(true); // 결과 화면 표시
-    } else if (message.type === 'END_GAME') {
-      // setShowYutPan(true);
     }
   };
 
@@ -503,6 +552,27 @@ const Lobby = () => {
             onClose={handleCloseInforModal}
             userId={selectedUserId}  // userId만 전달
           />
+
+          {/* 친구 추가 요청 모달 (보낸 사람) */}
+          <FriendFrom
+            open={isFriendFromModalOpen}
+            onClose={() => setIsFriendFromModalOpen(false)}
+            onSendRequest={() => handleSendFriendRequest(selectedUserId)}
+            senderNickname={senderNickname}
+          />
+
+          {/* 친구 추가 요청 모달 (받은 사람) */}
+          <FriendTo
+            open={isFriendToModalOpen} // 상태에 따라 모달이 열림
+            onClose={() => setIsFriendToModalOpen(false)}
+            senderNickname={senderNickname}
+            userId={receiver} // 수신자의 ID
+            friendId={sender} // 친구 요청을 보낸 사람의 ID
+          />
+
+
+
+
 
           <div className="titleStyle">
             <h1>{roomName} {players.length}/4</h1>
@@ -552,9 +622,12 @@ const Lobby = () => {
                                 정보
                               </Button>
                               {player.user_id != userData.user_id && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
-                                <button onClick={() => handleOptionClick('Option 2')} style={{ backgroundColor: '#f1e7e0' }}>
-                                  친구추가
-                                </button>
+                                <Button
+                                  onClick={() => handleSendFriendRequest(player.user_id)} // 친구 추가 버튼 클릭 시 모달 열기
+                                  style={{ backgroundColor: '#f1e7e0' }}
+                                >
+                                  친추
+                                </Button>
                               )}
                             </div>
                           )}
