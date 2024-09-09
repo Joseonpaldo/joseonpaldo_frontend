@@ -32,17 +32,16 @@
     "@phosphor-icons/react": "2.1.6",
     "@stomp/stompjs": "^7.0.0",
     "apexcharts": "3.49.2",
-    "axios": "^1.7.5",
+    "axios": "^1.7.2",
     "clsx": "^2.1.1",
     "dayjs": "1.11.11",
-    "emoji-picker-react": "^4.11.1",
+    "dotenv": "^16.4.5",
     "formik": "^2.4.6",
     "next": "14.2.4",
     "react": "18.3.1",
     "react-apexcharts": "1.4.1",
     "react-dom": "18.3.1",
     "react-hook-form": "7.52.0",
-    "socket.io-client": "^4.7.5",
     "sockjs-client": "^1.6.1",
     "yup": "^1.4.0",
     "zod": "3.23.8"
@@ -65,5 +64,6 @@
     "jest-environment-jsdom": "29.7.0",
     "prettier": "3.3.2",
     "typescript": "5.5.2"
-  }
+  },
+  "proxy": "http://localhost:8080"
 }

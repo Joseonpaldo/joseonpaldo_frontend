@@ -1,24 +1,37 @@
 "use client"; // 추가
 
-import {Box, Button, Card, styled,} from "@mui/material";
+import {Box, Button, Card, Divider, FormControlLabel, FormHelperText, styled, Switch,} from "@mui/material";
 import FlexBox from "/src/components/FlexBox";
 import GoogleIcon from "/src/app/auth/sign-in/GoogleIcon.tsx";
-import KakaoIcon from "/src/app/auth/sign-in/KakaoIcon.tsx";
-import NaverIcon from "@/app/auth/sign-in/NaverIcon";
+import FacebookIcon from "/src/app/auth/sign-in/FacebookIcon.tsx";
 
 
 export default function Login() {
-  const loginWithGoogle = () => {
-    location.href = "/api/login/oauth2/google"
-  }
-  const loginWithNaver = () => {
-    location.href = "/api/login/oauth2/naver"
-  }
-  const loginWithKakao = () => {
-    location.href = "/api/login/oauth2/kakao"
-  }
-  const loginwithGuest = () => {
-    location.href = ""
+  const redirectUri="http://localhost:8080/login/oauth2/code";
+  const googleClientId=process.env.GOOGLE_CLIENT_ID;
+  const kakaoRestApiKey=process.env.KAKAO_RESTAPI_KEY;
+  const naverClientId=process.env.NAVER_CLIENT_ID;
+  const state = Math.random().toString(36).substr(2);
+
+  let googleUrl=`https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}/google&response_type=code&scope=email profile&state=${state}`;
+  let kakaoUrl = `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${kakaoRestApiKey}/kakao&redirect_uri=${redirectUri}`;
+  let naverUrl=`https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}/naver&redirect_uri=${redirectUri}&state=${state}`;
+
+  const loginWithSocial=(social)=>{
+    switch (social){
+      case "google":{
+        window.location.href=googleUrl;
+        break
+      }
+      case "kakao":{
+        window.location.href=kakaoUrl;
+        break
+      }
+      case "naver":{
+        window.location.href=naverUrl;
+        break
+      }
+    }
   }
 
   return <FlexBox
@@ -29,14 +42,12 @@ export default function Login() {
       height: {sm: "100%"},
     }}
   >
-    <Card sx={{
-      padding: 4, boxShadow: 1, width: "400px",
-    }}>
+    <Card sx={{padding: 4, maxWidth: 500, boxShadow: 1, minWidth: 500,}}>
       <FlexBox
         alignItems="center"
         flexDirection="column"
         justifyContent="center"
-        mb={2}
+        mb={5}
       >
         <Box width={50}>
           <img src="/static/logo/logo.png" width="100%" alt="Uko Logo"/>
@@ -44,46 +55,34 @@ export default function Login() {
         <h1>조선팔도</h1>
       </FlexBox>
 
-      <FlexBox alignItems="center" flexDirection="column" gap={2}>
+      <FlexBox justifyContent="space-between" flexWrap="wrap" my="1rem">
         <SocialIconButton
-          onClick={loginWithGoogle}
+          onClick={()=>loginWithSocial("google")}
           startIcon={<GoogleIcon sx={{mr: 1}}/>}
         >
           Google
         </SocialIconButton>
-
         <SocialIconButton
-          onClick={loginWithNaver}
-          startIcon={<NaverIcon sx={{mr: 1}}/>}
-        >
-          NAVER
-        </SocialIconButton>
-
-        <SocialIconButton
-          onClick={loginWithKakao}
-          startIcon={<KakaoIcon sx={{mr: 1}}/>}
+          onClick={()=>loginWithSocial("kakao")}
         >
           Kakao
         </SocialIconButton>
-
         <SocialIconButton
-          onClick={loginwithGuest}
-          startIcon={<KakaoIcon sx={{mr: 1}}/>}
+          onClick={()=>loginWithSocial("naver")}
         >
-          Guest
+          Naver
         </SocialIconButton>
-
       </FlexBox>
     </Card>
   </FlexBox>
 }
 
 export const SocialIconButton = styled(Button)(({theme}) => ({
-  width: "70%",
+  width: "48%",
   height: 48,
   fontSize: 13,
   borderRadius: "6px",
-  border: "1.5px solid #E5EAF2",
+  border: "2px solid #E5EAF2",
   borderColor:
     theme.palette.mode === "light"
       ? theme.palette.text.secondary
