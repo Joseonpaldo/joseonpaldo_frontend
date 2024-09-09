@@ -20,15 +20,20 @@ async function getUserData() {
   if (jwt == null){
     return null;
   }
-  const response = await apiAxiosInstance.get(`/user/${jwt}`);
-  console.log(response);
-  return response.data; // 응답 데이터 반환
+  try {
+    const response = await apiAxiosInstance.get(`/user/${jwt}`);
+    console.log(response);
+    return response.data; // 응답 데이터 반환
+  } catch (error) {
+    console.error("Failed to fetch user data:", error);
+    return null;
+  }
 }
 
 class AuthClient {
   async getUser(): Promise<{ data?: User | null; error?: string }> {
     // Make API request
-    let userData = await getUserData()
+    let userData = await getUserData();
     if (userData != null) {
       user.id = userData.user_id;
       user.avatar = userData.profilePicture;
