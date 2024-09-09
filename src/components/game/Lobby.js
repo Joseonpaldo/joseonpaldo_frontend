@@ -11,6 +11,7 @@ import RankAnimation from "@/components/game/RankAnimation";
 import Modal from "@/components/game/Modal";
 import InviteModal from "@/components/game/InviteModal";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
+import {useParams} from "next/navigation";
 
 const characters = [
   {id: 1, src: '/image/character/bear.png', alt: 'Character 1'},
@@ -46,7 +47,6 @@ const Lobby = () => {
   const chatMessagesRef = useRef(null);
   const [input, setInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [roomId, setRoomId] = useState('');
   const [balloons, setBalloons] = useState({});
   const [showOptions, setShowOptions] = useState(false);
   const [visibleOptions, setVisibleOptions] = useState({});
@@ -58,8 +58,8 @@ const Lobby = () => {
   const [showGameResult, setShowGameResult] = useState(false);
 
   const [loading, setLoading] = useState("flex");
+  const {roomId} = useParams();
 
-  console.log(messages);
 
   async function getUserData(jwt) {
     try {
@@ -71,6 +71,7 @@ const Lobby = () => {
     }
   }
 
+
   useEffect(() => {
     const jwt = localStorage.getItem('custom-auth-token');
     if (jwt) {
@@ -80,14 +81,6 @@ const Lobby = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlPath = window.location.pathname;
-      const pathSegments = urlPath.split('/');
-      const lastSegment = pathSegments[pathSegments.length - 1];
-      setRoomId(lastSegment);
-    }
-  }, []);
 
   useEffect(() => {
     const socket = new SockJS('/ws/');
@@ -155,7 +148,7 @@ const Lobby = () => {
   }, [players, userData]);
 
   const checkAllReady = () => {
-    if (players.length > 1 && players.slice(1).every(player => player.ready)) {
+    if (players.length === 4 && players.slice(1).every(player => player.ready)) {
       setAllReady(true);
     } else {
       setAllReady(false);
@@ -164,14 +157,18 @@ const Lobby = () => {
 
   const handleReadyClick = (player) => {
     if (player?.user_id == userData?.user_id) {
-      if (client && client.connected) {
-        const updatedReadyState = !player.ready;
-        client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({
-          sender: player.user_id,
-          type: 'READY',
-          ready: updatedReadyState,
-          roomId
-        }));
+      if (player.characterSrc.startsWith('/image')) {
+        if (client && client.connected) {
+          const updatedReadyState = !player.ready;
+          client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({
+            sender: player.user_id,
+            type: 'READY',
+            ready: updatedReadyState,
+            roomId
+          }));
+        }
+      } else {
+        alert("캐릭터 선택을 해주십시오.")
       }
     }
   };
@@ -592,6 +589,7 @@ const Lobby = () => {
                     alt={character.alt}
                     className={`character ${selectedCharacter === character.id ? 'selected' : ''}`}
                     onClick={() => {
+                      //캐릭터 선택
                       if (selectedCharacter === character.id) {
                         handleCharacterDeselect(character.id);
                       } else if (!selectedCharacters.includes(character.src)) {
