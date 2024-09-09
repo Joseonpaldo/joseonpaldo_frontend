@@ -1,11 +1,52 @@
-import React from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import React, { useEffect, useState } from 'react';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid } from "@mui/material";
 import Button from "@mui/material/Button";
+import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
-const Modal = ({ open, onClose }) => {
+const Modal = ({ open, onClose, userId }) => {
+  const jwt = localStorage.getItem('custom-auth-token');
+  const [userData, setUserData] = useState(null);
+  const [friendList, setFriendList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const players = ['player1', 'player2', 'player3', 'player4', 'player5'];
+  async function getUserData(jwt) {
+    try {
+      const response = await apiAxiosInstance.get(`/user/${jwt}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 
+  async function getFriendList(jwt) {
+    if (jwt) {
+      setLoading(true);  // 로딩 시작
+      try {
+        const response = await apiAxiosInstance.get(`/friend/list/${jwt}`);
+        setFriendList(response.data);
+      } catch (e) {
+        console.error('친구 목록을 불러오는 데 실패했습니다:', e);
+      } finally {
+        setLoading(false);  // 로딩 종료
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (jwt) {
+      getUserData(jwt)
+        .then(data => setUserData(data))
+        .catch(error => console.error('사용자 데이터 로드 실패:', error));
+
+      getFriendList(jwt); // 친구 목록 불러오기
+    }
+  }, [jwt]);
+
+  // 초대하기 버튼 클릭 시 실행할 함수
+  const handleInviteClick = (friendId) => {
+    console.log(`초대된 사용자 ID: ${friendId}`);
+    // 여기서 초대 요청 등을 처리하는 로직을 추가할 수 있습니다.
+  };
 
   return (
     <Dialog
@@ -45,33 +86,38 @@ const Modal = ({ open, onClose }) => {
             margin: '20px 0',
           }}
         >
-          {players.map((player, index) => (
-            <div
-              key={index}
-              style={{
-                margin: '10px 0',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <span>{player}</span>
-              <Button
-                variant="contained"
-                style={{
-                  backgroundColor: '#ff8a65',
-                  marginLeft: '50px'  // 간격 추가
-                }}
-              >
-                초대
-              </Button>
-            </div>
-          ))}
-
-
+          {/* 로딩 중일 때 */}
+          {loading ? (
+            <div>Loading...</div>
+          ) : (
+            friendList && friendList.length > 0 ? (
+              <Grid container spacing={2}> {/* Grid 컨테이너 추가 */}
+                {friendList.map((friend, index) => (
+                  <Grid item xs={12} key={index} container alignItems="center" justifyContent="center">
+                    <Grid item xs={6} style={{ textAlign: 'center' }}> {/* 이름 영역 */}
+                      <span>{friend.nickname} {friend.userId}</span>
+                    </Grid>
+                    <Grid item xs={6} style={{ textAlign: 'center' }}> {/* 버튼 영역 */}
+                      <Button
+                        variant="contained"
+                        style={{
+                          backgroundColor: '#ff8a65',
+                        }}
+                        onClick={() => handleInviteClick(friend.userId)} // friend.userId를 전달
+                      >
+                        초대
+                      </Button>
+                    </Grid>
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <div>No friends found</div>
+            )
+          )}
         </DialogContentText>
       </DialogContent>
-      <DialogActions sx={{justifyContent: 'center'}}>
+      <DialogActions sx={{ justifyContent: 'center' }}>
         <Button
           color="primary"
           onClick={onClose}
