@@ -6,8 +6,9 @@ import Stack from '@mui/material/Stack';
 
 import { config } from '@/config';
 import Lobby from "@/components/game/Lobby";
-import App from "@/components/mini-game/App";
+import App from "@/components/mini-game/snake/App";
 import useWindowSizeCustom from "@/hooks/useWindowSizeCustom";
+import GameMap from "@/components/mini-game/snake/components/GameMap";
 
 
 
@@ -22,7 +23,7 @@ export default function Page(): React.JSX.Element {
         // scale: 0.3,
         // width: windowSizeCustom.width / ,
       }}>
-      <App/>
+        <GameMap roomId={11} />
       </div>
 
 

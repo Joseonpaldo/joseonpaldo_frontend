@@ -35,6 +35,7 @@ import {Stomp} from "@stomp/stompjs";
 import SockJS from 'sockjs-client';
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import ChatComponent from "@/components/game/chatComponent";
+import GameMap from "@/components/mini-game/snake/components/GameMap";
 
 
 function YutPan() {
@@ -526,12 +527,6 @@ function YutPan() {
     }
   };
 
-  // const start = () => {
-  //   client.send(
-  //     `/app/main/start/${roomId}`,
-  //     JSON.stringify({message: "move this"})
-  //   );
-  // };
 
   const stepOnEvent = (index) => {
     console.log("last step index " + index);
@@ -547,7 +542,7 @@ function YutPan() {
       case 41:
       case 45:
         console.log("미니게임~");
-        passTurn();
+        // <GameMap roomId={roomId}/>
         break;
 
       case 0:
@@ -586,58 +581,6 @@ function YutPan() {
         {name: myPlayer, item: item}, // 헤더 설정
         JSON.stringify({message: "use result"})
       );
-      // 상태 업데이트 후 화살표 표시를 위한 setTimeout 사용
-      // setTimeout(() => {
-      //
-      //   let moveIndex = players[myPlayer].index + item;
-      //   if (players[myPlayer].index === 100) {
-      //     let go1 = (33 + item);
-      //     if (go1 > 36) go1 = go1 - 36 + 17;
-      //
-      //     const arrow1 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go1);
-      //     arrow1.style.display = "block";
-      //
-      //     let go2 = (43 + item);
-      //     if (go2 > 46) go2 = go2 - 47;
-      //     const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go2);
-      //     arrow2.style.display = "block";
-      //     return;
-      //   }
-      //
-      //   // 크게 한바퀴 돌았을때
-      //   if (moveIndex >= 24 && players[myPlayer].index <= 23) {
-      //     moveIndex -= 24;
-      //   }
-      //
-      //   if (players[myPlayer].index >= 30 && players[myPlayer].index <= 36 && moveIndex > 36) {
-      //     moveIndex = moveIndex - 37 + 18;
-      //   }
-      //
-      //   if (players[myPlayer].index >= 40 && players[myPlayer].index <= 46 && moveIndex > 46) {
-      //     moveIndex = moveIndex - 47;
-      //   }
-      //
-      //   // 중앙
-      //   if (moveIndex === 33 || moveIndex === 43) {
-      //     moveIndex = 100;
-      //   }
-      //   // console.log(moveIndex);
-      //   const arrow1 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + moveIndex);
-      //   arrow1.style.display = "block";
-      //
-      //   if (players[myPlayer].index === 6) {
-      //     let go = (item + 29);
-      //     if (go === 33) go = 100;
-      //     const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go);
-      //     arrow2.style.display = "block";
-      //   }
-      //   if (players[myPlayer].index === 12) {
-      //     let go = (item + 39);
-      //     if (go === 43) go = 100;
-      //     const arrow2 = yutRefs.current.find(s => s.classList[0] === "arrowIndex" + go);
-      //     arrow2.style.display = "block";
-      //   }
-      // }, 0); // 상태가 업데이트된 후 바로 실행
     }
   }
 
@@ -675,7 +618,7 @@ function YutPan() {
         //   {name: myPlayer, location: index}, // 헤더 설정
         //   JSON.stringify({message: "move this"})
         // );
-        // passTurn();
+        passTurn();
       }
 
     }

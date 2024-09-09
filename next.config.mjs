@@ -13,11 +13,11 @@ const config = {
       },
       {
         source: '/nws/:path*',
-        destination: 'http://localhost:4000/nws/:path*',
+        destination: 'http://localhost:4000/nws/?:path*',
       },
       {
         source: '/socket.io/:path*',
-        destination: 'http://localhost:4000/socket.io/:path*',
+        destination: 'http://localhost:4000/socket.io/?:path*',
       },
     ]
   },

@@ -285,6 +285,11 @@ const Lobby = () => {
   }, [messages]);
 
   const handleStartGame = () => {
+    if (players.some(player => !player.characterSrc.startsWith("/image"))) {
+      alert("캐릭터 선택을 해야 시작 가능합니다.");
+      return;
+    }
+
     if (client && client.connected) {
       // 현재 사용자가 선택한 캐릭터 이미지를 가져옴
       const selectedCharacterSrc = players.find(player => player.name === userData.nickname)?.characterSrc;
