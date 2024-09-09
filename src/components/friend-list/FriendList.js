@@ -1,8 +1,9 @@
 import './Friend.css';  // CSS 파일을 불러옵니다
 import apiAxiosInstance from '@/hooks/apiAxiosInstance';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from "@stomp/stompjs";
+import axios from 'axios';
 
 export default function FriendList() {
   const jwt = localStorage.getItem('custom-auth-token');
@@ -14,6 +15,8 @@ export default function FriendList() {
   const [unreadMessages, setUnreadMessages] = useState({});
   const [stompClient, setStompClient] = useState(null);
   const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null);
+
 
   async function getUserData(jwt) {
     try {
@@ -27,7 +30,7 @@ export default function FriendList() {
 
   async function getFriendList() {
     if (jwt != null) {
-      await apiAxiosInstance.get(`/friend/list/${jwt}`)
+      await apiAxiosInstance.get(`/friend?userId=${userData.user_id}`)
         .then(res => {
           console.log('친구 목록 데이터:', res.data);
           if (Array.isArray(res.data)) {
@@ -42,10 +45,11 @@ export default function FriendList() {
 
   function friendButton(friend) {
     console.log("선택한 친구 데이터:", friend);
+    console.log(friend.user_id);
     if (!friend.chatRoomId) {
       apiAxiosInstance.post('/chat/createOrGetChatRoom', {
         userId1: userData.user_id,
-        userId2: friend.userId
+        userId2: friend.user_id
       })
         .then(res => {
           const chatRoomId = res.data.roomId;
@@ -63,10 +67,10 @@ export default function FriendList() {
               if (res.headers['content-type'].includes('application/json')) {
                 if (Array.isArray(res.data)) {
                   const loadedMessages = res.data.map(msg => ({
-                    senderId: msg.sender.userId,
-                    senderNickname: msg.sender.nickname,
+                    senderId: msg.userId1,
+                    senderNickname: msg.nickname,
                     content: msg.messageContent,
-                    timestamp: msg.sentAt,
+                    timestamp: msg.timestamp,
                   }));
                   setMessages(loadedMessages);
                 } else {
@@ -161,20 +165,20 @@ export default function FriendList() {
     if (stompClient && stompClient.connected && messageContent.trim() !== '') {
       // 데이터 로그 확인
       console.log("senderId:", userData.user_id); // senderId 확인
-      console.log("receiverId:", oneFriend.userId); // receiverId 확인
+      console.log("receiverId:", oneFriend.user_id); // receiverId 확인
       console.log("userId1:", userData.user_id); // userId1 확인
-      console.log("userId2:", oneFriend.userId); // userId2 확인
+      console.log("userId2:", oneFriend.user_id); // userId2 확인
 
-      if (!userData.user_id || !oneFriend.userId) {
+      if (!userData.user_id || !oneFriend.user_id) {
         console.error('필수 값이 누락되었습니다. senderId, receiverId, 또는 userId1, userId2가 null입니다.');
         return;
       }
 
       const chatMessage = {
         senderId: userData.user_id,
-        receiverId: oneFriend.userId,
+        receiverId: oneFriend.user_id,
         userId1: userData.user_id, // userId1을 sender로 설정
-        userId2: oneFriend.userId, // userId2를 receiver로 설정
+        userId2: oneFriend.user_id, // userId2를 receiver로 설정
         messageContent: messageContent,
         timestamp: new Date().toISOString(),
       };
@@ -195,32 +199,38 @@ export default function FriendList() {
     setMessages([]);
   }
 
+  useEffect(() => {
+    // 메시지 목록이 업데이트될 때마다 스크롤을 최하단으로 이동
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]); // messages 배열이 변경될 때마다 실행
+
   return (
-    <>
-      {!isChatRoom ? (
-        <div className="friend-list-container">
-          <button onClick={getFriendList} className="button">친구 목록 보기</button>
-          <ul className="friend-list">
-            {
-              friendList.map((item, idx) => (
-                <li key={idx} className="friend-list-item">
-                  <button onClick={() => friendButton(item)} className="friend-button">
-                    {item.userId} : {item.nickname}
-                  </button>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-      ) : (
-        <div className="chat-room">
-          <button onClick={closeChatRoom} className="button">친구 목록으로 돌아가기</button>
-          <h3>{oneFriend.nickname}님과의 채팅</h3>
+    <div className="chat-container">
+      <div className="friend-list-container">
+        <button onClick={getFriendList} className="button">친구 목록</button>
+        <ul className="friend-list">
+          {friendList.map((item, idx) => (
+            <li key={idx} className="friend-list-item">
+              <button onClick={() => friendButton(item)} className="friend-button">
+                {item.user_id} : {item.nickname}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {isChatRoom && (
+        <div className="chat-room-container">
+          <div style={{display: 'flex', justifyContent: 'space-between'}}>
+          <h3>{oneFriend.nickname}</h3><button onClick={closeChatRoom} className="close-chatContainer">닫기</button>
+          </div>
           <div className="chat-messages">
             {messages.map((msg, idx) => (
               <div key={idx} style={{ textAlign: msg.senderId === userData.user_id ? 'right' : 'left' }}>
                 <p style={{ color: 'black' }}>
-                  <strong>{msg.senderId === userData.user_id ? '나' : msg.senderNickname}:</strong> {msg.content}
+                  {msg.content}
                 </p>
                 <p style={{ fontSize: '12px', color: 'gray' }}>{new Date(msg.timestamp).toLocaleTimeString()}</p>
               </div>
@@ -245,6 +255,6 @@ export default function FriendList() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
