@@ -1,6 +1,6 @@
 import './Friend.css';  // CSS 파일을 불러옵니다
 import apiAxiosInstance from '@/hooks/apiAxiosInstance';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from "@stomp/stompjs";
 import InviteModal from '../game/InviteModal';
@@ -8,7 +8,6 @@ import Accept from "@/components/game/Accept"; // 초대 모달 컴포넌트 추
 
 export default function FriendList() {
   const jwt = localStorage.getItem('custom-auth-token');
-
   const [userData, setUserData] = useState(null);
   const [friendList, setFriendList] = useState([]);
   const [oneFriend, setOneFriend] = useState(null);
@@ -16,12 +15,15 @@ export default function FriendList() {
   const [unreadMessages, setUnreadMessages] = useState({});
   const [stompClient, setStompClient] = useState(null);
   const [messages, setMessages] = useState([]);
+  const chatMessagesRef = useRef(null);  // 채팅 메시지 div에 대한 ref
+  const [showFriendList, setShowFriendList] = useState(false); // 친구 목록 표시 여부 상태 추가
 
   // 초대 모달 관련 상태
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviter, setInviter] = useState('');
   const [inviteRoomId, setInviteRoomId] = useState('');
 
+  // 유저 데이터 가져오기
   async function getUserData(jwt) {
     try {
       const response = await apiAxiosInstance.get(`/user/${jwt}`);
@@ -32,6 +34,7 @@ export default function FriendList() {
     }
   }
 
+  // 친구 목록 가져오기
   async function getFriendList() {
     if (jwt != null) {
       await apiAxiosInstance.get(`/friend/list/${jwt}`)
@@ -52,9 +55,12 @@ export default function FriendList() {
           setUserData(data);
         })
         .catch(error => console.error('사용자 데이터 로드 실패:', error));
+
+      getFriendList();
     }
   }, []);
 
+  // 웹소켓 연결 및 메시지 처리
   useEffect(() => {
     if (userData) {
       const socket = new SockJS('/ws/');
@@ -85,62 +91,147 @@ export default function FriendList() {
     }
   }, [userData]);
 
-// 메시지 수신 처리 함수
+  // 메시지 수신 처리 함수
   const receivedMessage = (message) => {
     if (message.type === 'INVITE') {
       console.log(message);
       setInviteRoomId(message.roomId);
       setInviter(message.nickname);  // 초대한 사람의 ID나 이름 설정
       setIsInviteModalOpen(true);
+    } else if (message.type === 'MESSAGE') {
+      // 채팅 메시지 수신 시 처리
+      setMessages(prevMessages => [
+        ...prevMessages,
+        {
+          senderId: message.senderId,
+          content: message.messageContent,
+          timestamp: message.timestamp
+        }
+      ]);
     }
   };
 
+  // 채팅창 열기 함수
+  function friendButton(friend) {
+    setOneFriend(friend);
+    setIsChatRoom(true);
+    if (!friend.chatRoomId) {
+      apiAxiosInstance.post('/chat/createOrGetChatRoom', {
+        userId1: userData.user_id,
+        userId2: friend.userId
+      })
+        .then(res => {
+          const chatRoomId = res.data.roomId;
+          setOneFriend({
+            ...friend,
+            chatRoomId: chatRoomId
+          });
+          loadMessages(chatRoomId);
+        })
+        .catch(error => console.error('채팅방 생성 또는 조회 실패:', error));
+    } else {
+      loadMessages(friend.chatRoomId);
+    }
+  }
 
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight; // 맨 아래로 스크롤
+    }
+  }, [messages]); // messages 상태가 변경될 때마다 실행
+
+  // 메시지 로드 함수
+  function loadMessages(chatRoomId) {
+    apiAxiosInstance.get(`/chat/history`, {
+      params: { roomId: chatRoomId }  // 방 ID를 쿼리 파라미터로 보냄
+    })
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          const loadedMessages = res.data.map(msg => ({
+            senderId: msg.senderId,
+            senderNickname: msg.senderNickname,
+            content: msg.messageContent,
+            timestamp: msg.timestamp,
+          }));
+          setMessages(loadedMessages);
+        }
+      })
+      .catch(error => console.error('메시지 내역 불러오기 실패:', error));
+  }
+
+  // 메시지 전송 함수
+  function sendMessage(messageContent) {
+    if (stompClient && stompClient.connected && messageContent.trim() !== '') {
+      const chatMessage = {
+        senderId: userData.user_id,
+        receiverId: oneFriend.userId,
+        userId1: userData.user_id,
+        userId2: oneFriend.userId,
+        messageContent: messageContent,
+        timestamp: new Date().toISOString(),
+      };
+      stompClient.send("/app/chat/sendMessage", {}, JSON.stringify(chatMessage));
+      setMessages(prevMessages => [
+        ...prevMessages,
+        { senderId: userData.user_id, content: messageContent, timestamp: new Date().toISOString() }
+      ]);
+    }
+  }
+
+  // 초대 수락 핸들러
   const handleAcceptInvite = () => {
-    // 초대 수락 시 해당 방으로 이동
     window.location.href = `/lobby/${inviteRoomId}`;
   };
 
+  // 초대 모달 닫기 핸들러
   const handleCloseInviteModal = () => {
-    setIsInviteModalOpen(false); // 초대 모달 닫기
+    setIsInviteModalOpen(false);
   };
 
-  // friendButton 함수 정의
-  const friendButton = (friend) => {
-    setOneFriend(friend);
-    setIsChatRoom(true); // 선택된 친구와의 채팅 화면으로 이동
+  // 친구 목록 토글 핸들러
+  const toggleFriendList = () => {
+    setShowFriendList(prevState => !prevState);
   };
 
   return (
+    <div style={{position:'absolute', bottom:'0'}}>
     <>
       {!isChatRoom ? (
         <div className="friend-list-container">
-          <button onClick={getFriendList} className="button">친구 목록 보기</button>
-          <ul className="friend-list">
-            {
-              friendList.map((item, idx) => (
-                <li key={idx} className="friend-list-item">
-                  <button onClick={() => friendButton(item)} className="friend-button">
-                    {item.userId} : {item.nickname}
-                  </button>
-                </li>
-              ))
-            }
+          <button onClick={toggleFriendList} className="button">친구 목록 보기</button>
+
+          {showFriendList && ( // 친구 목록을 토글하여 표시
+            <ul className="friend-list">
+            {friendList.map((item, idx) => (
+              <li key={idx} className="friend-list-item">
+                <button onClick={() => friendButton(item)} className="friend-button">
+                  {item.userId} : {item.nickname}
+                </button>
+              </li>
+            ))}
           </ul>
+          )}
+
         </div>
       ) : (
         <div className="chat-room">
           <button onClick={() => setIsChatRoom(false)} className="button">친구 목록으로 돌아가기</button>
           <h3>{oneFriend.nickname}님과의 채팅</h3>
-          <div className="chat-messages">
-            {messages.map((msg, idx) => (
-              <div key={idx} style={{ textAlign: msg.senderId === userData.user_id ? 'right' : 'left' }}>
-                <p style={{ color: 'black' }}>
-                  <strong>{msg.senderId === userData.user_id ? '나' : msg.senderNickname}:</strong> {msg.content}
-                </p>
-                <p style={{ fontSize: '12px', color: 'gray' }}>{new Date(msg.timestamp).toLocaleTimeString()}</p>
-              </div>
-            ))}
+          <div className="chat-messages" ref={chatMessagesRef} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {messages.map((msg, idx) => {
+              const isSender = msg.senderId === userData.user_id;
+              const friend = friendList.find(f => f.userId === (isSender ? msg.receiverId : msg.senderId));
+              const displayName = isSender ? '나' : (friend ? friend.nickname : '알 수 없음');
+
+              return (
+                <div key={idx} style={{ textAlign: isSender ? 'right' : 'left' }}>
+                  <p style={{ color: 'black' }}>
+                    <strong>{displayName}:</strong> {msg.content}
+                  </p>
+                  <p style={{ fontSize: '12px', color: 'gray' }}>{new Date(msg.timestamp).toLocaleTimeString()}</p>
+                </div>
+              );
+            })}
           </div>
 
           <div className="chat-input">
@@ -166,10 +257,11 @@ export default function FriendList() {
       <Accept
         open={isInviteModalOpen}
         onClose={handleCloseInviteModal}
-        inviter={inviter} // 초대한 사용자 정보 전달
-        onAccept={handleAcceptInvite} // 초대 수락 핸들러 전달
+        inviter={inviter}
+        onAccept={handleAcceptInvite}
         roomId={inviteRoomId}
       />
     </>
+    </div>
   );
 }
