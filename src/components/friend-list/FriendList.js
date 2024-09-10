@@ -107,6 +107,11 @@ export default function FriendList() {
           timestamp: message.timestamp
         }
       ]);
+
+      // 메시지 전송 후, loadMessages 함수 실행
+      if (oneFriend && oneFriend.chatRoomId) {
+        loadMessages(oneFriend.chatRoomId);
+      }
     }
   };
 
@@ -174,7 +179,9 @@ export default function FriendList() {
         ...prevMessages,
         { senderId: userData.user_id, content: messageContent, timestamp: new Date().toISOString() }
       ]);
+
     }
+
   }
 
   // 초대 수락 핸들러
