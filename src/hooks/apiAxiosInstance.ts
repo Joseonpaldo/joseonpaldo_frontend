@@ -20,6 +20,7 @@ apiAxiosInstance.interceptors.request.use(
 apiAxiosInstance.interceptors.response.use(
   response => {
     if (typeof window !== 'undefined') {
+      console.log('응답:', response);
       const accessToken = response.headers['accessToken'];
       if (accessToken) {
         localStorage.setItem('custom-auth-token', accessToken);

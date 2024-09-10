@@ -4,8 +4,11 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, G
 import Button from "@mui/material/Button";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
-const InviteModal = ({ open, onClose, userId, client, roomId }) => {
-  const jwt = localStorage.getItem('custom-auth-token');
+const InviteModal = ({open, onClose, userId, client, roomId}) => {
+  const [jwt, setJwt] = useState(null);
+  useEffect(() => {
+    setJwt(localStorage.getItem('custom-auth-token'));
+  }, [jwt]);
   const [userData, setUserData] = useState(null);
   const [friendList, setFriendList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -58,7 +61,6 @@ const InviteModal = ({ open, onClose, userId, client, roomId }) => {
 
     }
   };
-
 
 
   return (

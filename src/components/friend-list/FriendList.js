@@ -112,6 +112,7 @@ export default function FriendList() {
       if (oneFriend && oneFriend.chatRoomId) {
         loadMessages(oneFriend.chatRoomId);
       }
+
     }
   };
 
@@ -179,9 +180,7 @@ export default function FriendList() {
         ...prevMessages,
         { senderId: userData.user_id, content: messageContent, timestamp: new Date().toISOString() }
       ]);
-
     }
-
   }
 
   // 초대 수락 핸들러

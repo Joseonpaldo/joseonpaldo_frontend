@@ -11,9 +11,10 @@ import RankAnimation from "@/components/game/RankAnimation";
 import Modal from "@/components/game/Modal";
 import InviteModal from "@/components/game/InviteModal";
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
+import {useParams} from "next/navigation";
+import FriendFrom from "@/components/game/FriendFrom";
 import InforModal from "@/components/game/InforModal";
 import FriendTo from "@/components/game/FriendTo";
-import FriendFrom from "@/components/game/FriendFrom";
 
 const characters = [
   {id: 1, src: '/image/character/bear.png', alt: 'Character 1'},
@@ -49,7 +50,6 @@ const Lobby = () => {
   const chatMessagesRef = useRef(null);
   const [input, setInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [roomId, setRoomId] = useState('');
   const [balloons, setBalloons] = useState({});
   const [showOptions, setShowOptions] = useState(false);
   const [visibleOptions, setVisibleOptions] = useState({});
@@ -70,7 +70,7 @@ const Lobby = () => {
   const [isFriendToModalOpen, setIsFriendToModalOpen] = useState(false); // 친구 요청 받은 모달 상태
   const [receiver, setReciver] = useState(''); // 친구 요청을 보낸 유저 닉네임
   const [sender, setSender] = useState(''); // 친구 요청을 보낸 유저 닉네임
-
+  const {roomId} = useParams();
 
   async function getUserData(jwt) {
     try {
@@ -91,15 +91,18 @@ const Lobby = () => {
     }
   }, []);
 
-  //roomId
+  //방 제목
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const urlPath = window.location.pathname;
-      const pathSegments = urlPath.split('/');
-      const lastSegment = pathSegments[pathSegments.length - 1];
-      setRoomId(lastSegment);
+    const fetchRoomName = async () => {
+        const response = await apiAxiosInstance.get(`/roomName/${roomId}`);
+        setRoomName(response.data); // 서버에서 반환된 roomName 설정
+    };
+
+    if (roomId) {
+      fetchRoomName();
     }
-  }, []);
+  }, [roomId]);
+
 
   //방 제목
   useEffect(() => {
@@ -188,7 +191,7 @@ const Lobby = () => {
   }, [players, userData]);
 
   const checkAllReady = () => {
-    if (players.length > 1 && players.slice(1).every(player => player.ready)) {
+    if (players.length === 4 && players.slice(1).every(player => player.ready)) {
       setAllReady(true);
     } else {
       setAllReady(false);
@@ -197,14 +200,18 @@ const Lobby = () => {
 
   const handleReadyClick = (player) => {
     if (player?.user_id == userData?.user_id) {
-      if (client && client.connected) {
-        const updatedReadyState = !player.ready;
-        client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({
-          sender: player.user_id,
-          type: 'READY',
-          ready: updatedReadyState,
-          roomId
-        }));
+      if (player.characterSrc.startsWith('/image')) {
+        if (client && client.connected) {
+          const updatedReadyState = !player.ready;
+          client.send(`/app/chat.ready/${roomId}`, {}, JSON.stringify({
+            sender: player.user_id,
+            type: 'READY',
+            ready: updatedReadyState,
+            roomId
+          }));
+        }
+      } else {
+        alert("캐릭터 선택을 해주십시오.")
       }
     }
   };
@@ -369,6 +376,11 @@ const Lobby = () => {
   }, [messages]);
 
   const handleStartGame = () => {
+    if (players.some(player => !player.characterSrc.startsWith("/image"))) {
+      alert("캐릭터 선택을 해야 시작 가능합니다.");
+      return;
+    }
+
     if (client && client.connected) {
       // 현재 사용자가 선택한 캐릭터 이미지를 가져옴
       const selectedCharacterSrc = players.find(player => player.name === userData.nickname)?.characterSrc;
@@ -494,19 +506,20 @@ const Lobby = () => {
       const playersData = [];
 
       gameInfo.forEach(line => {
-        const match = line.match(/^(.+?):\s(.+?),\sSpeed:\s(\d+)$/);
-        if (match) {
-          const playerName = match[1].trim();
-          const characterSrc = match[2].trim();
-          const speed = parseInt(match[3], 10);
-
-          playersData.push({user_id: playerName, characterSrc: characterSrc, speed: speed});
+        const match = line.split("|");
+        if (match.length === 4) {
+          let [user_id, characterSrc, speed, nickname] = line.split("|");
+          speed = parseInt(speed, 10);
+          playersData.push({user_id: user_id, characterSrc: characterSrc, speed: speed, nickname: nickname});
         }
       });
+      console.log('playersData', playersData);
 
       // 순서를 유지한 채로 playersData를 사용
       setOrder(playersData); // 순서대로 저장된 정보를 그대로 사용
       setShowGameResult(true); // 결과 화면 표시
+    } else if (message.type === 'END_GAME') {
+      location.href = `/game/${roomId}`;
     }
   };
 
@@ -515,7 +528,7 @@ const Lobby = () => {
     if (showGameResult) {
       console.log('Order updated:', order); // 디버깅용
 
-      let delay = 1000; // 각 순위가 나타나는 시간 간격 (밀리초)
+      let delay = 100; // 각 순위가 나타나는 시간 간격 (밀리초)
 
       // 순번을 순차적으로 추가
       const tempOrder = [];
@@ -523,7 +536,7 @@ const Lobby = () => {
         setTimeout(() => {
           tempOrder.push(player);
           setOrder([...tempOrder]); // 새로운 배열로 설정하여 재렌더링
-        }, delay * (index + 1));
+        }, delay + (index + 100));
       });
     }
   }, [showGameResult]); // order가 아니라 showGameResult가 변경될 때만 실행되도록 수정
@@ -534,7 +547,7 @@ const Lobby = () => {
       {showYutPan ? (
         <YutPan roomId={roomId}/>
       ) : showGameResult ? (
-        <RankAnimation players={order} userData={userData}/>
+        <RankAnimation players={order} userData={userData} client={client}/>
       ) : (
         <>
           <Modal open={isModalOpen} onClose={handleCloseModal}/>
@@ -721,7 +734,18 @@ const Lobby = () => {
               </div>
             </>
           )}
-          <div className="game-container">
+          <div style={{
+            width: "500px",
+            height: "445px",
+            padding: "20px",
+            backgroundColor: "white",
+            borderRadius: "10px",
+            color: "black",
+            textAlign: "center",
+            position: "absolute",
+            right: "5%",
+            boxShadow: "5px 5px 5px gray"
+          }}>
             <b style={{fontSize: '20px'}}>Select&nbsp;Character</b>
 
             <div className="character-selection">
@@ -732,6 +756,7 @@ const Lobby = () => {
                     alt={character.alt}
                     className={`character ${selectedCharacter === character.id ? 'selected' : ''}`}
                     onClick={() => {
+                      //캐릭터 선택
                       if (selectedCharacter === character.id) {
                         handleCharacterDeselect(character.id);
                       } else if (!selectedCharacters.includes(character.src)) {
