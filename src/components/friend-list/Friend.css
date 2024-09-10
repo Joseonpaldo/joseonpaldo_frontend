@@ -25,6 +25,7 @@
 }
 
 .friend-button {
+  width: 150px;
   padding: 10px;
   background-color: #f8f9fa;
   border: 1px solid #ddd;
@@ -56,30 +57,37 @@
   margin-bottom: 10px;
   background-color: #efe9e3; /* 메시지 영역 배경 흰색 */
   border-radius: 10px;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-message {
   padding: 8px 12px;
   margin-bottom: 8px;
   border-radius: 10px;
-  max-width: 70%;
+  max-width: 70%; /* 메시지의 최대 너비를 제한 */
+  word-wrap: break-word; /* 긴 단어를 자동으로 줄바꿈 */
+  display: inline-block;
 }
 
 .chat-message.sent {
   background-color: #e1b389; /* 보낸 메시지 배경 */
-  margin-left: auto;
+  align-self: flex-end; /* 보낸 메시지를 오른쪽에 정렬 */
   text-align: right;
   color: white;
 }
 
 .chat-message.received {
   background-color: #f1f1f1; /* 받은 메시지 배경 */
+  align-self: flex-start; /* 받은 메시지를 왼쪽에 정렬 */
   text-align: left;
 }
 
 .chat-message p {
   margin: 0;
+  word-wrap: break-word; /* 긴 단어를 줄바꿈 처리 */
 }
+
 
 .chat-input {
   align-items: center;
@@ -112,5 +120,5 @@
 }
 
 .send-button:hover {
-  background-color: #218838;
+  background-color: #8c582b;
 }

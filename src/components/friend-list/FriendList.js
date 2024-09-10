@@ -107,13 +107,39 @@ export default function FriendList() {
           timestamp: message.timestamp
         }
       ]);
+      // 읽지 않은 메시지 카운트 업데이트
+      if (oneFriend?.userId !== message.senderId) {  // 현재 채팅 중인 친구가 아니면
+        setUnreadMessages(prev => ({
+          ...prev,
+          [message.senderId]: (prev[message.senderId] || 0) + 1
+        }));
+      }
+
+      // 메시지 전송 후, loadMessages 함수 실행
+      if (oneFriend && oneFriend.chatRoomId) {
+        loadMessages(oneFriend.chatRoomId);
+      }
+
     }
   };
+
+  // 총 읽지 않은 메시지 수
+  const getTotalUnreadCount = () => {
+    return Object.values(unreadMessages).reduce((acc, count) => acc + count, 0);
+  };
+
 
   // 채팅창 열기 함수
   function friendButton(friend) {
     setOneFriend(friend);
     setIsChatRoom(true);
+
+    // 해당 친구의 읽지 않은 메시지 카운트 초기화
+    setUnreadMessages(prev => ({
+      ...prev,
+      [friend.userId]: 0
+    }));
+
     if (!friend.chatRoomId) {
       apiAxiosInstance.post('/chat/createOrGetChatRoom', {
         userId1: userData.user_id,
@@ -132,6 +158,7 @@ export default function FriendList() {
       loadMessages(friend.chatRoomId);
     }
   }
+
 
   useEffect(() => {
     if (chatMessagesRef.current) {
@@ -159,7 +186,7 @@ export default function FriendList() {
   }
 
   // 메시지 전송 함수
-  function sendMessage(messageContent) {
+  function sendMessage() {
     if (stompClient && stompClient.connected && messageContent.trim() !== '') {
       const chatMessage = {
         senderId: userData.user_id,
@@ -174,9 +201,9 @@ export default function FriendList() {
         ...prevMessages,
         { senderId: userData.user_id, content: messageContent, timestamp: new Date().toISOString() }
       ]);
+      setMessageContent(''); // 전송 후 입력값 비우기
     }
   }
-
   // 초대 수락 핸들러
   const handleAcceptInvite = () => {
     window.location.href = `/lobby/${inviteRoomId}`;
@@ -191,29 +218,52 @@ export default function FriendList() {
   const toggleFriendList = () => {
     setShowFriendList(prevState => !prevState);
   };
+  const [messageContent, setMessageContent] = useState(''); // 입력 상태 관리
 
   return (
     <div style={{position:'absolute', bottom:'0'}}>
       <>
         {!isChatRoom ? (
           <div className="friend-list-container">
-            <button onClick={toggleFriendList} className="button">친구 목록</button>
+            <button onClick={toggleFriendList} className="button">
+              친구 목록
+              {getTotalUnreadCount() > 0 && (
+                <span className="total-unread-count" style={{
+                  marginLeft: '10px',
+                  color: 'red',
+                  fontWeight: 'bold',
+                }}>
+      ({getTotalUnreadCount()})
+    </span>
+              )}
+            </button>
 
             {showFriendList && ( // 친구 목록을 토글하여 표시
               <ul className="friend-list">
                 {friendList.map((item, idx) => (
                   <li key={idx} className="friend-list-item">
                     <button onClick={() => friendButton(item)} className="friend-button">
-                      {item.userId} : {item.nickname}
+                      {item.nickname}
+                      {unreadMessages[item.userId] > 0 && (
+                        <span className="unread-count" style={{
+                          marginLeft: '10px',
+                          color: 'red',
+                          fontWeight: 'bold',
+                        }}>
+            {unreadMessages[item.userId]}
+          </span>
+                      )}
                     </button>
                   </li>
                 ))}
               </ul>
+
             )}
 
           </div>
         ) : (
           <div className="chat-room">
+
             {/* X 버튼 추가 */}
             <button onClick={() => setIsChatRoom(false)} className="close-button" style={{
               position: 'absolute',
@@ -223,44 +273,111 @@ export default function FriendList() {
               border: 'none',
               fontSize: '24px',
               cursor: 'pointer'
-            }}>✕</button>
+            }}>✕
+            </button>
 
-            <h3>{oneFriend.nickname}님과의 채팅</h3>
-            <div className="chat-messages" ref={chatMessagesRef} style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {/* 채팅 메시지 목록 */}
+            <div style={{display: 'flex'}}>
+              <img
+              src={oneFriend.profilePicture}
+              alt="profile"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius:'50%',
+                marginRight: '5px',
+                marginBottom:'10px'
+              }}
+            />
+            <h3 style={{ margin: '5px'}}>{oneFriend.nickname}님과의 채팅</h3>
+            </div>
+            <div className="chat-messages" ref={chatMessagesRef} style={{maxHeight: '400px', overflowY: 'auto'}}>
               {messages.map((msg, idx) => {
                 const isSender = msg.senderId === userData.user_id;
                 const friend = friendList.find(f => f.userId === (isSender ? msg.receiverId : msg.senderId));
                 const displayName = isSender ? '나' : (friend ? friend.nickname : '알 수 없음');
 
-                return (
-                  <div key={idx} style={{textAlign: isSender ? 'right' : 'left'}}>
-                    <p style={{color: 'black'}}>
-                      <strong>{displayName} :</strong> {msg.content}
-                      <span style={{fontSize: '10px', color: 'gray', marginLeft: '10px'}}>
-                       {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-                      </span>
-                    </p>
-                  </div>
+                const profilePicture = isSender ? userData.profilePicture : friend ? oneFriend.profilePicture : null;
 
+                // 이전 메시지와 비교해서 같은 사람이 같은 시간에 보냈는지 확인
+                const showTimestamp =
+                  idx === messages.length - 1 || // 마지막 메시지이거나
+                  msg.senderId !== messages[idx + 1].senderId || // 이전 메시지와 발신자가 다르거나
+                  new Date(messages[idx + 1].timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) !==
+                  new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}); // 시간이 다르면 시간 표시
+
+                const showName =
+                  idx === 0 || // 첫 번째 메시지이거나
+                  msg.senderId !== messages[idx - 1].senderId || // 이전 메시지와 발신자가 다르거나
+                  new Date(messages[idx - 1].timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) !==
+                  new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      flexDirection: isSender ? 'row-reverse' : 'row',
+                      alignItems: 'flex-start', // 프로필과 메시지 정렬
+                      marginBottom: '10px',
+                    }}
+                  >
+                    {/* 프로필 사진 (이름이 있을 때만 표시) */}
+                    {showName && profilePicture && (
+                      <img
+                        src={profilePicture}
+                        alt="profile"
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          marginRight: isSender ? '0' : '10px',
+                          marginLeft: isSender ? '10px' : '0',
+                        }}
+                      />
+                    )}
+
+                    {/* 메시지 내용 */}
+                    <div style={{maxWidth: '70%', textAlign: isSender ? 'right' : 'left'}}>
+                      {/* 이름 */}
+                      {showName && <strong style={{color: 'black'}}>{displayName}</strong>}
+                      <br/> {/* 줄바꿈 추가 */}
+                      {/* 메시지 */}
+                      <span style={{
+                        color: 'black',
+                        backgroundColor: 'white',
+                        padding: '8px',
+                        borderRadius: '15px'
+                      }}>{msg.content}</span>
+                      {/* 시간 표시 */}
+                      {showTimestamp && (
+                        <span style={{fontSize: '10px', color: 'gray', marginLeft: '10px'}}>
+            {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+          </span>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
+
+
             </div>
 
+            {/* 채팅 입력 및 전송 버튼 */}
             <div className="chat-input">
               <input
                 type="text"
-                placeholder="Type your message..."
+                value={messageContent} // 입력값을 상태와 연결
+                placeholder="메시지를 입력하세요..."
+                onChange={(e) => setMessageContent(e.target.value)} // 입력값 업데이트
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
-                    sendMessage(e.target.value);
-                    e.target.value = ''; // 입력란 비우기
+                    sendMessage();
                   }
                 }}
                 className="input"
               />
-              <button onClick={() => sendMessage(document.querySelector('.chat-input input').value)} className="send-button">
-                전송
-              </button>
+              <button onClick={sendMessage} className="send-button">전송</button>
             </div>
           </div>
         )}

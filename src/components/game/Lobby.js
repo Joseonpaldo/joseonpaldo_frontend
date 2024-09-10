@@ -518,6 +518,20 @@ const Lobby = () => {
     }
   }, [showGameResult]); // order가 아니라 showGameResult가 변경될 때만 실행되도록 수정
 
+  const friendCheck=(user_id, friend_id)=>{
+    console.log("이거부터 친구 추가 없애기 로오직");
+    console.log("나 : "+user_id);
+    console.log("친구 : "+friend_id);
+
+    apiAxiosInstance.post(`/friend//check/${user_id}/${friend_id}`)
+      .then(res => {
+        console.log(res.data);
+        return res.data;
+      })
+      .catch(error => console.error('암무것도 안됨:', error));
+
+  }
+
 
   return (
     <div className="backStyle">
@@ -611,7 +625,7 @@ const Lobby = () => {
                               >
                                 정보
                               </Button>
-                              {player.user_id != userData.user_id && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
+                              {player.user_id != userData.user_id && friendCheck(userData.user_id, player.user_id) && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
                                 <Button
                                   onClick={() => handleSendFriendRequest(player.user_id)} // 친구 추가 버튼 클릭 시 모달 열기
                                   style={{ backgroundColor: '#f1e7e0' }}
