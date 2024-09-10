@@ -35,7 +35,6 @@ import {Stomp} from "@stomp/stompjs";
 import SockJS from 'sockjs-client';
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import ChatComponent from "@/components/game/chatComponent";
-import GameMap from "@/components/mini-game/snake/components/GameMap";
 import Roulette from "@/components/game/roulette";
 
 
