@@ -9,7 +9,7 @@ socket.on('connect', () => {
 });
 
 export function joinRoom(roomId) {
-    socket.emit('joinRoom', { roomNum: roomId });
+    socket.emit('joinRoom', { roomId: roomId });
 }
 
 export default socket;

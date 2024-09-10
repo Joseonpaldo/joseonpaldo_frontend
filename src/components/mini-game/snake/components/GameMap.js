@@ -2,7 +2,8 @@ import React, {useEffect, useState} from 'react';
 import Snake from './Snake';
 import PlayerList from './PlayerList';
 import '../styles.css';
-import {io} from "socket.io-client";
+import socket from "@/components/mini-game/snake/websocket";
+
 
 function GameMap({roomId}) {
   const [players, setPlayers] = useState({});
@@ -10,21 +11,10 @@ function GameMap({roomId}) {
   const [countdown, setCountdown] = useState(0); // 카운트다운 초기값을 0으로 설정
   const [gameStarted, setGameStarted] = useState(false); // 게임 시작 여부
   const [waiting, setWaiting] = useState(true); // 대기 상태 관리
-  const [client, setClient] = useState(null);
+
 
 
   useEffect(() => {
-    const socket = io('/snake', {
-      path: "/nws"
-    });
-    setClient(socket);
-
-    socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-    });
-
-    socket.emit('joinRoom', {roomNum: roomId});
-
     // 서버에서 모든 플레이어가 입장하면 카운트다운 시작 이벤트를 수신
     socket.on('startCountdown', () => {
       setCountdown(10); // 카운트다운 초기화
@@ -77,7 +67,7 @@ function GameMap({roomId}) {
         default:
           return;
       }
-      client.emit('gameState', direction);
+      socket.emit('gameState', direction);
     };
 
     window.addEventListener('keydown', handleKeyDown);

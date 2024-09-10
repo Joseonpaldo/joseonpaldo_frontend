@@ -36,6 +36,7 @@ import SockJS from 'sockjs-client';
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import ChatComponent from "@/components/game/chatComponent";
 import GameMap from "@/components/mini-game/snake/components/GameMap";
+import Roulette from "@/components/game/roulette";
 
 
 function YutPan() {
@@ -45,6 +46,8 @@ function YutPan() {
   const [nowTurn, setNowTurn] = useState(null);
   const [lastStep, setLastStep] = useState(false);
   const [loading, setLoading] = useState("flex");
+
+  const [showRoulette, setShowRoulette] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -409,6 +412,8 @@ function YutPan() {
           let commend = message.message;
           if (commend === "oneMore") {
             setTimeout(() => oneMore(), 2000)
+          } else if (commend === "mini-game-step") {
+            setShowRoulette(true);
           }
         } else if (message.type === "resultArr") {
           setTimeout(() => setResultArr(JSON.parse(message.message)), 0)
@@ -435,7 +440,8 @@ function YutPan() {
               JSON.stringify({message: "join"})
             );
           }
-        } else {
+        }
+        else {
           console.log("error : " + JSON.parse(message.message).toString());
         }
 
@@ -527,6 +533,14 @@ function YutPan() {
     }
   };
 
+  const miniGameStep = () => {
+    client.send(
+      `/app/main/mini-game-step/${roomId}`,
+      {name: myPlayer}, // 헤더 설정
+      JSON.stringify({message: "step"})
+    );
+  }
+
 
   const stepOnEvent = (index) => {
     console.log("last step index " + index);
@@ -541,8 +555,7 @@ function YutPan() {
       case 35:
       case 41:
       case 45:
-        console.log("미니게임~");
-        // <GameMap roomId={roomId}/>
+        miniGameStep();
         break;
 
       case 0:
@@ -913,7 +926,9 @@ function YutPan() {
     }}>
       <div className="loader"></div>
     </div>
-
+    {
+      showRoulette ? <Roulette client={client} myPlayer={myPlayer}/> : null
+    }
   </div>
 }
 
