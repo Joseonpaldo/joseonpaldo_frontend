@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import Snake from './Snake';
 import PlayerList from './PlayerList';
 import '../styles.css';
-import socket from "@/components/mini-game/snake/websocket";
+import socket from "../websocket";
 
 
 function GameMap({roomId}) {
