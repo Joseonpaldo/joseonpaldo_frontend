@@ -96,8 +96,8 @@ const Lobby = () => {
   //방 제목
   useEffect(() => {
     const fetchRoomName = async () => {
-        const response = await apiAxiosInstance.get(`/roomName/${roomId}`);
-        setRoomName(response.data); // 서버에서 반환된 roomName 설정
+      const response = await apiAxiosInstance.get(`/roomName/${roomId}`);
+      setRoomName(response.data); // 서버에서 반환된 roomName 설정
     };
 
     if (roomId) {
@@ -624,8 +624,8 @@ const Lobby = () => {
                                 style={{ backgroundColor: '#f1e7e0' }}
                               >
                                 정보
-                              </Button>
-                              {player.user_id != userData.user_id && friendCheck(userData.user_id, player.user_id) && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
+                              </Button>   {/*&& friendCheck(userData.user_id, player.user_id)*/}
+                              {player.user_id != userData.user_id  && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
                                 <Button
                                   onClick={() => handleSendFriendRequest(player.user_id)} // 친구 추가 버튼 클릭 시 모달 열기
                                   style={{ backgroundColor: '#f1e7e0' }}

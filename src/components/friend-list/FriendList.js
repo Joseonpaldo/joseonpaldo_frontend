@@ -220,6 +220,19 @@ export default function FriendList() {
   };
   const [messageContent, setMessageContent] = useState(''); // 입력 상태 관리
 
+  // 친구 삭제 함수
+  function deleteFriend(friendId) {
+    apiAxiosInstance.delete(`/friend/delete/${userData.user_id}/${friendId}`)
+      .then(() => {
+        console.log("userid"+userData.user_id+"friend"+friendId);
+
+        // 삭제 후 친구 목록 갱신
+        setFriendList(prevList => prevList.filter(friend => friend.userId !== friendId));
+      })
+      .catch(error => console.error('친구 삭제 실패:', error));
+  }
+
+
   return (
     <div style={{position:'absolute', bottom:'0'}}>
       <>
@@ -254,9 +267,18 @@ export default function FriendList() {
           </span>
                       )}
                     </button>
+                    {/* 삭제 버튼 추가 */}
+                    <button
+                      onClick={() => deleteFriend(item.userId)}
+                      className="delete-button"
+                      style={{marginLeft: '10px', background: 'red', color: 'white', borderRadius: '5px'}}
+                    >
+                      삭제
+                    </button>
                   </li>
                 ))}
               </ul>
+
 
             )}
 
@@ -279,17 +301,17 @@ export default function FriendList() {
             {/* 채팅 메시지 목록 */}
             <div style={{display: 'flex'}}>
               <img
-              src={oneFriend.profilePicture}
-              alt="profile"
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius:'50%',
-                marginRight: '5px',
-                marginBottom:'10px'
-              }}
-            />
-            <h3 style={{ margin: '5px'}}>{oneFriend.nickname}님과의 채팅</h3>
+                src={oneFriend.profilePicture}
+                alt="profile"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  marginRight: '5px',
+                  marginBottom:'10px'
+                }}
+              />
+              <h3 style={{ margin: '5px'}}>{oneFriend.nickname}님과의 채팅</h3>
             </div>
             <div className="chat-messages" ref={chatMessagesRef} style={{maxHeight: '400px', overflowY: 'auto'}}>
               {messages.map((msg, idx) => {
@@ -299,18 +321,17 @@ export default function FriendList() {
 
                 const profilePicture = isSender ? userData.profilePicture : friend ? oneFriend.profilePicture : null;
 
-                // 이전 메시지와 비교해서 같은 사람이 같은 시간에 보냈는지 확인
                 const showTimestamp =
-                  idx === messages.length - 1 || // 마지막 메시지이거나
-                  msg.senderId !== messages[idx + 1].senderId || // 이전 메시지와 발신자가 다르거나
-                  new Date(messages[idx + 1].timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) !==
-                  new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}); // 시간이 다르면 시간 표시
+                  idx === messages.length - 1 ||
+                  msg.senderId !== messages[idx + 1].senderId ||
+                  new Date(messages[idx + 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) !==
+                  new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                 const showName =
-                  idx === 0 || // 첫 번째 메시지이거나
-                  msg.senderId !== messages[idx - 1].senderId || // 이전 메시지와 발신자가 다르거나
-                  new Date(messages[idx - 1].timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) !==
-                  new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                  idx === 0 ||
+                  msg.senderId !== messages[idx - 1].senderId ||
+                  new Date(messages[idx - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) !==
+                  new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                 return (
                   <div
@@ -318,11 +339,11 @@ export default function FriendList() {
                     style={{
                       display: 'flex',
                       flexDirection: isSender ? 'row-reverse' : 'row',
-                      alignItems: 'flex-start', // 프로필과 메시지 정렬
+                      alignItems: 'flex-start',
                       marginBottom: '10px',
                     }}
                   >
-                    {/* 프로필 사진 (이름이 있을 때만 표시) */}
+                    {/* 프로필 사진 */}
                     {showName && profilePicture && (
                       <img
                         src={profilePicture}
@@ -337,28 +358,51 @@ export default function FriendList() {
                       />
                     )}
 
-                    {/* 메시지 내용 */}
-                    <div style={{maxWidth: '70%', textAlign: isSender ? 'right' : 'left'}}>
-                      {/* 이름 */}
-                      {showName && <strong style={{color: 'black'}}>{displayName}</strong>}
-                      <br/> {/* 줄바꿈 추가 */}
-                      {/* 메시지 */}
-                      <span style={{
-                        color: 'black',
-                        backgroundColor: 'white',
-                        padding: '8px',
-                        borderRadius: '15px'
-                      }}>{msg.content}</span>
-                      {/* 시간 표시 */}
-                      {showTimestamp && (
-                        <span style={{fontSize: '10px', color: 'gray', marginLeft: '10px'}}>
-            {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-          </span>
+                    {/* 메시지와 시간 */}
+                    <div style={{ maxWidth: '70%', textAlign: isSender ? 'right' : 'left' }}>
+                      {/* 본인 메시지일 경우 시간 먼저 출력 */}
+                      {isSender ? (
+                        <>
+                          {showTimestamp && (
+                            <span style={{ fontSize: '10px', color: 'gray', marginRight: '10px' }}>
+                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+                          )}
+                          <span
+                            style={{
+                              color: 'black',
+                              backgroundColor: 'white',
+                              padding: '8px',
+                              borderRadius: '15px',
+                            }}
+                          >
+              {msg.content}
+            </span>
+                        </>
+                      ) : (
+                        <>
+            <span
+              style={{
+                color: 'black',
+                backgroundColor: 'white',
+                padding: '8px',
+                borderRadius: '15px',
+              }}
+            >
+              {msg.content}
+            </span>
+                          {showTimestamp && (
+                            <span style={{ fontSize: '10px', color: 'gray', marginLeft: '10px' }}>
+                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
                 );
               })}
+
 
 
             </div>
@@ -395,3 +439,4 @@ export default function FriendList() {
   );
 
 }
+
