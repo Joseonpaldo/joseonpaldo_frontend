@@ -3,7 +3,8 @@ import apiAxiosInstance from '@/hooks/apiAxiosInstance';
 import React, { useEffect, useRef, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Stomp } from "@stomp/stompjs";
-import Accept from "@/components/game/Accept"; // 초대 모달 컴포넌트 추가
+import Accept from "@/components/game/Accept";
+import DeleteFriend from "@/components/friend-list/DeleteFriend"; // 초대 모달 컴포넌트 추가
 
 export default function FriendList() {
   const jwt = localStorage.getItem('custom-auth-token');
@@ -21,6 +22,9 @@ export default function FriendList() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviter, setInviter] = useState('');
   const [inviteRoomId, setInviteRoomId] = useState('');
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [friendToDelete, setFriendToDelete] = useState(null); // 삭제할 친구의 ID
 
   // 유저 데이터 가져오기
   async function getUserData(jwt) {
@@ -218,70 +222,89 @@ export default function FriendList() {
   const toggleFriendList = () => {
     setShowFriendList(prevState => !prevState);
   };
+
   const [messageContent, setMessageContent] = useState(''); // 입력 상태 관리
 
-  // 친구 삭제 함수
-  function deleteFriend(friendId) {
-    apiAxiosInstance.delete(`/friend/delete/${userData.user_id}/${friendId}`)
-      .then(() => {
-        console.log("userid"+userData.user_id+"friend"+friendId);
 
-        // 삭제 후 친구 목록 갱신
-        setFriendList(prevList => prevList.filter(friend => friend.userId !== friendId));
-      })
-      .catch(error => console.error('친구 삭제 실패:', error));
+// 친구 삭제 버튼을 누르면 모달을 열고 삭제할 친구 ID를 설정
+  function handleDeleteFriend(friendId) {
+    setFriendToDelete(friendId); // 삭제할 친구의 ID 설정
+    setTimeout(() => {
+      setIsDeleteModalOpen(true);  // 모달 열기 (상태 업데이트 딜레이로 보장)
+    }, 0);
+  }
+
+// 친구 삭제 처리 함수
+  function confirmDeleteFriend() {
+    if (friendToDelete) {
+      apiAxiosInstance.delete(`/friend/delete/${userData.user_id}/${friendToDelete}`)
+        .then(() => {
+          setFriendList(prevList => prevList.filter(friend => friend.userId !== friendToDelete));
+          setIsDeleteModalOpen(false);  // 모달 닫기
+        })
+        .catch(error => console.error('친구 삭제 실패:', error));
+    }
   }
 
 
   return (
-    <div style={{position:'absolute', bottom:'0'}}>
+
+  <div className={"friendd"}>
       <>
         {!isChatRoom ? (
-          <div className="friend-list-container">
-            <button onClick={toggleFriendList} className="button">
-              친구 목록
-              {getTotalUnreadCount() > 0 && (
-                <span className="total-unread-count" style={{
-                  marginLeft: '10px',
-                  color: 'red',
-                  fontWeight: 'bold',
-                }}>
-      ({getTotalUnreadCount()})
-    </span>
+          <div style={{position: 'absolute', bottom: '0'}}>
+            <>
+              {!isChatRoom ? (
+                <div className="friend-list-container">
+                  <button onClick={toggleFriendList} className="button">
+                    친구 목록
+                    {getTotalUnreadCount() > 0 && (
+                      <span className="total-unread-count" style={{
+                        marginLeft: '10px',
+                        color: 'red',
+                        fontWeight: 'bold',
+                      }}>
+                ({getTotalUnreadCount()})
+              </span>
+                    )}
+                  </button>
+
+                  {showFriendList && ( // 친구 목록을 토글하여 표시
+                    <ul className="friend-list">
+                      {friendList.map((item, idx) => (
+                        <li key={idx} className="friend-list-item">
+                          <button onClick={() => friendButton(item)} className="friend-button">
+                            {item.nickname}
+                            {unreadMessages[item.userId] > 0 && (
+                              <span className="unread-count"
+                                    style={{marginLeft: '10px', color: 'red', fontWeight: 'bold'}}>
+                        {unreadMessages[item.userId]}
+                      </span>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFriend(item.userId)} // 친구 삭제 모달 열기
+                            className="delete-button">
+                            X
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : (
+                <div className="chat-room">
+                  {/* 채팅 메시지 관련 UI */}
+                </div>
               )}
-            </button>
 
-            {showFriendList && ( // 친구 목록을 토글하여 표시
-              <ul className="friend-list">
-                {friendList.map((item, idx) => (
-                  <li key={idx} className="friend-list-item">
-                    <button onClick={() => friendButton(item)} className="friend-button">
-                      {item.nickname}
-                      {unreadMessages[item.userId] > 0 && (
-                        <span className="unread-count" style={{
-                          marginLeft: '10px',
-                          color: 'red',
-                          fontWeight: 'bold',
-                        }}>
-            {unreadMessages[item.userId]}
-          </span>
-                      )}
-                    </button>
-                    {/* 삭제 버튼 추가 */}
-                    <button
-                      onClick={() => deleteFriend(item.userId)}
-                      className="delete-button"
-                      style={{marginLeft: '10px', background: 'red', color: 'white', borderRadius: '5px'}}
-                    >
-                      삭제
-                    </button>
-                  </li>
-                ))}
-              </ul>
-
-
-            )}
-
+              {/* 친구 삭제 모달 */}
+              <DeleteFriend
+                open={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}  // 모달 닫기
+                onConfirm={confirmDeleteFriend}  // "예" 버튼 클릭 시 실행될 함수
+              />
+            </>
           </div>
         ) : (
           <div className="chat-room">
@@ -308,10 +331,10 @@ export default function FriendList() {
                   height: '40px',
                   borderRadius: '50%',
                   marginRight: '5px',
-                  marginBottom:'10px'
+                  marginBottom: '10px'
                 }}
               />
-              <h3 style={{ margin: '5px'}}>{oneFriend.nickname}님과의 채팅</h3>
+              <h3 style={{margin: '5px'}}>{oneFriend.nickname}님과의 채팅</h3>
             </div>
             <div className="chat-messages" ref={chatMessagesRef} style={{maxHeight: '400px', overflowY: 'auto'}}>
               {messages.map((msg, idx) => {
@@ -324,13 +347,13 @@ export default function FriendList() {
                 const showTimestamp =
                   idx === messages.length - 1 ||
                   msg.senderId !== messages[idx + 1].senderId ||
-                  new Date(messages[idx + 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) !==
-                  new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  new Date(messages[idx + 1].timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) !==
+                  new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
 
                 const showName =
                   idx === 0 ||
                   msg.senderId !== messages[idx - 1].senderId ||
-                  new Date(messages[idx - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) !==
+                  new Date(messages[idx - 1].timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit' }) !==
                   new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                 return (
@@ -402,8 +425,6 @@ export default function FriendList() {
                   </div>
                 );
               })}
-
-
 
             </div>
 

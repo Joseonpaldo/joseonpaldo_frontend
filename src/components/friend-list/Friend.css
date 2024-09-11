@@ -1,14 +1,27 @@
+.friendd {
+
+  position: absolute; /* 버튼의 위치를 상대적으로 설정 */
+  bottom: 100px;
+}
 .friend-list-container {
   padding: 20px;
+  width: 250px; /* 클릭 전후에 동일한 너비 설정 */
+  overflow-y: hidden; /* 클릭 전에는 목록이 숨겨지도록 설정 */
+  transition: all 0.3s ease; /* 크기 변화 시 부드러운 전환 */
+}
+
+.friend-list-container.show {
+  overflow-y: auto; /* 클릭 후에 스크롤 가능하게 변경 */
 }
 
 .button {
-  padding: 10px 20px;
+  padding: 10px 60px;
   background-color: #dca371;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin-bottom: 10px;
 }
 
 .button:hover {
@@ -18,24 +31,49 @@
 .friend-list {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .friend-list-item {
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
 }
 
 .friend-button {
-  width: 150px;
+  margin-right: 10px;
+  width: 120px;
   padding: 10px;
-  background-color: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  font-size: 14px;
+  background-color: white;
+  border: 2px solid #e1b389;
+  border-radius: 10px;
+  color: #333;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.delete-button {
+  color: red;
+  border: 2px solid #e1b389;
+  border-radius: 10px;
+  background-color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+  padding: 6px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .friend-button:hover {
-  background-color: #e1b389; /* 좋아하는 색상으로 변경 */
+  background-color: #e1b389; /* 좋아하는 색상 */
+  color: white;
+  border-color: #e1b389;
+}
+
+.delete-button:hover {
+  background-color: #f8d7da; /* 삭제 버튼 호버 시 색상 변경 */
+  color: red;
 }
 
 .chat-room {
@@ -44,7 +82,8 @@
   border-radius: 10px;
   background-color: #f4d3a1; /* 더 부드러운 배경색 */
 }
-.chat-room h3{
+
+.chat-room h3 {
   color: black;
 }
 
@@ -88,8 +127,8 @@
   word-wrap: break-word; /* 긴 단어를 줄바꿈 처리 */
 }
 
-
 .chat-input {
+  display: flex;
   align-items: center;
 }
 
