@@ -4,6 +4,7 @@ import Stack from '@mui/material/Stack';
 
 import { config } from '@/config';
 import Lobby from "@/components/game/Lobby";
+import Gameover from "@/components/game/Gameover";
 
 
 
@@ -15,7 +16,6 @@ export default function Page(): React.JSX.Element {
     <Stack spacing={3}>
 
       <Lobby/>
-
 
     </Stack>
   );

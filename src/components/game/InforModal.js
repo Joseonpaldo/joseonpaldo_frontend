@@ -82,11 +82,6 @@ const InforModal = ({ open, onClose, userId }) => {
 
       <DialogActions>
         <Button onClick={onClose}
-                style={{backgroundColor: '#ff8a65', color: 'white'}}>친구추가</Button>
-      </DialogActions>
-
-      <DialogActions>
-        <Button onClick={onClose}
         style={{backgroundColor: '#ff8a65', color: 'white'}}>닫기</Button>
       </DialogActions>
     </Dialog>

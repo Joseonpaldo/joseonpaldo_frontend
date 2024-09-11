@@ -11,6 +11,7 @@ import {usePathname, useRouter} from "next/navigation";
 import SearchInput from "@/components/SearchInput";
 import Typography from "@mui/material/Typography";
 import {light} from "@mui/material/styles/createPalette";
+import Gameover from "@/components/game/Gameover";
 
 
 // styled component
@@ -63,7 +64,6 @@ const GameRoom = () => {
       setRoomStatus(true);
       setBtnVariant("outlined");
     }
-
   }
 
   useEffect(() => {
