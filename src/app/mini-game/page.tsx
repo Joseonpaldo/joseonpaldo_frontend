@@ -2,21 +2,14 @@
 
 import * as React from 'react';
 import Stack from '@mui/material/Stack';
-
-
+import Minigame from "@/components/mini-game/Minigame";
 
 export default function Page(): React.JSX.Element {
+    const [param, setParam] = React.useState(null);
 
-
-  return (
-    <Stack spacing={3}>
-      <div style={{
-      }}>
-
-        {/*<button onClick={handleJoinRoom} className="join-room-button">입장하기</button>*/}
-      </div>
-
-
-    </Stack>
-  );
+    return (
+        <Stack spacing={3}>
+            <Minigame param={2} roomNumber={123}/>
+        </Stack>
+    );
 }

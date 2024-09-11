@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './AlienShooter.css';
+import './css/AlienShooter.css';
 
 const AlienShooter = ({ socket }) => {
   const [aliens, setAliens] = useState([]);
@@ -101,7 +101,7 @@ const AlienShooter = ({ socket }) => {
             id: Date.now(),
             left: Math.random() * 90,
             top: 0,
-            speed: isStrongAlien ? 0.05 : 0.1, // Strong alien is slower
+            speed: isStrongAlien ? 0.01 : 0.05, // Strong alien is slower
             type: isStrongAlien ? 'strong' : 'normal',
             hits: isStrongAlien ? 3 : 1, // Strong alien takes 3 hits, normal takes 1 hit
             flash: false, // Flash effect
@@ -150,7 +150,7 @@ const AlienShooter = ({ socket }) => {
         }))
       );
       socket.emit('updateBullets', bullets);
-    }, 2);
+    }, 3.5);
 
     return () => clearInterval(interval);
   }, [gameOver, bullets, socket]);
@@ -161,7 +161,7 @@ const AlienShooter = ({ socket }) => {
       if (!gameOver) {
         if (event.key === 'ArrowLeft' || event.key === 'a') {
           setSpaceshipPosition((prev) => {
-            const newPos = Math.max(prev - 2, 0);
+            const newPos = Math.max(prev - 3, 0);
             socket.emit('spaceshipPosition', newPos); // Emit spaceship position update
             console.log('Emitting spaceship position:', newPos); // Debug log
             return newPos;
@@ -169,7 +169,7 @@ const AlienShooter = ({ socket }) => {
         }
         if (event.key === 'ArrowRight' || event.key === 'd') {
           setSpaceshipPosition((prev) => {
-            const newPos = Math.min(prev + 2, 90);
+            const newPos = Math.min(prev + 3, 90);
             socket.emit('spaceshipPosition', newPos); // Emit spaceship position update
             console.log('Emitting spaceship position:', newPos); // Debug log
             return newPos;
@@ -272,7 +272,7 @@ const AlienShooter = ({ socket }) => {
             className={`${alien.type === 'strong' ? 'strong-alien' : 'normal-alien'} ${alien.flash ? 'flash' : ''}`}
             style={{ left: `${alien.left}%`, top: `${alien.top}%`, opacity: alien.flash ? 0.5 : 1 }}
           >
-            <img src={alien.type === 'strong' ? '/strong-alien.png' : '/normal-alien.png'} alt="Alien" />
+            <img src={alien.type === 'strong' ? '/mg/strong-alien.png' : '/mg/normal-alien.png'} alt="Alien" />
           </div>
         ))}
         {specialEntities.map((entity) => (
@@ -281,14 +281,14 @@ const AlienShooter = ({ socket }) => {
             className="special-entity"
             style={{ left: `${entity.left}%`, top: `${entity.top}%` }}
           >
-            <img src="/barrel.png" alt="Special Entity" />
+            <img src="/mg/barrel.png" alt="Special Entity" />
           </div>
         ))}
         {bullets.map((bullet) => (
           <div key={bullet.id} className="bullet" style={{ left: `${bullet.left}%`, top: `${bullet.top}%` }} />
         ))}
         <div className="spaceship" style={{ left: `${spaceshipPosition}%` }}>
-          <img src="/player.gif" alt="Spaceship" />
+          <img src="/mg/player.gif" alt="Spaceship" />
         </div>
         {reloading && <div className="reloading">Reloading...</div>}
         <div className="ammo">Shots Left: {shotsLeft}</div>

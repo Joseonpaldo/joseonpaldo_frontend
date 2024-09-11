@@ -1,0 +1,85 @@
+/* Game Wrapper */
+.game-wrapper {
+  width: 100%; /* Full width */
+  max-width: 800px; /* Set a max width for the game */
+  margin: 0 auto; /* Center the game horizontally */
+  padding: 20px; /* Optional padding */
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Optional box-shadow for aesthetics */
+  background-color: #f5f5f5; /* Optional background color */
+  border-radius: 10px; /* Rounded corners */
+  text-align: center; /* Center all text elements */
+}
+
+/* Timer Box */
+.timer-box {
+  width: 100%; /* Full width of container */
+  max-width: 200px; /* Max width for the timer */
+  height: 20px;
+  position: relative;
+  border: 1px solid #000;
+  margin: 0 auto 10px auto; /* Center the timer and add margin */
+  overflow: hidden;
+}
+
+/* Timer Fill (Shrinking Effect) */
+.timer-fill {
+  background-color: #4caf50;
+  height: 100%;
+  transition: width 1s linear; /* Smooth shrinking effect */
+  width: 100%; /* Starts at full width */
+  transform-origin: center; /* Shrinks symmetrically from the center */
+}
+
+.timer-reset {
+  background-color: #4caf50;
+  height: 100%;
+  transition: width 0s linear; /* Smooth shrinking effect */
+  width: 100%; /* Starts at full width */
+  transform-origin: center; /* Shrinks symmetrically from the center */
+}
+
+/* Choices Container */
+.choices-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* Choice Buttons */
+.choice {
+  margin: 0 10px; /* Spacing between choices */
+}
+
+/* Hands Display (Your and Computer's choices) */
+.hands {
+  display: flex;
+  justify-content: center;
+}
+
+.hand {
+  margin: 20px;
+}
+
+/* Result Text */
+.result {
+  text-align: center;
+  font-size: 1.5em;
+  margin-top: 20px;
+}
+
+/* Jump Animation */
+.jump {
+  animation: jump 0.5s ease;
+}
+
+@keyframes jump {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}

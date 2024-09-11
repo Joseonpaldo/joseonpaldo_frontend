@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './AlienShooter.css';
+import './css/AlienShooter.css';
 
 const AlienViewer = ({ socket }) => {
   const [aliens, setAliens] = useState([]);
@@ -195,7 +195,7 @@ const AlienViewer = ({ socket }) => {
             className={`${alien.type === 'strong' ? 'strong-alien' : 'normal-alien'} ${alien.flash ? 'flash' : ''}`}
             style={{ left: `${alien.left}%`, top: `${alien.top}%`, opacity: alien.flash ? 0.5 : 1 }}
           >
-            <img src={alien.type === 'strong' ? '/strong-alien.png' : '/normal-alien.png'} alt="Alien" />
+            <img src={alien.type === 'strong' ? '/mg/strong-alien.png' : '/mg/normal-alien.png'} alt="Alien" />
           </div>
         ))}
         {specialEntities.map((entity) => (
@@ -204,14 +204,14 @@ const AlienViewer = ({ socket }) => {
             className="special-entity"
             style={{ left: `${entity.left}%`, top: `${entity.top}%` }}
           >
-            <img src="/barrel.png" alt="Special Entity" />
+            <img src="/mg/barrel.png" alt="Special Entity" />
           </div>
         ))}
         {bullets.map((bullet) => (
           <div key={bullet.id} className="bullet" style={{ left: `${bullet.left}%`, top: `${bullet.top}%` }} />
         ))}
         <div className="spaceship" style={{ left: `${spaceshipPosition}%` }}>
-          <img src="/turtle.png" alt="Spaceship" />
+          <img src="/mg/turtle.png" alt="Spaceship" />
         </div>
         {reloading && <div className="reloading">Reloading...</div>}
       </div>
