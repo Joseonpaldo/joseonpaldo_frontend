@@ -1,0 +1,64 @@
+.gameover-container {
+  text-align: center;
+  padding: 20px;
+  background-color: #f0f0f0;
+}
+
+.rank-section {
+  background-color: #fff;
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rank-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.rank-table th, .rank-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+
+.rank-table th {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.rank-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.rank-table tr:hover {
+  background-color: #ddd;
+}
+
+.rank-table td {
+  text-align: center;
+}
+
+.reward-section {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rewards {
+  display: flex;
+  justify-content: space-around;
+}
+
+.reward-box {
+  width: 50px;
+  height: 50px;
+  background-color: #e1b389;
+  border-radius: 10px;
+}
+
+.purple {
+  background-color: #a020f0;
+}
