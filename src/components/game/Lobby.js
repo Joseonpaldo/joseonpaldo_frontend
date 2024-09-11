@@ -70,7 +70,7 @@ const Lobby = () => {
   const [isFriendToModalOpen, setIsFriendToModalOpen] = useState(false); // 친구 요청 받은 모달 상태
   const [receiver, setReciver] = useState(''); // 친구 요청을 보낸 유저 닉네임
   const [sender, setSender] = useState(''); // 친구 요청을 보낸 유저 닉네임
-
+  const [isFriend, setIsFriend] = useState(false); // 친구 여부 상태 추가
   const {roomId} = useParams();
 
 
@@ -201,11 +201,14 @@ const Lobby = () => {
     }
   };
 
-  const handleButtonClick = (name) => {
+  const handleButtonClick = (friend_id) => {
     setVisibleOptions((prevState) => ({
       ...prevState,
-      [name]: !prevState[name]
+      [friend_id]: !prevState[friend_id]
     }));
+
+    // 버튼을 클릭할 때 friendCheck 실행
+    friendCheck(userData.user_id, friend_id);
   };
 
 
@@ -518,19 +521,23 @@ const Lobby = () => {
     }
   }, [showGameResult]); // order가 아니라 showGameResult가 변경될 때만 실행되도록 수정
 
-  const friendCheck=(user_id, friend_id)=>{
-    console.log("이거부터 친구 추가 없애기 로오직");
-    console.log("나 : "+user_id);
-    console.log("친구 : "+friend_id);
+  const friendCheck = (user_id, friend_id) => {
+    apiAxiosInstance
+      .post(`/friend/check/${user_id}/${friend_id}`)
+      .then((res) => {
 
-    apiAxiosInstance.post(`/friend//check/${user_id}/${friend_id}`)
-      .then(res => {
-        console.log(res.data);
-        return res.data;
+        console.log("us"+user_id+friend_id);
+        setIsFriend(res.data); // 친구 여부 상태 업데이트
       })
-      .catch(error => console.error('암무것도 안됨:', error));
+      .catch((error) => console.error("친구 여부 확인 오류:", error));
+  };
 
-  }
+
+  useEffect(() => {
+    if (isFriend) {
+      console.log("이미 친구입니다.");
+    }
+  }, [isFriend]);
 
 
   return (
@@ -624,15 +631,16 @@ const Lobby = () => {
                                 style={{ backgroundColor: '#f1e7e0' }}
                               >
                                 정보
-                              </Button>   {/*&& friendCheck(userData.user_id, player.user_id)*/}
-                              {player.user_id != userData.user_id  && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
+                              </Button>
+                              {player.user_id != userData.user_id && !isFriend && (  // 친구 추가 버튼은 자신에게 보이지 않게 설정
                                 <Button
-                                  onClick={() => handleSendFriendRequest(player.user_id)} // 친구 추가 버튼 클릭 시 모달 열기
-                                  style={{ backgroundColor: '#f1e7e0' }}
+                                  onClick={() => handleSendFriendRequest(player.user_id)}
+                                  style={{backgroundColor: '#f1e7e0'}}
                                 >
                                   친추
                                 </Button>
                               )}
+
                             </div>
                           )}
                         </div>
