@@ -124,6 +124,14 @@ const Roulette = ({client, myPlayer}) => {
       default:
         alert("꽝! 다음 기회에");
     }
+    client.send(
+      `/app/mini-game/result/${roomId}`,
+      {
+        name: myPlayer,
+        number: num,
+      },
+      JSON.stringify({message: "result"})
+    );
   };
 
   const rouletteStartClick = () => {
