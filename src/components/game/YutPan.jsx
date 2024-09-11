@@ -46,6 +46,8 @@ function YutPan() {
   const [lastStep, setLastStep] = useState(false);
   const [loading, setLoading] = useState("flex");
 
+  const [stepEvent, setStepEvent] = useState(true);
+
   const [showRoulette, setShowRoulette] = useState(false);
 
   useEffect(() => {
@@ -385,6 +387,7 @@ function YutPan() {
               setMyTurn(false);
               if (myPlayer == ("player" + (index + 1))) {
                 setMyTurn(true);
+                setStepEvent(true);
               }
             }
             if (player.SessionId === undefined || player.SessionId === "") {
@@ -411,8 +414,23 @@ function YutPan() {
           let commend = message.message;
           if (commend === "oneMore") {
             setTimeout(() => oneMore(), 2000)
-          } else if (commend === "mini-game-step") {
+          } else if (commend === "mini-game-step-open") {
             setShowRoulette(true);
+          } else if (commend === "mini-game-step-close") {
+            setShowRoulette(false);
+          }
+        } else if (message.type === "passTurn") {
+          let player = message.message;
+          if (myPlayer === player) {
+            setTimeout(() => {
+              setMyTurn(false);
+              setLastStep(false);
+              stompClient.send(
+                `/app/main/passTurn/${roomId}`,
+                {name: myPlayer}, // 헤더 설정
+                JSON.stringify({message: "pass"})
+              );
+            }, 0)
           }
         } else if (message.type === "resultArr") {
           setTimeout(() => setResultArr(JSON.parse(message.message)), 0)
@@ -439,11 +457,17 @@ function YutPan() {
               JSON.stringify({message: "join"})
             );
           }
-        }
-        else {
+        } else {
           console.log("error : " + JSON.parse(message.message).toString());
         }
 
+      });
+
+      stompClient.subscribe(`/topic/mini-game/${roomId}`, (msg) => {
+        const message = JSON.parse(msg.body)
+        if (message.type === "result") {
+          let getPlayers = JSON.parse(message.message);
+        }
       });
 
 
@@ -460,8 +484,9 @@ function YutPan() {
   }, [myPlayer]);
 
   useEffect(() => {
-    if (resultArr.length === 0 && !yutThrowAble && myTurn && lastStep) {
+    if (resultArr.length === 0 && !yutThrowAble && myTurn && lastStep && stepEvent) {
       stepOnEvent(parseInt(players[myPlayer].index, 10))
+      setStepEvent(false);
     }
   }, [resultArr]);
 
@@ -599,6 +624,7 @@ function YutPan() {
 
   //기본 땅 밟을 시 이벤트
   const defaultStateEvent = (index) => {
+    console.log("default state event");
 
     const ele = yutIndexRefs.current.find(s => s.classList[0] === "YutState" + index);
     if (ele?.classList[2] === undefined) {
@@ -622,14 +648,17 @@ function YutPan() {
         //땅 주인이 내가 아니면
       } else {
         //통행료 내기
-        // console.log((players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(index)).price * 1.5));
-        // updatePlayer(myPlayer, {money: (players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(index)).price * 1.5)});
-        // updatePlayer(owner, {money: (players[owner].money + yutStates.find(states => states.YutIndex === parseInt(index)).price * 1.5)});
-        // client.send(
-        //   `/app/main/arrowClick/${roomId}`,
-        //   {name: myPlayer, location: index}, // 헤더 설정
-        //   JSON.stringify({message: "move this"})
-        // );
+        const statePrice = yutStates.find(states => states.YutIndex === parseInt(index)).price;
+        client.send(
+          `/app/main/pay-toll/${roomId}`,
+          {
+            name: myPlayer,
+            location: index,
+            price: statePrice,
+            owner: owner
+          }, // 헤더 설정
+          JSON.stringify({message: "pay toll"})
+        );
         passTurn();
       }
 
@@ -797,7 +826,7 @@ function YutPan() {
         </div>
 
         {/*<div style={{fontSize: "20px", position: "absolute"}} onClick={start}>한번더</div>*/}
-        {/*<div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={passTurn}>pass turn</div>*/}
+        <div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={passTurn}>pass turn</div>
 
 
         {Object.keys(players).map((key, index) => {

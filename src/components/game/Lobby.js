@@ -139,11 +139,11 @@ const Lobby = () => {
         }));
       }
 
-      window.addEventListener('beforeunload', (event) => {
-        leaveUser();
-        event.preventDefault();
-        event.returnValue = '';
-      });
+      // window.addEventListener('beforeunload', (event) => {
+      //   leaveUser();
+      //   event.preventDefault();
+      //   event.returnValue = '';
+      // });
     });
 
     return () => {
