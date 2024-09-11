@@ -241,7 +241,7 @@ function YutPan() {
   ]);
 
   useEffect(() => {
-    const bankruptcyCount = Object.values(players).filter(player => player.money).length;
+     const bankruptcyCount = Object.values(players).filter(player => player.money < 0).length;
 
     if (bankruptcyCount === 3) {
       alert("게임 끝");
