@@ -36,6 +36,7 @@ import SockJS from 'sockjs-client';
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import ChatComponent from "@/components/game/chatComponent";
 import Roulette from "@/components/game/roulette";
+import Minigame from "@/components/mini-game/Minigame";
 
 
 function YutPan() {
@@ -49,6 +50,12 @@ function YutPan() {
   const [stepEvent, setStepEvent] = useState(true);
 
   const [showRoulette, setShowRoulette] = useState(false);
+
+  const [showMiniGame, setShowMiniGame] = useState(false);
+  const [miniGameParam, setMiniGameParam] = useState(0);
+
+  const [miniGameResult, setMiniGameResult] = useState(0);
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -385,6 +392,7 @@ function YutPan() {
             if (player.myTurn) {
               setNowTurn(player.player);
               setMyTurn(false);
+              setMiniGameResult(0);
               if (myPlayer == ("player" + (index + 1))) {
                 setMyTurn(true);
                 setStepEvent(true);
@@ -466,7 +474,7 @@ function YutPan() {
       stompClient.subscribe(`/topic/mini-game/${roomId}`, (msg) => {
         const message = JSON.parse(msg.body)
         if (message.type === "result") {
-          let getPlayers = JSON.parse(message.message);
+          setMiniGameResult(parseInt(message.message));
         }
       });
 
@@ -482,6 +490,23 @@ function YutPan() {
 
     });
   }, [myPlayer]);
+
+
+  useEffect(() => {
+    if (miniGameResult === 0) {
+      setShowMiniGame(false);
+      return;
+    }
+    console.log("miniGameResult", miniGameResult);
+    if (myTurn) {
+      setMiniGameParam(miniGameResult);
+    } else {
+      setMiniGameParam(miniGameResult + 10);
+    }
+    console.log("miniGameParam", miniGameParam);
+    setShowMiniGame(true);
+  }, [miniGameResult]);
+
 
   useEffect(() => {
     if (resultArr.length === 0 && !yutThrowAble && myTurn && lastStep && stepEvent) {
@@ -957,6 +982,18 @@ function YutPan() {
     {
       showRoulette ? <Roulette client={client} myPlayer={myPlayer}/> : null
     }
+    <div style={{
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.22)",
+      justifyContent: "center",
+      alignItems: "center",
+      display: showMiniGame ? "flex" : "none",
+      scale: panScale / 1.8,
+    }}>
+      {showMiniGame ? <Minigame param={miniGameParam} roomNumber={roomId}/> : null}
+    </div>
   </div>
 }
 
