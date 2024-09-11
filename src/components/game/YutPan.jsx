@@ -240,6 +240,18 @@ function YutPan() {
     players.player4.connected
   ]);
 
+  useEffect(() => {
+    const bankruptcyCount = Object.values(players).filter(player => player.money).length;
+
+    if (bankruptcyCount === 3) {
+      alert("게임 끝");
+    }
+  }, [
+    players.player1.money,
+    players.player2.money,
+    players.player3.money,
+    players.player4.money
+  ]);
 
   useEffect(() => {
     Object.values(players).forEach((player) => {
@@ -287,19 +299,11 @@ function YutPan() {
 
   useEffect(() => {
     yutRefs.current = yutRefs.current.slice(0, yutStates.length);
-  }, []);
-
-  useEffect(() => {
     yutIndexRefs.current = yutIndexRefs.current.slice(0, yutStates.length);
-  }, []);
-
-  useEffect(() => {
     playerCardRefs.current = playerCardRefs.current.slice(0, playerKeys.length);
-  }, []);
-
-  useEffect(() => {
     playerConnectedRefs.current = playerConnectedRefs.current.slice(0, playerKeys.length);
   }, []);
+
 
 
   const {roomId} = useParams();
@@ -804,7 +808,6 @@ function YutPan() {
 
 
   return <div style={backStyle}>
-    {client != null ? <ChatComponent socket={client}/> : null}
 
     <div style={YutPanStyle} ref={yutPanRef}>
       <div style={{
@@ -994,6 +997,7 @@ function YutPan() {
     }}>
       {showMiniGame ? <Minigame param={miniGameParam} roomNumber={roomId}/> : null}
     </div>
+    {(client == null || myPlayer == null) ? null : <ChatComponent socket={client} myPlayer={myPlayer}/>}
   </div>
 }
 

@@ -6,15 +6,14 @@ import {useEffect, useRef, useState} from "react";
 import {useParams} from "next/navigation";
 import {Box} from "@mui/system";
 import {ChatCircleDots, X} from "@phosphor-icons/react";
-import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 
-export default function ChatComponent({socket}) {
+export default function ChatComponent({socket, myPlayer}) {
 
   const {roomId} = useParams();
   const inputRef = useRef(null);
   const inputElement = inputRef.current?.querySelector("input");
 
-  const [myPlayer, setMyPlayer] = useState(null);
+  // const [myPlayer, setMyPlayer] = useState(null);
   const [messages, setMessages] = useState([]);
 
   const chattingBaseRef = useRef(null);
@@ -45,7 +44,6 @@ export default function ChatComponent({socket}) {
           //처음 댓글 가져올떄
           setMessages(JSON.parse(message.message));
         }
-        inputElement.value = "";
       }
     });
   }, [socket, myPlayer]);
@@ -56,22 +54,26 @@ export default function ChatComponent({socket}) {
   }, [messages]);
 
 
-  useEffect(async () => {
-    let token = localStorage.getItem("custom-auth-token");
-    try {
-      const response = await apiAxiosInstance.get(`/game/data/player?roomName=${roomId}&jwt=${token}`);
-      if (response.status === 200 && response.data !== null) {
-        setMyPlayer("player" + response.data);
-      } else {
-        setMyPlayer("player")
+  useEffect(() => {
+    const inputElement = inputRef.current?.querySelector("input");
+    const handleKeyPress = (e) => {
+      if (inputElement.value.length > 0 && e.key === 'Enter') {
+        inputSend();
       }
-    } catch (error) {
-      console.error('Error creating game room:', error);
-    }
+    };
+
+    // 이벤트 리스너 추가
+    inputElement.addEventListener('keypress', handleKeyPress);
+
+    // 컴포넌트 언마운트 시 리스너 제거
+    return () => {
+      inputElement.removeEventListener('keypress', handleKeyPress);
+    };
   }, []);
 
 
   const inputSend = () => {
+    const inputElement = inputRef.current?.querySelector("input");
     const value = inputElement.value;
     socket.send(
       `/app/main/chatLog/${roomId}`,
@@ -80,16 +82,21 @@ export default function ChatComponent({socket}) {
       },
       value
     );
+    inputElement.value = "";
   };
 
   const chattingClose = () => {
     chattingBaseRef.current.style.right = "-300px";
     chattingIconRef.current.style.right = "20px";
+    const inputElement = inputRef.current?.querySelector("input");
+    setTimeout(() => inputElement.blur(), 300)
   }
 
   const chattingOpen = () => {
     chattingBaseRef.current.style.right = "20px";
     chattingIconRef.current.style.right = "-200px";
+    const inputElement = inputRef.current?.querySelector("input");
+    setTimeout(() => inputElement.focus(), 300)
   }
 
 
