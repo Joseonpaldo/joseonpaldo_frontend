@@ -73,6 +73,8 @@ const Lobby = () => {
   const [isFriend, setIsFriend] = useState(false); // 친구 여부 상태 추가
   const {roomId} = useParams();
 
+  const [roomchecking, setRoomchecking] = useState(false);
+
 
   async function getUserData(jwt) {
     try {
@@ -540,6 +542,29 @@ const Lobby = () => {
   }, [isFriend]);
 
 
+  const roomCheck= async (roomId, userId)=>{
+    const res = await apiAxiosInstance.get(`/game/myRoom/${roomId}/${userId}`);
+    return res.data;
+  }
+
+  useEffect(() => {
+    const checkRoom = async () => {
+      if (userData != null && userData.user_id != null) {
+        const result = await roomCheck(roomId, userData.user_id);
+        console.log(result);
+        setRoomchecking(result);
+      }
+    };
+
+    checkRoom();
+  }, [userData]);
+
+  const deleteRoom= async (roomId, userId) => {
+    console.log(`/game/room/delete/${roomId}/ ${userId}`);
+    apiAxiosInstance.delete(`/game/room/delete/${roomId}/ ${userId}`)
+      .then(res => console.log("일단 요청은 성공적")).catch(error => console.error("방삭제 에러"+error));
+  }
+
   return (
     <div className="backStyle">
       {showYutPan ? (
@@ -586,12 +611,14 @@ const Lobby = () => {
 
 
           <div className="titleStyle">
+            {
+              roomchecking ? <button onClick={()=>deleteRoom(roomId, userData.user_id)}>방 폭파</button> : null
+            }
             <h1>{roomName} {players.length}/4</h1>
             <button type="button" onClick={() => {
               leaveUser();
               window.close();
             }}>
-              <b>
                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
                      className="bi bi-box-arrow-right" viewBox="0 0 16 16">
                   <path
@@ -599,7 +626,6 @@ const Lobby = () => {
                   <path
                     d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
                 </svg>
-              </b>
             </button>
           </div>
 
