@@ -43,6 +43,7 @@ function YutPan() {
 
   const [myPlayer, setMyPlayer] = useState(null);
   const [myTurn, setMyTurn] = useState(false);
+  const [imLive, setImLive] = useState(true);
   const [nowTurn, setNowTurn] = useState(null);
   const [lastStep, setLastStep] = useState(false);
   const [loading, setLoading] = useState("flex");
@@ -55,6 +56,8 @@ function YutPan() {
   const [miniGameParam, setMiniGameParam] = useState(0);
 
   const [miniGameResult, setMiniGameResult] = useState(0);
+
+  let bankruptcyCount = 0;
 
 
   useEffect(() => {
@@ -126,12 +129,13 @@ function YutPan() {
   const [players, setPlayers] = useState({
     player1: {
       player: "player1",
+      userId: "99",
       top: 356.11,
       left: 356.31,
       index: 0,
       direction: "scaleX(1)",
       name: "player1",
-      money: 500,
+      money: 100,
       color: "#b59282",
       rank: "1st",
       avatar: "/image/character/bear.png",
@@ -141,6 +145,7 @@ function YutPan() {
     },
     player2: {
       player: "player2",
+      userId: "99",
       top: 356.11,
       left: 356.31,
       index: 0,
@@ -156,6 +161,7 @@ function YutPan() {
     },
     player3: {
       player: "player3",
+      userId: "99",
       top: 356.11,
       left: 356.31,
       index: 0,
@@ -171,12 +177,13 @@ function YutPan() {
     },
     player4: {
       player: "player4",
+      userId: "99",
       top: 356.11,
       left: 356.31,
       index: 0,
       direction: "scaleX(1)",
       name: "player4",
-      money: 500,
+      money: 30,
       color: "#FBD8E2",
       rank: "1st",
       avatar: "/image/character/rabbit.png",
@@ -241,17 +248,41 @@ function YutPan() {
   ]);
 
   useEffect(() => {
-     const bankruptcyCount = Object.values(players).filter(player => player.money < 0).length;
+    const updatedPlayers = {...players};
 
+    // 돈이 0 이상인 플레이어만 정렬
+    const sortedPlayers = Object.values(updatedPlayers)
+      .filter(player => player.money >= 0)
+      .sort((a, b) => b.money - a.money);
+
+    // 랭크 업데이트
+    sortedPlayers.forEach((player, index) => {
+      updatePlayer(player.player, {rank: `${index + 1}`});
+    });
+
+    const bankruptcyCount = Object.values(players).filter(player => player.money < 0).length;
     if (bankruptcyCount === 3) {
       alert("게임 끝");
     }
+
+    if (players[myPlayer]?.money < 0 && imLive) {
+      client.send(
+        `/app/main/dead/${roomId}`,
+        {
+          name: myPlayer,
+        },
+        JSON.stringify({message: "im dead"})
+      );
+      setImLive(false);
+    }
+
   }, [
     players.player1.money,
     players.player2.money,
     players.player3.money,
     players.player4.money
   ]);
+
 
   useEffect(() => {
     Object.values(players).forEach((player) => {
@@ -288,7 +319,6 @@ function YutPan() {
     players.player4.estate
   ]);
 
-
   // YutState에 ref를 할당
   const yutRefs = useRef([]);
   const yutIndexRefs = useRef([]);
@@ -303,7 +333,6 @@ function YutPan() {
     playerCardRefs.current = playerCardRefs.current.slice(0, playerKeys.length);
     playerConnectedRefs.current = playerConnectedRefs.current.slice(0, playerKeys.length);
   }, []);
-
 
 
   const {roomId} = useParams();
@@ -356,11 +385,11 @@ function YutPan() {
           Object.values(playerObjects).forEach((player, index) => {
             updatePlayer("player" + (index + 1), {
               name: player.name,
+              userId: player.userId,
               avatar: `/image/character/${player.avatar}.png`,
               index: player.location,
               profile: player.profile,
               money: player.money,
-              rank: "1st",
               estate: player.estate,
               player: player.player
             });
@@ -458,7 +487,12 @@ function YutPan() {
           if (JSON.parse(message.message)) {
             setYutThrowAble(true);
           }
+        } else if (message.type === "userDead") {
+          handleBankruptcy(message.message);
+          updatePlayer(message.message, {index: -1});
+          updatePlayer(message.message, {top: parseInt(1000, 10)});
         } else if (message.type === "error") {
+
           if ("not found room" === message.message) {
             stompClient.send(
               `/app/main/start/${roomId}`,
@@ -494,6 +528,19 @@ function YutPan() {
 
     });
   }, [myPlayer]);
+
+  const handleBankruptcy = (deadPlayer) => {
+    updatePlayer(deadPlayer, {rank: `${4 - (bankruptcyCount)}`});
+    bankruptcyCount += 1;
+
+    yutIndexRefs.current.forEach((estate, index) => {
+      if (estate.classList[2] === deadPlayer){
+        estate.classList.remove(deadPlayer);
+        estate.style.borderColor = "#fff";
+        estate.children[1].style.backgroundImage = ``; // 필요한 경우 배경 이미지 설정
+      }
+    })
+  };
 
 
   useEffect(() => {
@@ -940,7 +987,7 @@ function YutPan() {
                 <p style={{color: '#6b7280', margin: 0}}>{player.money.toLocaleString()}냥</p>
               </div>
               <div style={rankStyle}>
-                <span>{player.rank}</span>
+                <span>{player.rank}등</span>
               </div>
               <div
                 ref={(el) => (playerConnectedRefs.current[index] = el)} // ref 할당
