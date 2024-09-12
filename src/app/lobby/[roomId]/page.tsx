@@ -16,7 +16,7 @@ export default function Page(): React.JSX.Element {
     <Stack spacing={3}>
 
       <Lobby/>
-
+      {/*<Gameover/>*/}
     </Stack>
   );
 }

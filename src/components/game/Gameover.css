@@ -1,10 +1,24 @@
 .gameover-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   text-align: center;
   padding: 20px;
-  background-color: #f0f0f0;
+  min-height: 100vh; /* 세로 중앙 정렬 */
+  background-image: url("../../../public/image/background.jpg");
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
-.rank-section {
+.rank-section, .reward-section {
+  width: 80%; /* 섹션 크기 조정 */
+  max-width: 800px;
   background-color: #fff;
   padding: 10px;
   margin-bottom: 20px;
@@ -24,7 +38,7 @@
 }
 
 .rank-table th {
-  background-color: #4CAF50;
+  background-color: #e1b389;
   color: white;
 }
 
@@ -40,23 +54,9 @@
   text-align: center;
 }
 
-.reward-section {
-  background-color: #fff;
-  padding: 10px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
 .rewards {
   display: flex;
   justify-content: space-around;
-}
-
-.reward-box {
-  width: 50px;
-  height: 50px;
-  background-color: #e1b389;
-  border-radius: 10px;
 }
 
 .purple {
