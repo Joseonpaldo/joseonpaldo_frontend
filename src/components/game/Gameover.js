@@ -1,7 +1,7 @@
 import React from 'react';
 import './Gameover.css';
 
-const Gameover = () => {
+const Gameover = ({ players }) => {
   return (
     <div className="gameover-container">
       {/* Rank Section */}
@@ -18,43 +18,22 @@ const Gameover = () => {
           </tr>
           </thead>
           <tbody>
-          <tr>
-            <td>1</td>
-            <td>병현</td>
-            <td>3(+1)</td>
-            <td>1</td>
-            <td>75%</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>병현</td>
-            <td>3</td>
-            <td>1(+1)</td>
-            <td>75%</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>병현</td>
-            <td>3</td>
-            <td>1(+1)</td>
-            <td>75%</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>병현</td>
-            <td>3</td>
-            <td>1(+1)</td>
-            <td>75%</td>
-          </tr>
+          {players.map((player, index) => (
+            <tr key={index}>
+              <td>{index + 1}</td>
+              <td>{player.name}</td>
+              <td>{player.win}</td>
+              <td>{player.lose}</td>
+              <td>{player.winRate}%</td>
+            </tr>
+          ))}
           </tbody>
         </table>
       </div>
 
-      {/* 참잘했어요 / 분발하세요 순위에 따라 문구 */}
+      {/* 승리자와 패배자에 따른 문구 표시 */}
       <div className="reward-section">
-
-        <h3>굳잡!</h3>
-
+        {players[0].win ? <h3>굳잡! {players[0].name}님이 승리했습니다!</h3> : <h3>분발하세요! {players[0].name}님이 패배했습니다.</h3>}
       </div>
     </div>
   );
