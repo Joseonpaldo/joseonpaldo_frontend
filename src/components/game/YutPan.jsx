@@ -1049,7 +1049,7 @@ function YutPan() {
       <div className="loader"></div>
     </div>
     {
-      showRoulette ? <Roulette client={client} myPlayer={myPlayer}/> : null
+      showRoulette || (client == null || myPlayer == null) ? <Roulette client={client} myPlayer={myPlayer}/> : null
     }
     <div style={{
       position: "absolute",

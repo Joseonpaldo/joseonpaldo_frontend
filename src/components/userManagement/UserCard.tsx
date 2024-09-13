@@ -96,8 +96,8 @@ const UserCard: FC<UserCardProps> = ({user, roomStatus}) => {
 
       <Grid container spacing={3} mb={2}>
         <Grid item xs={6} textAlign="center">
-          <H3>{user.currentMember}/{user.fullMember}</H3>
-          <Small color="text.disabled">인원 수</Small>
+          <H3>{user.fullMember}</H3>
+          <Small color="text.disabled">정원 수</Small>
         </Grid>
         {/*<Grid item xs={4} textAlign="center">*/}
         {/*  <H3>{user.follower}</H3>*/}
