@@ -15,6 +15,8 @@ import {useParams} from "next/navigation";
 import FriendFrom from "@/components/game/FriendFrom";
 import InforModal from "@/components/game/InforModal";
 import FriendTo from "@/components/game/FriendTo";
+import DeleteRoomModal from '@/components/game/DeleteRoomModal';
+import DeleteSuccessModal from "@/components/game/DeleteSuccessModal";
 
 const characters = [
   {id: 1, src: '/image/character/bear.png', alt: 'Character 1'},
@@ -75,6 +77,9 @@ const Lobby = () => {
 
   const [roomchecking, setRoomchecking] = useState(false);
 
+  //lobby 삭제 useState
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteSuccessModalOpen, setIsDeleteSuccessModalOpen] = useState(false);
 
   async function getUserData(jwt) {
     try {
@@ -502,6 +507,9 @@ const Lobby = () => {
       setShowGameResult(true); // 결과 화면 표시
     } else if (message.type === 'END_GAME') {
       location.href = `/game/${roomId}`;
+    } else if (message.type === "DELETE_ROOM"){
+      //그냥 모달 띄울래
+      setIsDeleteSuccessModalOpen(true);
     }
   };
 
@@ -562,7 +570,17 @@ const Lobby = () => {
   const deleteRoom= async (roomId, userId) => {
     console.log(`/game/room/delete/${roomId}/ ${userId}`);
     apiAxiosInstance.delete(`/game/room/delete/${roomId}/ ${userId}`)
-      .then(res => console.log("일단 요청은 성공적")).catch(error => console.error("방삭제 에러"+error));
+      .then(res => {
+        console.log("일단 요청은 성공적");
+        if(client && client.connected){
+          client.send(`/app/chat.deleteRoom/${roomId}`, {}, JSON.stringify({
+            type: 'DELETE_ROOM',
+            roomId
+          }));
+        }
+        setIsDeleteSuccessModalOpen(true);
+      })
+      .catch(error => console.error("방삭제 에러"+error));
   }
 
   return (
@@ -606,13 +624,23 @@ const Lobby = () => {
             friendId={sender} // 친구 요청을 보낸 사람의 ID
           />
 
+          {/* 방폭파 모달 방장 여기는 아래 모달 실행과 deleteRoom*/}
+          <DeleteRoomModal
+            open={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            confirm={() => deleteRoom(roomId, userData.user_id)}
+          />
 
-
-
+          { /* 방폭파 추방 모달 여기서는 확인 후 window.close*/}
+          <DeleteSuccessModal
+            open={isDeleteSuccessModalOpen}
+            onClose={() => setIsDeleteSuccessModalOpen(false)}
+            confirm={() => window.close()}
+          />
 
           <div className="titleStyle">
             {
-              roomchecking ? <button onClick={()=>deleteRoom(roomId, userData.user_id)}>방 폭파</button> : null
+              roomchecking ? <button onClick={()=>setIsDeleteModalOpen(true)}>방 폭파</button> : null
             }
             <h1>{roomName} {players.length}/4</h1>
             <button type="button" onClick={() => {
