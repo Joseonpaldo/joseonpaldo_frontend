@@ -85,7 +85,7 @@ const AddNewUser: FC = () => {
                 onChange={(event) => setFieldValue("startBudget", event.target.value)} // 수정된 부분
                 error={Boolean(touched.startBudget && errors.startBudget)}
               >
-                <MenuItem value={5000}>500 냥</MenuItem>
+                <MenuItem value={500}>500 냥</MenuItem>
                 <MenuItem value={1000}>1000 냥</MenuItem>
                 <MenuItem value={1500}>1500 냥</MenuItem>
               </LightSelect>

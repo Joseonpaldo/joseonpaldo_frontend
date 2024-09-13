@@ -5,7 +5,7 @@ const BombViewer = ({ socket }) => {
 
     useEffect(() => {
         if (socket) {
-            sockt.on('setBombStatus', (stat) => {
+            socket.on('setBombStatus', (stat) => {
                 setStatus(stat);
             });
         }

@@ -36,17 +36,33 @@ import SockJS from 'sockjs-client';
 import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import ChatComponent from "@/components/game/chatComponent";
 import Roulette from "@/components/game/roulette";
+import Minigame from "@/components/mini-game/Minigame";
+import Gameover from "@/components/game/Gameover";
 
 
 function YutPan() {
 
   const [myPlayer, setMyPlayer] = useState(null);
   const [myTurn, setMyTurn] = useState(false);
+  const [imLive, setImLive] = useState(false);
   const [nowTurn, setNowTurn] = useState(null);
   const [lastStep, setLastStep] = useState(false);
   const [loading, setLoading] = useState("flex");
 
+  const [stepEvent, setStepEvent] = useState(true);
+
   const [showRoulette, setShowRoulette] = useState(false);
+
+  const [showMiniGame, setShowMiniGame] = useState(false);
+  const [miniGameParam, setMiniGameParam] = useState(0);
+
+  const [miniGameResult, setMiniGameResult] = useState(0);
+
+
+  const [showEndGame, setShowEndGame] = useState(false);
+
+  let bankruptcyCount = 0;
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -117,12 +133,13 @@ function YutPan() {
   const [players, setPlayers] = useState({
     player1: {
       player: "player1",
+      userId: "99",
       top: 356.11,
       left: 356.31,
       index: 0,
       direction: "scaleX(1)",
       name: "player1",
-      money: 500,
+      money: 100,
       color: "#b59282",
       rank: "1st",
       avatar: "/image/character/bear.png",
@@ -132,6 +149,7 @@ function YutPan() {
     },
     player2: {
       player: "player2",
+      userId: "99",
       top: 356.11,
       left: 356.31,
       index: 0,
@@ -147,6 +165,7 @@ function YutPan() {
     },
     player3: {
       player: "player3",
+      userId: "99",
       top: 356.11,
       left: 356.31,
       index: 0,
@@ -162,12 +181,13 @@ function YutPan() {
     },
     player4: {
       player: "player4",
+      userId: "99",
       top: 356.11,
       left: 356.31,
       index: 0,
       direction: "scaleX(1)",
       name: "player4",
-      money: 500,
+      money: 30,
       color: "#FBD8E2",
       rank: "1st",
       avatar: "/image/character/rabbit.png",
@@ -231,6 +251,51 @@ function YutPan() {
     players.player4.connected
   ]);
 
+  useEffect(() => {
+    // const updatedPlayers = {...players};
+    //
+    // // 돈이 0 이상인 플레이어만 정렬
+    // const sortedPlayers = Object.values(updatedPlayers)
+    //   .filter(player => player.money >= 0)
+    //   .sort((a, b) => b.money - a.money);
+    //
+    // // 랭크 업데이트
+    // sortedPlayers.forEach((player, index) => {
+    //   updatePlayer(player.player, {rank: `${index + 1}`});
+    //   client.send(
+    //     `/app/main/main-game/rank/${roomId}`,{
+    //       nake
+    //     },
+    //     JSON.stringify({message: "The End"})
+    //   );
+    // });
+
+    const bankruptcyCount = Object.values(players).filter(player => player.money < 0).length;
+    if (bankruptcyCount === 3) {
+      client.send(
+        `/app/main/main-game/end/${roomId}`,
+        JSON.stringify({message: "The End"})
+      );
+    }
+
+    if (players[myPlayer]?.money < 0 && imLive) {
+      client.send(
+        `/app/main/dead/${roomId}`,
+        {
+          name: myPlayer,
+        },
+        JSON.stringify({message: "im dead"})
+      );
+      setImLive(false);
+    }
+
+  }, [
+    players.player1.money,
+    players.player2.money,
+    players.player3.money,
+    players.player4.money
+  ]);
+
 
   useEffect(() => {
     Object.values(players).forEach((player) => {
@@ -267,7 +332,6 @@ function YutPan() {
     players.player4.estate
   ]);
 
-
   // YutState에 ref를 할당
   const yutRefs = useRef([]);
   const yutIndexRefs = useRef([]);
@@ -278,17 +342,8 @@ function YutPan() {
 
   useEffect(() => {
     yutRefs.current = yutRefs.current.slice(0, yutStates.length);
-  }, []);
-
-  useEffect(() => {
     yutIndexRefs.current = yutIndexRefs.current.slice(0, yutStates.length);
-  }, []);
-
-  useEffect(() => {
     playerCardRefs.current = playerCardRefs.current.slice(0, playerKeys.length);
-  }, []);
-
-  useEffect(() => {
     playerConnectedRefs.current = playerConnectedRefs.current.slice(0, playerKeys.length);
   }, []);
 
@@ -343,11 +398,12 @@ function YutPan() {
           Object.values(playerObjects).forEach((player, index) => {
             updatePlayer("player" + (index + 1), {
               name: player.name,
+              userId: player.userId,
               avatar: `/image/character/${player.avatar}.png`,
               index: player.location,
               profile: player.profile,
+              rank: player?.rank,
               money: player.money,
-              rank: "1st",
               estate: player.estate,
               player: player.player
             });
@@ -383,8 +439,11 @@ function YutPan() {
             if (player.myTurn) {
               setNowTurn(player.player);
               setMyTurn(false);
+              setImLive(true);
+              setMiniGameResult(0);
               if (myPlayer == ("player" + (index + 1))) {
                 setMyTurn(true);
+                setStepEvent(true);
               }
             }
             if (player.SessionId === undefined || player.SessionId === "") {
@@ -411,8 +470,23 @@ function YutPan() {
           let commend = message.message;
           if (commend === "oneMore") {
             setTimeout(() => oneMore(), 2000)
-          } else if (commend === "mini-game-step") {
+          } else if (commend === "mini-game-step-open") {
             setShowRoulette(true);
+          } else if (commend === "mini-game-step-close") {
+            setShowRoulette(false);
+          }
+        } else if (message.type === "passTurn") {
+          let player = message.message;
+          if (myPlayer === player) {
+            setTimeout(() => {
+              setMyTurn(false);
+              setLastStep(false);
+              stompClient.send(
+                `/app/main/passTurn/${roomId}`,
+                {name: myPlayer}, // 헤더 설정
+                JSON.stringify({message: "pass"})
+              );
+            }, 0)
           }
         } else if (message.type === "resultArr") {
           setTimeout(() => setResultArr(JSON.parse(message.message)), 0)
@@ -428,7 +502,12 @@ function YutPan() {
           if (JSON.parse(message.message)) {
             setYutThrowAble(true);
           }
+        } else if (message.type === "userDead") {
+          handleBankruptcy(message.message);
+          updatePlayer(message.message, {index: -1});
+          updatePlayer(message.message, {top: parseInt(1000, 10)});
         } else if (message.type === "error") {
+
           if ("not found room" === message.message) {
             stompClient.send(
               `/app/main/start/${roomId}`,
@@ -439,11 +518,21 @@ function YutPan() {
               JSON.stringify({message: "join"})
             );
           }
-        }
-        else {
+        } else {
           console.log("error : " + JSON.parse(message.message).toString());
         }
 
+      });
+
+      stompClient.subscribe(`/topic/mini-game/${roomId}`, (msg) => {
+        const message = JSON.parse(msg.body)
+        if (message.type === "whatGame") {
+          setMiniGameResult(parseInt(message.message));
+        } else if (message.type === "isWin") {
+          if (showMiniGame) {
+            setShowMiniGame(false);
+          }
+        }
       });
 
 
@@ -459,9 +548,40 @@ function YutPan() {
     });
   }, [myPlayer]);
 
+  const handleBankruptcy = (deadPlayer) => {
+    updatePlayer(deadPlayer, {rank: `${4 - (bankruptcyCount)}`});
+    bankruptcyCount += 1;
+
+    yutIndexRefs.current.forEach((estate, index) => {
+      if (estate.classList[2] === deadPlayer) {
+        estate.classList.remove(deadPlayer);
+        estate.style.borderColor = "#fff";
+        estate.children[1].style.backgroundImage = ``; // 필요한 경우 배경 이미지 설정
+      }
+    })
+  };
+
+
   useEffect(() => {
-    if (resultArr.length === 0 && !yutThrowAble && myTurn && lastStep) {
+    if (miniGameResult === 0) {
+      setShowMiniGame(false);
+      return;
+    }
+    console.log("miniGameResult", miniGameResult);
+    if (myTurn) {
+      setMiniGameParam(miniGameResult);
+    } else {
+      setMiniGameParam(miniGameResult + 10);
+    }
+    console.log("miniGameParam", miniGameParam);
+    setShowMiniGame(true);
+  }, [miniGameResult]);
+
+
+  useEffect(() => {
+    if (resultArr.length === 0 && !yutThrowAble && myTurn && lastStep && stepEvent) {
       stepOnEvent(parseInt(players[myPlayer].index, 10))
+      setStepEvent(false);
     }
   }, [resultArr]);
 
@@ -599,6 +719,7 @@ function YutPan() {
 
   //기본 땅 밟을 시 이벤트
   const defaultStateEvent = (index) => {
+    console.log("default state event");
 
     const ele = yutIndexRefs.current.find(s => s.classList[0] === "YutState" + index);
     if (ele?.classList[2] === undefined) {
@@ -622,14 +743,17 @@ function YutPan() {
         //땅 주인이 내가 아니면
       } else {
         //통행료 내기
-        // console.log((players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(index)).price * 1.5));
-        // updatePlayer(myPlayer, {money: (players[myPlayer].money - yutStates.find(states => states.YutIndex === parseInt(index)).price * 1.5)});
-        // updatePlayer(owner, {money: (players[owner].money + yutStates.find(states => states.YutIndex === parseInt(index)).price * 1.5)});
-        // client.send(
-        //   `/app/main/arrowClick/${roomId}`,
-        //   {name: myPlayer, location: index}, // 헤더 설정
-        //   JSON.stringify({message: "move this"})
-        // );
+        const statePrice = yutStates.find(states => states.YutIndex === parseInt(index)).price;
+        client.send(
+          `/app/main/pay-toll/${roomId}`,
+          {
+            name: myPlayer,
+            location: index,
+            price: statePrice,
+            owner: owner
+          }, // 헤더 설정
+          JSON.stringify({message: "pay toll"})
+        );
         passTurn();
       }
 
@@ -750,7 +874,6 @@ function YutPan() {
 
 
   return <div style={backStyle}>
-    {client != null ? <ChatComponent socket={client}/> : null}
 
     <div style={YutPanStyle} ref={yutPanRef}>
       <div style={{
@@ -797,7 +920,7 @@ function YutPan() {
         </div>
 
         {/*<div style={{fontSize: "20px", position: "absolute"}} onClick={start}>한번더</div>*/}
-        {/*<div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={passTurn}>pass turn</div>*/}
+        <div style={{fontSize: "20px", position: "absolute", top: "10%"}} onClick={passTurn}>pass turn</div>
 
 
         {Object.keys(players).map((key, index) => {
@@ -883,7 +1006,7 @@ function YutPan() {
                 <p style={{color: '#6b7280', margin: 0}}>{player.money.toLocaleString()}냥</p>
               </div>
               <div style={rankStyle}>
-                <span>{player.rank}</span>
+                <span>{player.rank}등</span>
               </div>
               <div
                 ref={(el) => (playerConnectedRefs.current[index] = el)} // ref 할당
@@ -926,8 +1049,40 @@ function YutPan() {
       <div className="loader"></div>
     </div>
     {
-      showRoulette ? <Roulette client={client} myPlayer={myPlayer}/> : null
+      showRoulette || (client == null || myPlayer == null) ? <Roulette client={client} myPlayer={myPlayer}/> : null
     }
+    <div style={{
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.22)",
+      justifyContent: "center",
+      alignItems: "center",
+      display: showMiniGame ? "flex" : "none",
+      scale: panScale / 1.8,
+    }}>
+      {showMiniGame || (client == null || myPlayer == null) ?
+        <Minigame param={miniGameParam} roomNumber={roomId} javaSocket={client} player={players[myPlayer]}/> : null}
+    </div>
+    {(client == null || myPlayer == null) ? null : <ChatComponent socket={client} myPlayer={myPlayer}/>}
+    <div style={{
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.22)",
+      justifyContent: "center",
+      alignItems: "center",
+      display: showEndGame ? "flex" : "none",
+      fontSize: "50px",
+      fontWeight: "bolder",
+      color: "#ffffff",
+      textShadow: "#ffff78 0px 0px 10px",
+    }}>
+      {
+        (client == null || myPlayer == null) ? null :
+        players[myPlayer]?.name + " " + players[myPlayer]?.rank + "등"
+      }
+    </div>
   </div>
 }
 

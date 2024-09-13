@@ -20,7 +20,7 @@ export default function Page(): React.JSX.Element {
     return (
         <Stack spacing={3}>
           {param && roomNumber && (
-                <Minigame param={param} roomNumber={roomNumber} />
+                //<Minigame param={param} roomNumber={roomNumber} />
           )}
         </Stack>
     );

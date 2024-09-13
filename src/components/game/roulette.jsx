@@ -27,7 +27,7 @@ const RouletteBg = styled.div`
 const RouletteWacu = styled.div`
   width: 100%;
   height: 100%;
-  background: #ffff00 url("https://m.lifeplanet.co.kr:444/commons/slink/administrator/openInnovation/img/MO)%20360%ED%94%8C%EB%9E%98%EB%8B%9B_%EB%A3%B0%EB%A0%9B%ED%8C%90_476x476_201026.png") no-repeat;
+  background: #ffff00 url("/roullte.png") no-repeat;
   background-size: 100%;
   transform-origin: center;
   transition-timing-function: ease-in-out;
@@ -111,19 +111,34 @@ const Roulette = ({client, myPlayer}) => {
 
 
   const alertMessage = (num) => {
-    switch (num) {
-      case 1:
-        alert("당첨!! 스타벅스 아메리카노");
-        break;
-      case 3:
-        alert("당첨!! 햄버거 세트 교환권");
-        break;
-      case 5:
-        alert("당첨!! CU 3,000원 상품권");
-        break;
-      default:
-        alert("꽝! 다음 기회에");
-    }
+    // switch (num) {
+    //   case 1:
+    //     alert("1");
+    //     break;
+    //   case 2:
+    //     alert("2");
+    //     break;
+    //   case 3:
+    //     alert("3");
+    //     break;
+    //   case 4:
+    //     alert("4");
+    //     break;
+    //   case 5:
+    //     alert("5");
+    //     break;
+    //   case 6:
+    //     alert("6");
+    //     break;
+    // }
+    client.send(
+      `/app/mini-game/result/${roomId}`,
+      {
+        name: myPlayer,
+        number: num,
+      },
+      JSON.stringify({message: "result"})
+    );
   };
 
   const rouletteStartClick = () => {

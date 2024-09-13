@@ -8,11 +8,14 @@ import RockPaperScissors from './components/RockPaperScissors';
 import RPSviewer from './components/RPSviewer';
 import Bomb from './components/Bomb';
 import BombViewer from './components/BombViewer';
+import {useParams} from "next/navigation";
 
-const Minigame = ({param, roomNumber}) => {
+const Minigame = ({param, roomNumber, javaSocket, player}) => {
     const [role, setRole] = React.useState(null);
     const [gameType, setGameType] = React.useState(null);
     const [socket, setSocket] = React.useState(null);
+
+    const {roomId} = useParams();
 
     React.useEffect(() => {
         const soc = io('https://joseonpaldo.site', {
@@ -25,10 +28,18 @@ const Minigame = ({param, roomNumber}) => {
         if(socket) {
             socket.on('hostResult', (result) => {
                 // Send Game Result to the Main Game for Update
+              javaSocket.send(
+                `/app/mini-game/isWin/${roomId}`,
+                {
+                  result: result,
+                  name: player.player,
+                },
+                JSON.stringify({message: "is win"})
+              );
                 if(result === true) {
 
                 }else {
-                    
+
                 }
             });
 
@@ -82,7 +93,7 @@ const Minigame = ({param, roomNumber}) => {
         if(gameType && role){
             console.log('joinRoom is in action');
             console.log(gameType, roomNumber, role);
-            socket.emit('joinGame', { gameType, roomNumber, role });
+            socket.emit('joinGame', { gameType, roomNumber, role});
         }
     }, [gameType, role])
 
@@ -91,7 +102,7 @@ const Minigame = ({param, roomNumber}) => {
         <div>
             {role === 'host' && gameType === 'alienShooting' && <AlienShooter socket={socket} />}
             {role === 'viewer' && gameType === 'alienShooting' && <AlienViewer socket={socket} />}
-            {role === 'host' && gameType === 'platformer' && <Game socket={socket} />}
+            {role === 'host' && gameType === 'platformer' && <Game socket={socket} image={player.avatar}/>}
             {role === 'viewer' && gameType === 'platformer' && <Viewer socket={socket} />}
             {role === 'host' && gameType === 'RPS' && <RockPaperScissors socket={socket} />}
             {role === 'viewer' && gameType === 'RPS' && <RPSviewer socket={socket} />}

@@ -15,6 +15,8 @@ import {useParams} from "next/navigation";
 import FriendFrom from "@/components/game/FriendFrom";
 import InforModal from "@/components/game/InforModal";
 import FriendTo from "@/components/game/FriendTo";
+import DeleteRoomModal from '@/components/game/DeleteRoomModal';
+import DeleteSuccessModal from "@/components/game/DeleteSuccessModal";
 
 const characters = [
   {id: 1, src: '/image/character/bear.png', alt: 'Character 1'},
@@ -73,6 +75,11 @@ const Lobby = () => {
   const [isFriend, setIsFriend] = useState(false); // 친구 여부 상태 추가
   const {roomId} = useParams();
 
+  const [roomchecking, setRoomchecking] = useState(false);
+
+  //lobby 삭제 useState
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteSuccessModalOpen, setIsDeleteSuccessModalOpen] = useState(false);
 
   async function getUserData(jwt) {
     try {
@@ -139,11 +146,11 @@ const Lobby = () => {
         }));
       }
 
-      window.addEventListener('beforeunload', (event) => {
-        leaveUser();
-        event.preventDefault();
-        event.returnValue = '';
-      });
+      // window.addEventListener('beforeunload', (event) => {
+      //   leaveUser();
+      //   event.preventDefault();
+      //   event.returnValue = '';
+      // });
     });
 
     return () => {
@@ -500,6 +507,9 @@ const Lobby = () => {
       setShowGameResult(true); // 결과 화면 표시
     } else if (message.type === 'END_GAME') {
       location.href = `/game/${roomId}`;
+    } else if (message.type === "DELETE_ROOM"){
+      //그냥 모달 띄울래
+      setIsDeleteSuccessModalOpen(true);
     }
   };
 
@@ -539,6 +549,43 @@ const Lobby = () => {
     }
   }, [isFriend]);
 
+
+  const roomCheck= async (roomId, userId)=>{
+    const res = await apiAxiosInstance.get(`/game/myRoom/${roomId}/${userId}`);
+    return res.data;
+  }
+
+  useEffect(() => {
+    const checkRoom = async () => {
+      if (userData != null && userData.user_id != null) {
+        const result = await roomCheck(roomId, userData.user_id);
+        console.log(result);
+        // if(!result){
+        //   alert("존재하지 않는방");
+        //   window.close();
+        // }
+        setRoomchecking(result);
+      }
+    };
+
+    checkRoom();
+  }, [userData]);
+
+  const deleteRoom= async (roomId, userId) => {
+    console.log(`/game/room/delete/${roomId}/ ${userId}`);
+    apiAxiosInstance.delete(`/game/room/delete/${roomId}/ ${userId}`)
+      .then(res => {
+        console.log("일단 요청은 성공적");
+        if(client && client.connected){
+          client.send(`/app/chat.deleteRoom/${roomId}`, {}, JSON.stringify({
+            type: 'DELETE_ROOM',
+            roomId
+          }));
+        }
+        setIsDeleteSuccessModalOpen(true);
+      })
+      .catch(error => console.error("방삭제 에러"+error));
+  }
 
   return (
     <div className="backStyle">
@@ -581,17 +628,29 @@ const Lobby = () => {
             friendId={sender} // 친구 요청을 보낸 사람의 ID
           />
 
+          {/* 방폭파 모달 방장 여기는 아래 모달 실행과 deleteRoom*/}
+          <DeleteRoomModal
+            open={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            confirm={() => deleteRoom(roomId, userData.user_id)}
+          />
 
-
-
+          { /* 방폭파 추방 모달 여기서는 확인 후 window.close*/}
+          <DeleteSuccessModal
+            open={isDeleteSuccessModalOpen}
+            onClose={() => setIsDeleteSuccessModalOpen(false)}
+            confirm={() => window.close()}
+          />
 
           <div className="titleStyle">
+            {
+              roomchecking ? <button onClick={()=>setIsDeleteModalOpen(true)}>방 폭파</button> : null
+            }
             <h1>{roomName} {players.length}/4</h1>
             <button type="button" onClick={() => {
               leaveUser();
               window.close();
             }}>
-              <b>
                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor"
                      className="bi bi-box-arrow-right" viewBox="0 0 16 16">
                   <path
@@ -599,7 +658,6 @@ const Lobby = () => {
                   <path
                     d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
                 </svg>
-              </b>
             </button>
           </div>
 
