@@ -17,9 +17,9 @@ const BombViewer = ({ socket }) => {
             {status !== 'active' && <p>The defuse wire was: {defuseWire}</p>}
             <div className="bomb">
                 {status === 'exploded' ? (
-                    <img src={process.env.PUBLIC_URL + '/mg/explosion.png'} alt="Explosion" className="explosion-image" />
+                    <img src={'/mg/explosion.png'} alt="Explosion" className="explosion-image" />
                 ) : (
-                    <img src={process.env.PUBLIC_URL + '/mg/bomb.png'} alt="Bomb" className="bomb-image" />
+                    <img src={'/mg/bomb.png'} alt="Bomb" className="bomb-image" />
                 )}
             </div>
         </div>

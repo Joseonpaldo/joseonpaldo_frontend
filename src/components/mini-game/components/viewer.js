@@ -18,9 +18,38 @@ const Viewer = ({ socket }) => {
     const [isGameOver, setIsGameOver] = useState(false);
     const [portal, setPortal] = useState({});  // Portal state
     const [winMessage, setWinMessage] = useState(''); // Store win/loss messages
+    const [image, setImage] = useState(null); // Store viewer image
+    const [intervalId, setIntervalId] = useState(null);
+
+    useEffect(() => {
+        if (image !== null) {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        }
+    }, [image]);
+    
+    useEffect(() => {
+        if(socket) {
+            const id = setInterval(() => {
+                console.log('Requesting Image');
+                socket.emit('requestImage');
+            }, 100); // 0.1초마다 확인
+        
+            setIntervalId(id);
+        
+            // 컴포넌트가 언마운트될 때 인터벌을 정리합니다.
+            return () => clearInterval(id);
+        }
+    }, [socket]);
 
     // Receive initial game state and updates
     useEffect(() => {
+        socket.on('viewerImageReceived', (data) => {
+            console.log('Viewer Image Received');
+            setImage(data);
+        });
+
         socket.on('initialGameState', (initialState) => {
             setPlayer(initialState.player);
             setPlatforms(initialState.platforms || []);
@@ -53,6 +82,14 @@ const Viewer = ({ socket }) => {
             setWinMessage(data.message || 'Game Over!'); // Default message if none is provided
             setIsGameOver(true);
         });
+
+        return () => {
+            socket.off('viewerImageReceived');
+            socket.off('initialGameState');
+            socket.off('gameStateUpdate');
+            socket.off('gameWin');
+            socket.off('gameOver');
+        }
     }, [socket]);
 
     useEffect(() => {
@@ -78,8 +115,12 @@ const Viewer = ({ socket }) => {
                     <div className="timer">Time Left: {timeLeft}</div>
                     <div className="viewport" style={gameContainerStyle}>
                         <div
-                            className={`player ${player?.isFlashing ? 'flashing' : ''} ${player?.isWalking ? 'moving' : 'still'} ${player?.direction === -1 ? 'left' : 'right'}`}
-                            style={{ left: player?.x, top: player?.y }}
+                            className={`player ${player?.isFlashing ? 'flashing' : ''} ${player?.direction === -1 ? 'left' : 'right'}`}
+                            style={{ 
+                                left: player?.x, 
+                                top: player?.y,
+                                backgroundImage: `url(${image ? image : '/mg/Mokoko.png'})`,
+                            }}
                         />
                         {rockets.map((rocket, index) => (
                             <div key={index} className="rocket" style={{ left: rocket.x, top: rocket.y }} />
