@@ -4,44 +4,62 @@ import './css/RockPaperScissors.css'; // Custom styles for the game
 const RockPaperScissors = ({ socket }) => {
   const [playerChoice, setPlayerChoice] = useState(null);
   const [computerChoice, setComputerChoice] = useState(null);
-  const [result, setResult] = useState('');
   const [animateResult, setAnimateResult] = useState(false);
-  const [round, setRound] = useState(1);
-  const [playerScore, setPlayerScore] = useState(0);
-  const [computerScore, setComputerScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3); // Timer starts at 3 seconds
+  const [msg, setMsg] = useState('');
+
+  const [gameState, setGameState] = useState();
 
   const choices = ['바위', '보', '가위']; // Rock, Paper, Scissors in Korean
 
   useEffect(() => {
-    socket.on('')
+    if(socket) {
+      socket.on('rpsState', (pchoice, cchoice, state) => {
+        setPlayerChoice(pchoice);
+        setComputerChoice(cchoice);
+        setGameState(state);
+      });
 
+      socket.on('rpsTimeLeft', (time) => {
+        setTimeLeft(time);
+      });
+    }
   }, [socket]);
 
   useEffect(() => {
-    
-  })
+    if(isGameOver) {
+      if(gameState.playerScore > gameState.computerScore) {
+        setMsg('You Win the Game!');
+      }else if(gameState.playerScore < gameState.computerScore) {
+        setMsg('You Lose the Game!');
+      }
+    }
+  }, [isGameOver]);
 
-  // Timer logic for each round
-  useEffect(() => {
-    if (gameOver || timeLeft === 0) return;
+  const playGame = (choice) => {
+    socket.emit('rpsPlayerChoice', choice);
+  }
 
-    const timer = setInterval(() => {
-      setTimeLeft((prevTimeLeft) => {
-        if (prevTimeLeft > 0) {
-          socket.emit('rpsTimeLeft', prevTimeLeft - 1); // Emit timeLeft to the server
-          return prevTimeLeft - 1;
-        } else {
-          playGame(null); // Auto-play if the player doesn't choose
-          clearInterval(timer);
-          return 0;
-        }
-      });
-    }, 1000);
+  // // Timer logic for each round
+  // useEffect(() => {
+  //   if (gameOver || timeLeft === 0) return;
 
-    return () => clearInterval(timer);
-  }, [timeLeft, gameOver, socket]);
+  //   const timer = setInterval(() => {
+  //     setTimeLeft((prevTimeLeft) => {
+  //       if (prevTimeLeft > 0) {
+  //         socket.emit('rpsTimeLeft', prevTimeLeft - 1); // Emit timeLeft to the server
+  //         return prevTimeLeft - 1;
+  //       } else {
+  //         playGame(null); // Auto-play if the player doesn't choose
+  //         clearInterval(timer);
+  //         return 0;
+  //       }
+  //     });
+  //   }, 1000);
+
+  //   return () => clearInterval(timer);
+  // }, [timeLeft, gameOver, socket]);
 
   // const playGame = (choice) => {
   //   if (gameOver || round > 3) return;
@@ -123,55 +141,59 @@ const RockPaperScissors = ({ socket }) => {
   };
 
   return (
-    <div className="game-wrapper">
-      <h2>Rock Paper Scissors - Round {round}</h2>
-      <div>Player Score: {playerScore} | Computer Score: {computerScore}</div>
+    <>
+    {gameState && (
+      <div className="game-wrapper">
+        <h2>Rock Paper Scissors - Round {round}</h2>
+        <div>Player Score: {gameState.playerScore} | Computer Score: {gameState.computerScore}</div>
 
-      {/* Timer Box Animation */}
-      <div className="timer-box">
-        <div
-          className="timer-fill"
-          style={{ width: `${(timeLeft / 3) * 100}%` }} // Shrinking towards center
-        />
-      </div>
-
-      <div className="choices-container">
-        {choices.map((choice) => (
-          <button
-            key={choice}
-            className={`choice ${playerChoice === choice ? 'selected' : ''}`}
-            onClick={() => playGame(choice)}
-          >
-            {choice}
-          </button>
-        ))}
-      </div>
-
-      {playerChoice && (
-        <div>
-          <div className="hands">
-            <div className={`hand ${result === 'You Win' ? 'jump' : ''}`}>
-              <p>Your choice:</p>
-              <img src={getImage(playerChoice)} alt={playerChoice} />
-            </div>
-            <div className={`hand ${result === 'You Lose' ? 'jump' : ''}`}>
-              <p>Computer's choice:</p>
-              <img src={getImage(computerChoice)} alt={computerChoice} />
-            </div>
-          </div>
-          <h3 className={`result ${animateResult ? 'fadeIn' : ''}`}>{result}</h3>
-          {gameOver && (
-            <h3>
-              {playerScore > computerScore
-                ? 'You Win the Game!'
-                : playerScore < computerScore
-                ? 'You Lose the Game!'
-                : 'The Game is a Draw!'}
-            </h3>
-          )}
+        {/* Timer Box Animation */}
+        <div className="timer-box">
+          <div
+            className="timer-fill"
+            style={{ width: `${(timeLeft / 3) * 100}%` }} // Shrinking towards center
+          />
         </div>
-      )}
-    </div>
+        <div className="choices-container">
+          {choices.map((choice) => (
+            <button
+              key={choice}
+              className={`choice ${playerChoice === choice ? 'selected' : ''}`}
+              onClick={() => playGame(choice)}
+            >
+              {choice}
+            </button>
+          ))}
+        </div>
+        {playerChoice && (
+          <div>
+            <div className="hands">
+              <div className={`hand ${result === 'You Win' ? 'jump' : ''}`}>
+                <p>Your choice:</p>
+                <img src={getImage(playerChoice)} alt={playerChoice} />
+              </div>
+              <div className={`hand ${result === 'You Lose' ? 'jump' : ''}`}>
+                <p>Computer's choice:</p>
+                <img src={getImage(computerChoice)} alt={computerChoice} />
+              </div>
+            </div>
+            <h3 className={`result ${animateResult ? 'fadeIn' : ''}`}>
+              {  
+                gameState.win === 1 ? "win" : 
+                gameState.win === 2 ? "lose" :
+                gameState.win === 0 ? "draw" : ""
+              }
+            </h3>
+            {isGameOver && (
+              <h3>
+                { msg }
+              </h3>
+            )}
+          </div>
+        )}
+      </div>
+    )}
+    </>
   );
 };
 
