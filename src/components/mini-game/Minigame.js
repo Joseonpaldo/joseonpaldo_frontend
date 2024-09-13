@@ -5,7 +5,7 @@ import AlienViewer from './components/AlienViewer';
 import Game from './components/game';
 import Viewer from './components/viewer';
 import RockPaperScissors from './components/RockPaperScissors';
-import RockPaperScissorsViewer from './components/RPSViewer';
+import RPSViewer from './components/RPSViewer';
 import Bomb from './components/Bomb';
 import BombViewer from './components/BombViewer';
 import {useParams} from "next/navigation";
@@ -105,7 +105,7 @@ const Minigame = ({param, roomNumber, javaSocket, player}) => {
             {role === 'host' && gameType === 'platformer' && <Game socket={socket} image={player.avatar}/>}
             {role === 'viewer' && gameType === 'platformer' && <Viewer socket={socket} />}
             {role === 'host' && gameType === 'RPS' && <RockPaperScissors socket={socket} />}
-            {role === 'viewer' && gameType === 'RPS' && <RockPaperScissorsViewer socket={socket} />}
+            {role === 'viewer' && gameType === 'RPS' && <RPSViewer socket={socket} />}
             {role === 'host' && gameType === 'bomb' && <Bomb socket={socket} />}
             {role === 'viewer' && gameType === 'bomb' && <BombViewer socket={socket} />}
         </div>
