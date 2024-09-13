@@ -53,43 +53,13 @@ const Viewer = ({ socket }) => {
             setWinMessage(data.message || 'Game Over!'); // Default message if none is provided
             setIsGameOver(true);
         });
-
-        return () => {
-            socket.off('initialGameState');
-            socket.off('gameStateUpdate');
-            socket.off('gameWin');
-            socket.off('gameOver');
-        };
     }, [socket]);
 
-    // Update rocket movement and check for game over condition (viewer doesn't interact)
     useEffect(() => {
-        const gameInterval = setInterval(() => {
-            // Update rocket positions
-            setRockets((prevRockets) =>
-                prevRockets.map((rocket) => ({
-                    ...rocket,
-                    x: rocket.direction === 'left' ? rocket.x - 3 : rocket.x + 3,
-                })).filter(rocket => rocket.x > 0 && rocket.x < GAME_WIDTH)
-            );
-
-            // Check if player reached the portal
-            setPlayer((prevPlayer) => {
-                if (!prevPlayer) return prevPlayer;
-                if (
-                    prevPlayer.x < portal.x + portal.width &&
-                    prevPlayer.x + PLAYER_WIDTH > portal.x &&
-                    prevPlayer.y < portal.y + portal.height &&
-                    prevPlayer.y + PLAYER_HEIGHT > portal.y
-                ) {
-                    setIsGameOver(true);
-                }
-                return prevPlayer;
-            });
-        }, 1000 / 144); // Run at 144 FPS
-
-        return () => clearInterval(gameInterval);
-    }, [rockets, portal]);
+        if (isGameOver) {
+            // Game Over Logic Here(If needed)
+        }
+    }, [isGameOver]);
 
     const gameContainerStyle = {
         transform: `scale(${ZOOM_LEVEL})`,

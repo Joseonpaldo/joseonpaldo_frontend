@@ -22,6 +22,23 @@ const Minigame = ({param, roomNumber}) => {
     }, []);
 
     React.useEffect(() => {
+        if(socket) {
+            socket.on('hostResult', (result) => {
+                // Send Game Result to the Main Game for Update
+                if(result === true) {
+
+                }else {
+                    
+                }
+            });
+
+            socket.on('disconnect', () => {
+                console.log('socket disconnected');
+            });
+        }
+    }, [socket]);
+
+    React.useEffect(() => {
         if(param > 10) {
             setRole('viewer');
             switch(param) {

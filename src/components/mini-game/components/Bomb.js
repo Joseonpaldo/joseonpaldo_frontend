@@ -3,19 +3,19 @@ import Wire from './Wire'; // Assumed to be a component that renders wires for c
 
 const Bomb = ({ socket }) => {
     const [status, setStatus] = useState('active');
-    const [defuseWire, setDefuseWire] = useState('');
 
     useEffect(() => {
-        const randomWire = Math.random() < 0.5 ? 'blue' : 'red';
-        setDefuseWire(randomWire);
-        socket.emit('setDefuseWire', randomWire); // Send the defuse wire to the server
-        console.log(randomWire);
+        if(socket) {
+            sockt.on('setBombStatus', (stat) => {
+                setStatus(stat);
+            });
+        }else {
+            console.log('Socket not connected');
+        }
     }, [socket]);
 
     const handleCutWire = (color) => {
-        const newStatus = color === defuseWire ? 'defused' : 'exploded';
-        setStatus(newStatus);
-        socket.emit('bombStatus', newStatus); // Send the bomb status to the server
+        socket.emit('wireCut', color)
     };
 
     return (
