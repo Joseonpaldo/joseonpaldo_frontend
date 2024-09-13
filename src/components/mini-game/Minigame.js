@@ -15,7 +15,7 @@ const Minigame = ({param, roomNumber}) => {
     const [socket, setSocket] = React.useState(null);
 
     React.useEffect(() => {
-        const soc = io('http://localhost:4000', {
+        const soc = io('https://joseonpaldo.site', {
             path: '/nws'
         });
         setSocket(soc);

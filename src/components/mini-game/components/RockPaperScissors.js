@@ -16,9 +16,15 @@ const RockPaperScissors = ({ socket }) => {
   useEffect(() => {
     if(socket) {
       socket.on('rpsState', (pchoice, cchoice, state) => {
+        console.log('received game state');
+        console.log(JSON.stringify(state));
         setPlayerChoice(pchoice);
         setComputerChoice(cchoice);
         setGameState(state);
+
+        if(state.isGameOver) {
+          setIsGameOver(true);
+        }
       });
 
       socket.on('rpsTimeLeft', (time) => {
@@ -141,10 +147,9 @@ const RockPaperScissors = ({ socket }) => {
   };
 
   return (
-    <>
-    {gameState && (
+    (gameState === undefined) ? <div>Loading...</div> :
       <div className="game-wrapper">
-        <h2>Rock Paper Scissors - Round {round}</h2>
+        <h2>Rock Paper Scissors - Round {gameState.round}</h2>
         <div>Player Score: {gameState.playerScore} | Computer Score: {gameState.computerScore}</div>
 
         {/* Timer Box Animation */}
@@ -168,11 +173,11 @@ const RockPaperScissors = ({ socket }) => {
         {playerChoice && (
           <div>
             <div className="hands">
-              <div className={`hand ${result === 'You Win' ? 'jump' : ''}`}>
+              <div className={`hand ${gameState.win === 1 ? 'jump' : ''}`}>
                 <p>Your choice:</p>
                 <img src={getImage(playerChoice)} alt={playerChoice} />
               </div>
-              <div className={`hand ${result === 'You Lose' ? 'jump' : ''}`}>
+              <div className={`hand ${gameState.win === 2 ? 'jump' : ''}`}>
                 <p>Computer's choice:</p>
                 <img src={getImage(computerChoice)} alt={computerChoice} />
               </div>
@@ -192,8 +197,6 @@ const RockPaperScissors = ({ socket }) => {
           </div>
         )}
       </div>
-    )}
-    </>
   );
 };
 
