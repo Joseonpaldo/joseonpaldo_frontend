@@ -6,7 +6,7 @@ const Bomb = ({ socket }) => {
 
     useEffect(() => {
         if(socket) {
-            sockt.on('setBombStatus', (stat) => {
+            socket.on('setBombStatus', (stat) => {
                 setStatus(stat);
             });
         }else {
@@ -23,9 +23,9 @@ const Bomb = ({ socket }) => {
             <h1>Bomb Status: {status}</h1>
             <div className="bomb">
                 {status === 'exploded' ? (
-                    <img src={process.env.PUBLIC_URL + '/mg/explosion.png'} alt="Explosion" className="explosion-image" />
+                    <img src={'/mg/explosion.png'} alt="Explosion" className="explosion-image" />
                 ) : (
-                    <img src={process.env.PUBLIC_URL + '/mg/bomb.png'} alt="Bomb" className="bomb-image" />
+                    <img src={'/mg/bomb.png'} alt="Bomb" className="bomb-image" />
                 )}
                 {status === 'active' && (
                     <div className="wires">

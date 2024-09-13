@@ -8,7 +8,7 @@ const GAME_HEIGHT = 800;
 const BALL_SIZE = 50;  // Define BALL_SIZE here
 const ZOOM_LEVEL = 2;  // Adjust zoom level (based on your original requirement)
 
-const Game = ({ socket }) => {
+const Game = ({ socket, image }) => {
     const [player, setPlayer] = useState({});
     const [platforms, setPlatforms] = useState([]);
     const [ladders, setLadders] = useState([]);
@@ -34,6 +34,10 @@ const Game = ({ socket }) => {
             setIsGameOver(initialState.isGameOver);
         });
 
+        socket.on('requestImageForViewer', () => {
+            socket.emit('playerImage', image);
+        });
+
         socket.on('gameStateUpdate', (updatedState) => {
             setPlayer(updatedState.player);
             setPlatforms(updatedState.platforms);  // Update platforms
@@ -57,6 +61,13 @@ const Game = ({ socket }) => {
             setWin(false);
             setIsGameOver(true);
         });
+
+        return () => {
+            socket.off('initialGameState');
+            socket.off('gameStateUpdate');
+            socket.off('gameWin');
+            socket.off('gameOver');
+        }
     }, [socket]);
 
     useEffect(() => {
@@ -131,8 +142,12 @@ const Game = ({ socket }) => {
                     {gameStarted && (
                         <div className="viewport" style={gameContainerStyle}>
                             <div
-                                className={`player ${player?.isFlashing ? 'flashing' : ''} ${player?.isWalking ? 'moving' : 'still'} ${player?.direction === -1 ? 'left' : 'right'}`}
-                                style={{ left: player?.x, top: player?.y }}
+                                className={`player ${player?.isFlashing ? 'flashing' : ''} ${player?.direction === -1 ? 'left' : 'right'}`}
+                                style={{ 
+                                    left: player?.x, 
+                                    top: player?.y,
+                                    backgroundImage: `url(${image ? image : '/mg/Mokoko.png'})`,
+                                }}
                             />
                             {rockets.map((rocket, index) => (
                                 <div key={index} className="rocket" style={{ left: rocket.x, top: rocket.y }} />
