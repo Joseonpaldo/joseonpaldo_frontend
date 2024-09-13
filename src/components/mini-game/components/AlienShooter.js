@@ -263,7 +263,7 @@ const AlienShooter = ({ socket }) => {
 
   return (
     <div className="alien-shooter">
-      
+
       <div className="timer" >Time Left: {timeLeft}s</div>
       <div className="game-area">
         {aliens.map((alien) => (
