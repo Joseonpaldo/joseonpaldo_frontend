@@ -560,10 +560,10 @@ const Lobby = () => {
       if (userData != null && userData.user_id != null) {
         const result = await roomCheck(roomId, userData.user_id);
         console.log(result);
-        if(!result){
-          alert("존재하지 않는방");
-          window.close();
-        }
+        // if(!result){
+        //   alert("존재하지 않는방");
+        //   window.close();
+        // }
         setRoomchecking(result);
       }
     };
