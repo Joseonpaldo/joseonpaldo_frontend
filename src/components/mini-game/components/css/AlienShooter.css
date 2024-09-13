@@ -35,7 +35,7 @@
   width: 500px; /* More narrow */
   height: 700px; /* Adjusted height */
   background-color: #b0e0e6; /* Pale blue background color */
-  background-image:url('/mini-game-image/sea.png');
+  background-image:url('/mg/sea.png');
   background-size: contain; /* Ensure the image fits within the element */
   background-repeat: no-repeat;
   margin: 0 auto;
@@ -60,11 +60,11 @@
   position: absolute;
   width: 10px;
   height: 20px;
-  background-image:url('/mini-game-image/cannon_ball.png');
+  background-image:url('/mg/cannon_ball.png');
   background-size: contain; /* Ensure the image fits within the element */
   background-repeat: no-repeat;
-
-
+ 
+  
 }
 
 .spaceship {

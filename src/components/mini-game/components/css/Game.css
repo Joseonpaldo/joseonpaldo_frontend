@@ -2,7 +2,7 @@
     position: relative;
     width: 1200px; /* Example game width */
     height: 800px; /* Example game height */
-    background-image: url('/mini-game-image/background.jpg'); /* Use the correct path */
+    background-image: url('/mg/background.jpg'); /* Use the correct path */
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -34,11 +34,7 @@
 }
 
 .player.still {
-    background-image: url('/mini-game-image/Mokoko.png'); /* Use the correct path for the still image */
-}
-
-.player.moving {
-    background-image: url('/mini-game-image/move.gif'); /* Use the correct path for the moving image */
+    background-image: url('/mg/Mokoko.png'); /* Use the correct path for the still image */
 }
 
 .player.left {
@@ -59,7 +55,7 @@
     position: absolute;
     width: 20px;
     height: 20px;
-    background-image: url('/mini-game-image/bullet.png'); /* Use the correct path */
+    background-image: url('/mg/bullet.png'); /* Use the correct path */
     background-size: contain; /* Ensure the image fits within the element */
     background-repeat: no-repeat; /* Prevent image repetition */
     background-position: center; /* Center the image */
@@ -68,7 +64,7 @@
 .platform {
     position: absolute;
     background-color: gray;
-    background-image: url('/mini-game-image/platform.png'); /* Use the correct path */
+    background-image: url('/mg/platform.png'); /* Use the correct path */
     background-size: contain; /* Ensure the image fits within the element */
     background-position: center; /* Center the image */
 }
@@ -83,7 +79,7 @@
 .ladder {
     position: absolute;
     width: 50px;
-    background-image: url('/mini-game-image/ladder.png'); /* Use the correct path */
+    background-image: url('/mg/ladder.png'); /* Use the correct path */
     background-size: contain; /* Ensure the image fits within the element */
     background-repeat: no-repeat; /* Prevent image repetition */
     background-position: center; /* Center the image */
@@ -139,7 +135,7 @@
 
 .ball {
     position: absolute;
-    background-image: url('/mini-game-image/blueball.png'); /* Use the correct path */
+    background-image: url('/mg/jump.gif'); /* Use the correct path */
     background-size: contain; /* Ensure the image fits within the element */
     background-repeat: no-repeat; /* Prevent image repetition */
     background-position: center; /* Center the image */

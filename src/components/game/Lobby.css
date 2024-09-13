@@ -14,28 +14,27 @@
   line-height: 70px;
   text-align: center;
   margin-bottom: 30px;
+  padding: 0 10px;
   position: relative;
   color: #ecf0f1;
   box-shadow: 5px 4px 8px rgba(0, 0, 0, 0.3);
   font-family: 'Press Start 2P', cursive;
   border-radius: 15px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.titleStyle h1 {
+.titleStyle > h1 {
   margin: 0;
   padding: 0;
   font-size: 24px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.titleStyle button {
-  position: absolute;
-  right: 20px;
-  width: 50px;
-  top: 50%;
-  transform: translateY(-50%);
+.titleStyle > button {
+  width: 100px;
+  height: 70%;
   border: none;
   background: #e74c3c;
   color: #ecf0f1;
@@ -44,11 +43,14 @@
   font-size: 16px;
   transition: background 0.3s, color 0.3s, transform 0.3s;
   border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.titleStyle button:hover {
+.titleStyle > button:hover {
   background: #c0392b;
-  transform: translateY(-50%) scale(1.05);
+  transform: scale(1.05);
 }
 
 .formStyle {
