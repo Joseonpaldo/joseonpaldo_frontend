@@ -16,6 +16,7 @@ const Game = ({ socket }) => {
     const [balls, setBalls] = useState([]);
     const [timeLeft, setTimeLeft] = useState(60);
     const [isGameOver, setIsGameOver] = useState(false);
+    const [win, setWin] = useState(null);
     const [gameStarted, setGameStarted] = useState(false);
     const [portal, setPortal] = useState({}); // Ensure portal is initialized correctly
     const [winMessage, setWinMessage] = useState(''); // Store win/loss messages
@@ -47,27 +48,41 @@ const Game = ({ socket }) => {
         // Listen for game win and game over events
         socket.on('gameWin', (data) => {
             setWinMessage(data.message);
+            setWin(true);
             setIsGameOver(true);
         });
 
         socket.on('gameOver', (data) => {
             setWinMessage(data.message || 'Game Over!'); // Default message if none is provided
+            setWin(false);
             setIsGameOver(true);
         });
-
-        return () => {
-            socket.off('initialGameState');
-            socket.off('gameStateUpdate');
-            socket.off('gameWin');
-            socket.off('gameOver');
-        };
     }, [socket]);
+
+    useEffect(() => {
+        if (isGameOver) {
+            // Handle game over logic here
+            if (win) {
+
+            } else {
+            
+            }    
+        }
+    }, [isGameOver]);
+
+    useEffect(() => {
+        if(gameStarted) {
+            socket.emit('platformerStart'); // Notify server that the game has started
+        }
+    }, [socket, gameStarted]);
 
     // Handle keyboard input for player movements
     const handleKeyDown = (e) => {
+        if(gameStarted) {
         const key = e.key;
-        socket.emit('playerInput', key);  // Send key input to server
-        console.log('playerInput', key);  // Log key input for debugging
+            socket.emit('playerInput', key);  // Send key input to server
+            console.log('playerInput', key);  // Log key input for debugging
+        }
     };
 
     useEffect(() => {
@@ -75,7 +90,7 @@ const Game = ({ socket }) => {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, []);
+    }, [gameStarted]);
 
     // If the game is over, display the game over message
     if (isGameOver) {

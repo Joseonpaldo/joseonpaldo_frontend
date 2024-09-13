@@ -37,13 +37,14 @@ import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import ChatComponent from "@/components/game/chatComponent";
 import Roulette from "@/components/game/roulette";
 import Minigame from "@/components/mini-game/Minigame";
+import Gameover from "@/components/game/Gameover";
 
 
 function YutPan() {
 
   const [myPlayer, setMyPlayer] = useState(null);
   const [myTurn, setMyTurn] = useState(false);
-  const [imLive, setImLive] = useState(true);
+  const [imLive, setImLive] = useState(false);
   const [nowTurn, setNowTurn] = useState(null);
   const [lastStep, setLastStep] = useState(false);
   const [loading, setLoading] = useState("flex");
@@ -56,6 +57,9 @@ function YutPan() {
   const [miniGameParam, setMiniGameParam] = useState(0);
 
   const [miniGameResult, setMiniGameResult] = useState(0);
+
+
+  const [showEndGame, setShowEndGame] = useState(false);
 
   let bankruptcyCount = 0;
 
@@ -248,21 +252,30 @@ function YutPan() {
   ]);
 
   useEffect(() => {
-    const updatedPlayers = {...players};
-
-    // 돈이 0 이상인 플레이어만 정렬
-    const sortedPlayers = Object.values(updatedPlayers)
-      .filter(player => player.money >= 0)
-      .sort((a, b) => b.money - a.money);
-
-    // 랭크 업데이트
-    sortedPlayers.forEach((player, index) => {
-      updatePlayer(player.player, {rank: `${index + 1}`});
-    });
+    // const updatedPlayers = {...players};
+    //
+    // // 돈이 0 이상인 플레이어만 정렬
+    // const sortedPlayers = Object.values(updatedPlayers)
+    //   .filter(player => player.money >= 0)
+    //   .sort((a, b) => b.money - a.money);
+    //
+    // // 랭크 업데이트
+    // sortedPlayers.forEach((player, index) => {
+    //   updatePlayer(player.player, {rank: `${index + 1}`});
+    //   client.send(
+    //     `/app/main/main-game/rank/${roomId}`,{
+    //       nake
+    //     },
+    //     JSON.stringify({message: "The End"})
+    //   );
+    // });
 
     const bankruptcyCount = Object.values(players).filter(player => player.money < 0).length;
     if (bankruptcyCount === 3) {
-      alert("게임 끝");
+      client.send(
+        `/app/main/main-game/end/${roomId}`,
+        JSON.stringify({message: "The End"})
+      );
     }
 
     if (players[myPlayer]?.money < 0 && imLive) {
@@ -389,6 +402,7 @@ function YutPan() {
               avatar: `/image/character/${player.avatar}.png`,
               index: player.location,
               profile: player.profile,
+              rank: player?.rank,
               money: player.money,
               estate: player.estate,
               player: player.player
@@ -425,6 +439,7 @@ function YutPan() {
             if (player.myTurn) {
               setNowTurn(player.player);
               setMyTurn(false);
+              setImLive(true);
               setMiniGameResult(0);
               if (myPlayer == ("player" + (index + 1))) {
                 setMyTurn(true);
@@ -511,8 +526,12 @@ function YutPan() {
 
       stompClient.subscribe(`/topic/mini-game/${roomId}`, (msg) => {
         const message = JSON.parse(msg.body)
-        if (message.type === "result") {
+        if (message.type === "whatGame") {
           setMiniGameResult(parseInt(message.message));
+        } else if (message.type === "isWin") {
+          if (showMiniGame) {
+            setShowMiniGame(false);
+          }
         }
       });
 
@@ -534,7 +553,7 @@ function YutPan() {
     bankruptcyCount += 1;
 
     yutIndexRefs.current.forEach((estate, index) => {
-      if (estate.classList[2] === deadPlayer){
+      if (estate.classList[2] === deadPlayer) {
         estate.classList.remove(deadPlayer);
         estate.style.borderColor = "#fff";
         estate.children[1].style.backgroundImage = ``; // 필요한 경우 배경 이미지 설정
@@ -1042,9 +1061,28 @@ function YutPan() {
       display: showMiniGame ? "flex" : "none",
       scale: panScale / 1.8,
     }}>
-      {showMiniGame ? <Minigame param={miniGameParam} roomNumber={roomId}/> : null}
+      {showMiniGame || (client == null || myPlayer == null) ?
+        <Minigame param={miniGameParam} roomNumber={roomId} javaSocket={client} player={players[myPlayer]}/> : null}
     </div>
     {(client == null || myPlayer == null) ? null : <ChatComponent socket={client} myPlayer={myPlayer}/>}
+    <div style={{
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      backgroundColor: "rgba(0,0,0,0.22)",
+      justifyContent: "center",
+      alignItems: "center",
+      display: showEndGame ? "flex" : "none",
+      fontSize: "50px",
+      fontWeight: "bolder",
+      color: "#ffffff",
+      textShadow: "#ffff78 0px 0px 10px",
+    }}>
+      {
+        (client == null || myPlayer == null) ? null :
+        players[myPlayer]?.name + " " + players[myPlayer]?.rank + "등"
+      }
+    </div>
   </div>
 }
 
