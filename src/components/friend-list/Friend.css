@@ -93,7 +93,7 @@
   overflow-y: auto;
   border: 1px solid #ddd;
   padding: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 50px;
   background-color: #efe9e3; /* 메시지 영역 배경 흰색 */
   border-radius: 10px;
   display: flex;

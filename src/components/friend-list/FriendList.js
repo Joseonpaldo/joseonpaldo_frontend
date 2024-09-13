@@ -41,11 +41,11 @@ export default function FriendList() {
   async function getFriendList() {
     if (jwt != null) {
       await apiAxiosInstance.get(`/friend/list/${jwt}`)
-        .then(res => {
-          if (Array.isArray(res.data)) {
-            setFriendList([...res.data]);
-          }
-        })
+    .then(res => {
+        if (Array.isArray(res.data)) {
+          setFriendList([...res.data]);
+        }
+      })
         .catch(e => console.error("친구 목록 가져오기 실패", e));
     }
   }
@@ -172,20 +172,20 @@ export default function FriendList() {
 
   // 메시지 로드 함수
   function loadMessages(chatRoomId) {
-    apiAxiosInstance.get(`/chat/history`, {
+    apiAxiosInstance.get('/chat/history', {
       params: { roomId: chatRoomId }  // 방 ID를 쿼리 파라미터로 보냄
     })
-      .then(res => {
-        if (Array.isArray(res.data)) {
-          const loadedMessages = res.data.map(msg => ({
-            senderId: msg.senderId,
-            senderNickname: msg.senderNickname,
-            content: msg.messageContent,
-            timestamp: msg.timestamp,
-          }));
-          setMessages(loadedMessages);
-        }
-      })
+  .then(res => {
+      if (Array.isArray(res.data)) {
+        const loadedMessages = res.data.map(msg => ({
+          senderId: msg.senderId,
+          senderNickname: msg.senderNickname,
+          content: msg.messageContent,
+          timestamp: msg.timestamp,
+        }));
+        setMessages(loadedMessages);
+      }
+    })
       .catch(error => console.error('메시지 내역 불러오기 실패:', error));
   }
 
@@ -249,7 +249,7 @@ export default function FriendList() {
 
   return (
 
-  <div className={"friendd"}>
+    <div className={"friendd"}>
       <>
         {!isChatRoom ? (
           <div style={{position: 'absolute', bottom: '0'}}>
@@ -363,7 +363,7 @@ export default function FriendList() {
                       display: 'flex',
                       flexDirection: isSender ? 'row-reverse' : 'row',
                       alignItems: 'flex-start',
-                      marginBottom: '10px',
+                      marginBottom: '20px',
                     }}
                   >
                     {/* 프로필 사진 */}
@@ -460,4 +460,3 @@ export default function FriendList() {
   );
 
 }
-
