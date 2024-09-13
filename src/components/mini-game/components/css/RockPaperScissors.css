@@ -25,7 +25,6 @@
 .timer-fill {
   background-color: #4caf50;
   height: 100%;
-  transition: width 1s linear; /* Smooth shrinking effect */
   width: 100%; /* Starts at full width */
   transform-origin: center; /* Shrinks symmetrically from the center */
 }
