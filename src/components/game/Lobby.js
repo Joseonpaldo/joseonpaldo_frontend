@@ -555,16 +555,28 @@ const Lobby = () => {
     return res.data;
   }
 
+  //방장 roomcheck
   useEffect(() => {
+    if (roomId === null){
+      return;
+    }
+
+    const fetchRoomName1 = async() => {
+      const response = await apiAxiosInstance.get(`/roomName/${roomId}`)
+      .then(res => {
+        if(res.data === ""){
+          alert('존재하지 않는 방입니다');
+          window.close();
+        }
+      });
+    }
+
     const checkRoom = async () => {
       if (userData != null && userData.user_id != null) {
         const result = await roomCheck(roomId, userData.user_id);
         console.log(result);
-        // if(!result){
-        //   alert("존재하지 않는방");
-        //   window.close();
-        // }
         setRoomchecking(result);
+        fetchRoomName1();
       }
     };
 
