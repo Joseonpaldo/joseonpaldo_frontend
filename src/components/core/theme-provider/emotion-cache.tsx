@@ -61,12 +61,15 @@ export default function NextAppDirEmotionCacheProvider(props: NextAppDirEmotionC
 
       if (typeof style !== 'boolean') {
         if (isGlobal) {
-          globals.push({ name, style });
+          if (style !== undefined) { // style이 undefined가 아닐 때만 추가
+            globals.push({ name, style });
+          }
         } else {
           styles += style;
           dataEmotionAttribute += ` ${name}`;
         }
       }
+
     });
 
     return (
