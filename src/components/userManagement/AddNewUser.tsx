@@ -37,7 +37,8 @@ const AddNewUser: FC = () => {
             jwt : token,
           },
         });
-        location.href = "/lobby/" + response.data;
+        // location.href = "/lobby/" + response.data;
+        window.open("/lobby/" + response.data);
       } catch (error) {
         console.error('Error creating game room:', error);
       }
