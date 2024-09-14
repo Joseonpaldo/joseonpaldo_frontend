@@ -36,9 +36,9 @@ const RockPaperScissors = ({ socket }) => {
   useEffect(() => {
     if(isGameOver) {
       if(gameState.playerScore > gameState.computerScore) {
-        setMsg('You Win the Game!');
+        socket.emit('hostResult', true);
       }else if(gameState.playerScore < gameState.computerScore) {
-        setMsg('You Lose the Game!');
+        socket.emit('hostResult', false);
       }
     }
   }, [isGameOver]);
@@ -46,93 +46,7 @@ const RockPaperScissors = ({ socket }) => {
   const playGame = (choice) => {
     socket.emit('rpsPlayerChoice', choice);
   }
-
-  // // Timer logic for each round
-  // useEffect(() => {
-  //   if (gameOver || timeLeft === 0) return;
-
-  //   const timer = setInterval(() => {
-  //     setTimeLeft((prevTimeLeft) => {
-  //       if (prevTimeLeft > 0) {
-  //         socket.emit('rpsTimeLeft', prevTimeLeft - 1); // Emit timeLeft to the server
-  //         return prevTimeLeft - 1;
-  //       } else {
-  //         playGame(null); // Auto-play if the player doesn't choose
-  //         clearInterval(timer);
-  //         return 0;
-  //       }
-  //     });
-  //   }, 1000);
-
-  //   return () => clearInterval(timer);
-  // }, [timeLeft, gameOver, socket]);
-
-  // const playGame = (choice) => {
-  //   if (gameOver || round > 3) return;
-
-  //   setPlayerChoice(choice);
-  //   socket.emit('rpsPlayerChoice', choice);
-
-  //   const computerChoice = choices[Math.floor(Math.random() * 3)];
-  //   setComputerChoice(computerChoice);
-  //   socket.emit('rpsComputerChoice', computerChoice);
-
-  //   let outcome;
-  //   if (choice === computerChoice) {
-  //     outcome = 'Draw';
-  //     setResult(outcome);
-  //     socket.emit('rpsResult', outcome);
-
-  //     // If it's a draw, reset the round without incrementing the round number
-  //     setTimeLeft(3); // Reset the timer
-  //     return; // Exit early since we don't want to change the round or scores
-  //   } else if (
-  //     (choice === '바위' && computerChoice === '가위') ||
-  //     (choice === '보' && computerChoice === '바위') ||
-  //     (choice === '가위' && computerChoice === '보')
-  //   ) {
-  //     outcome = 'You Win';
-  //     setPlayerScore(playerScore + 1);
-  //     socket.emit('rpsScore', { playerScore: playerScore + 1, computerScore });
-  //   } else {
-  //     outcome = 'You Lose';
-  //     setComputerScore(computerScore + 1);
-  //     socket.emit('rpsScore', { playerScore, computerScore: computerScore + 1 });
-  //   }
-
-  //   setResult(outcome);
-  //   socket.emit('rpsResult', outcome);
-
-  //   // Check if game is over (after 3 non-draw rounds)
-  //   if (round === 3) {
-  //     setGameOver(true);
-
-  //     // Determine final result
-  //     let finalOutcome;
-  //     if (playerScore > computerScore) {
-  //       finalOutcome = 'You Win the Game!';
-  //     } else if (playerScore < computerScore) {
-  //       finalOutcome = 'You Lose the Game!';
-  //     } else {
-  //       finalOutcome = 'The Game is a Draw!';
-  //     }
-
-  //     // Send final result to the server
-  //     socket.emit('rpsFinalResult', finalOutcome);
-
-  //     // Trigger alert with final result
-  //     alert(finalOutcome);
-  //   } else {
-  //     setRound(round + 1);
-  //     socket.emit('round', round);
-  //     setTimeLeft(3); // Reset the timer for the next round
-  //   }
-
-  //   setAnimateResult(true);
-  //   setTimeout(() => setAnimateResult(false), 1000);
-  // };
-
-  // Utility to get the correct image for the choices
+  
   const getImage = (choice) => {
     switch (choice) {
       case '바위':

@@ -19,7 +19,7 @@ export default function Page(): React.JSX.Element {
 
     return (
         <Stack spacing={3}>
-
+            <Minigame roomNumber={roomNumber} param={param} javaSocket={null} player={null} />
         </Stack>
     );
 }
