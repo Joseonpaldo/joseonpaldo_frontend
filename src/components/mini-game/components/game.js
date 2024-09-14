@@ -73,11 +73,7 @@ const Game = ({ socket, image }) => {
     useEffect(() => {
         if (isGameOver) {
             // Handle game over logic here
-            if (win) {
-                console.log('You win!');
-            } else {
-                console.log('You lose!');
-            }    
+            socket.emit('hostResult', win);
         }
     }, [win]);
 

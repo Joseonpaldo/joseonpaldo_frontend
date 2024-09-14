@@ -4,81 +4,55 @@ import './css/RockPaperScissorsViewer.css'; // Add custom styles here
 const RPSviewer = ({ socket }) => {
   const [playerChoice, setPlayerChoice] = useState(null);
   const [computerChoice, setComputerChoice] = useState(null);
-  const [result, setResult] = useState('');
-  const [round, setRound] = useState(1);
-  const [playerScore, setPlayerScore] = useState(0);
-  const [computerScore, setComputerScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
   const [animateResult, setAnimateResult] = useState(false);
+  const [isGameOver, setIsGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3); // Timer starts at 3 seconds
+  const [msg, setMsg] = useState('');
+
+  const [gameState, setGameState] = useState();
+
+  const choices = ['바위', '보', '가위']; // Rock, Paper, Scissors in Korean
 
   useEffect(() => {
-    // Listen for player choice from the server
-    socket.on('rpsPlayerChoice', (choice) => {
-      setPlayerChoice(choice);
-    });
+    if(socket) {
+      socket.on('rpsState', (pchoice, cchoice, state) => {
+        console.log('received game state');
+        console.log(JSON.stringify(state));
+        setPlayerChoice(pchoice);
+        setComputerChoice(cchoice);
+        setGameState(state);
 
-    // Listen for computer choice from the server
-    socket.on('rpsComputerChoice', (choice) => {
-      setComputerChoice(choice);
-    });
+        if(state.isGameOver) {
+          setIsGameOver(true);
+        }
+      });
 
-    // Listen for game result from the server
-    socket.on('rpsResult', (outcome) => {
-      setResult(outcome);
-      setAnimateResult(true);
-      setTimeout(() => setAnimateResult(false), 1000);
-    });
-
-    // Listen for updated scores from the server
-    socket.on('rpsScore', ({ playerScore, computerScore }) => {
-      setPlayerScore(playerScore);
-      setComputerScore(computerScore);
-    });
-
-    // Listen for the current round number from the server
-    socket.on('rpsRound', (round) => {
-      setRound(round);
-      if (round > 3) {
-        setGameOver(true);
-      }
-    });
-
-    // Listen for time updates from the server
-    socket.on('rpsTimeLeft', (time) => {
-      setTimeLeft(time); // Sync timer with host
-    });
-
-    // Clean up the event listeners when the component unmounts
-    return () => {
-      socket.off('rpsPlayerChoice');
-      socket.off('rpsComputerChoice');
-      socket.off('rpsResult');
-      socket.off('rpsScore');
-      socket.off('rpsRound');
-      socket.off('rpsTimeLeft');
-    };
+      socket.on('rpsTimeLeft', (time) => {
+        setTimeLeft(time);
+      });
+    }
   }, [socket]);
 
   // Utility function to get image based on the choice
   const getImage = (choice) => {
     switch (choice) {
       case '바위':
-        return process.env.PUBLIC_URL + '/mg/rock.png'; // Ensure images are in the public folder
+        return '/mg/rock.png'; // Ensure images are in the public folder
       case '보':
-        return process.env.PUBLIC_URL + '/mg/paper.png';
+        return '/mg/paper.png';
       case '가위':
-        return process.env.PUBLIC_URL + '/mg/scissor.png';
+        return '/mg/scissor.png';
       default:
         return '';
     }
   };
 
   return (
+    (gameState === undefined) ? <div>Loading...</div> :
     <div className="game-wrapper">
-      <h2>Rock Paper Scissors - Viewer - Round {round}</h2>
+      <h2>Rock Paper Scissors - Viewer - Round {gameState.round}</h2>
       <div className="scoreboard">
-        Player Score: {playerScore} | Computer Score: {computerScore}
+        Player Score: {gameState.playerScore} | Computer Score: {gameState.computerScore}
       </div>
 
       {/* Timer Box for Viewer */}
@@ -91,26 +65,29 @@ const RPSviewer = ({ socket }) => {
 
       {/* Adding choices-container for consistent layout */}
       <div className="choices-container">
-        <div className={`hand ${result === 'You Win' ? 'jump' : ''}`}>
+        <div className={`hand ${gameState.win === 'You Win' ? 'jump' : ''}`}>
           <p>Player's choice:</p>
           <img src={getImage(playerChoice)} alt={playerChoice} />
         </div>
-        <div className={`hand ${result === 'You Lose' ? 'jump' : ''}`}>
+        <div className={`hand ${gameState.win === 'You Lose' ? 'jump' : ''}`}>
           <p>Computer's choice:</p>
           <img src={getImage(computerChoice)} alt={computerChoice} />
         </div>
       </div>
 
-      <h3 className={`result ${animateResult ? 'fadeIn' : ''}`}>{result}</h3>
-      {gameOver && (
-        <h3>
-          {playerScore > computerScore
-            ? 'Player Wins the Game!'
-            : playerScore < computerScore
-            ? 'Computer Wins the Game!'
-            : 'The Game is a Draw!'}
-        </h3>
-      )}
+      <h3 className={`result ${animateResult ? 'fadeIn' : ''}`}>{gameState.win}</h3>
+      <h3 className={`result ${animateResult ? 'fadeIn' : ''}`}>
+              {  
+                gameState.win === 1 ? "win" : 
+                gameState.win === 2 ? "lose" :
+                gameState.win === 0 ? "draw" : ""
+              }
+            </h3>
+            {isGameOver && (
+              <h3>
+                { msg }
+              </h3>
+            )}
     </div>
   );
 };
