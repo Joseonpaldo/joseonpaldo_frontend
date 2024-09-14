@@ -134,6 +134,18 @@ const rankStyle = {
 
 
 
+const loadingBackgroundStyle = {
+  position: "absolute",
+  width: "100%",
+  height: "100%",
+  backgroundColor: "rgba(0,0,0,0.22)",
+  justifyContent: "center",
+  alignItems: "center",
+};
+
+
+
+
 export {
   YutNameStyle,
   YutStateStyle,
@@ -147,4 +159,5 @@ export {
   containerStyle,
   cardStyle,
   rankStyle,
+  loadingBackgroundStyle,
 }
