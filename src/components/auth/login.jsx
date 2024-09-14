@@ -17,9 +17,6 @@ export default function Login() {
   const loginWithKakao = () => {
     location.href = "/api/login/oauth2/kakao"
   }
-  const loginwithGuest = () => {
-    location.href = ""
-  }
 
   return <FlexBox
     sx={{
@@ -64,13 +61,6 @@ export default function Login() {
           startIcon={<KakaoIcon sx={{mr: 1}}/>}
         >
           Kakao
-        </SocialIconButton>
-
-        <SocialIconButton
-          onClick={loginwithGuest}
-          startIcon={<KakaoIcon sx={{mr: 1}}/>}
-        >
-          Guest
         </SocialIconButton>
 
       </FlexBox>
