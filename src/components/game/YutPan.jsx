@@ -10,7 +10,7 @@ import './animation.css'
 import {
   backStyle,
   cardStyle,
-  containerStyle,
+  containerStyle, loadingBackgroundStyle,
   rankStyle,
   YetResultBtnStyle,
   YutFanBackGroundStyle,
@@ -37,8 +37,6 @@ import apiAxiosInstance from "@/hooks/apiAxiosInstance";
 import ChatComponent from "@/components/game/chatComponent";
 import Roulette from "@/components/game/roulette";
 import Minigame from "@/components/mini-game/Minigame";
-import Gameover from "@/components/game/Gameover";
-
 
 function YutPan() {
 
@@ -60,6 +58,11 @@ function YutPan() {
 
 
   const [showEndGame, setShowEndGame] = useState(false);
+
+  const [showMiniGameIsWin, setShowMiniGameIsWin] = useState(false);
+  const [miniGameIsWin, setMiniGameIsWin] = useState(false);
+
+
 
   let bankruptcyCount = 0;
 
@@ -506,8 +509,10 @@ function YutPan() {
           handleBankruptcy(message.message);
           updatePlayer(message.message, {index: -1});
           updatePlayer(message.message, {top: parseInt(1000, 10)});
-        } else if (message.type === "error") {
-
+        } else if (message.type === "TheEnd") {
+          setShowEndGame(true)
+        }
+        else if (message.type === "error") {
           if ("not found room" === message.message) {
             stompClient.send(
               `/app/main/start/${roomId}`,
@@ -532,6 +537,8 @@ function YutPan() {
           if (showMiniGame) {
             setShowMiniGame(false);
           }
+          setMiniGameIsWin(message.message);
+          setShowMiniGameIsWin(true);
         }
       });
 
@@ -1038,13 +1045,8 @@ function YutPan() {
     <UpgradeEstateConfirmDialog open={UpgradeEstateOpen} onClose={UpgradeEstateHandleClose} level={UpgradeLevel}/>
 
     <div style={{
-      position: "absolute",
-      width: "100%",
-      height: "100%",
-      backgroundColor: "rgba(0,0,0,0.22)",
+      loadingBackgroundStyle,
       display: loading,
-      justifyContent: "center",
-      alignItems: "center",
     }}>
       <div className="loader"></div>
     </div>
@@ -1052,12 +1054,7 @@ function YutPan() {
       showRoulette || (client == null || myPlayer == null) ? <Roulette client={client} myPlayer={myPlayer}/> : null
     }
     <div style={{
-      position: "absolute",
-      width: "100%",
-      height: "100%",
-      backgroundColor: "rgba(0,0,0,0.22)",
-      justifyContent: "center",
-      alignItems: "center",
+      loadingBackgroundStyle,
       display: showMiniGame ? "flex" : "none",
       scale: panScale / 1.8,
     }}>
@@ -1066,12 +1063,7 @@ function YutPan() {
     </div>
     {(client == null || myPlayer == null) ? null : <ChatComponent socket={client} myPlayer={myPlayer}/>}
     <div style={{
-      position: "absolute",
-      width: "100%",
-      height: "100%",
-      backgroundColor: "rgba(0,0,0,0.22)",
-      justifyContent: "center",
-      alignItems: "center",
+      loadingBackgroundStyle,
       display: showEndGame ? "flex" : "none",
       fontSize: "50px",
       fontWeight: "bolder",
@@ -1080,7 +1072,20 @@ function YutPan() {
     }}>
       {
         (client == null || myPlayer == null) ? null :
-        players[myPlayer]?.name + " " + players[myPlayer]?.rank + "등"
+          players[myPlayer]?.name + " " + players[myPlayer]?.rank + "등"
+      }
+    </div>
+
+    <div style={{
+      loadingBackgroundStyle,
+      display: showMiniGameIsWin ? "flex" : "none",
+      fontSize: "50px",
+      fontWeight: "bolder",
+      color: "#ffffff",
+      textShadow: "#ffff78 0px 0px 10px",
+    }}>
+      {
+        miniGameIsWin ? "미니게임 승리" : "미니게임 패배"
       }
     </div>
   </div>
