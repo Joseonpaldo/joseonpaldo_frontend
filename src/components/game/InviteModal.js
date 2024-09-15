@@ -110,7 +110,7 @@ const InviteModal = ({open, onClose, userId, client, roomId}) => {
                 {friendList.map((friend, index) => (
                   <Grid item xs={12} key={index} container alignItems="center" justifyContent="center">
                     <Grid item xs={6} style={{textAlign: 'center'}}> {/* 이름 영역 */}
-                      <span>{friend.nickname} {friend.userId}</span>
+                      <span>{friend.nickname}</span>
                     </Grid>
                     <Grid item xs={6} style={{textAlign: 'center'}}> {/* 버튼 영역 */}
                       <Button
