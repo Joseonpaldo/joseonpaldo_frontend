@@ -36,11 +36,6 @@ const Minigame = ({param, roomNumber, javaSocket, player}) => {
                 },
                 JSON.stringify({message: "is win"})
               );
-                if(result === true) {
-
-                }else {
-
-                }
             });
 
             socket.on('disconnect', () => {
