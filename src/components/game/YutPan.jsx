@@ -1045,7 +1045,7 @@ function YutPan() {
     <UpgradeEstateConfirmDialog open={UpgradeEstateOpen} onClose={UpgradeEstateHandleClose} level={UpgradeLevel}/>
 
     <div style={{
-      loadingBackgroundStyle,
+      ...loadingBackgroundStyle,
       display: loading,
     }}>
       <div className="loader"></div>
@@ -1054,7 +1054,7 @@ function YutPan() {
       showRoulette || (client == null || myPlayer == null) ? <Roulette client={client} myPlayer={myPlayer}/> : null
     }
     <div style={{
-      loadingBackgroundStyle,
+      ...loadingBackgroundStyle,
       display: showMiniGame ? "flex" : "none",
       scale: panScale / 1.8,
     }}>
@@ -1063,7 +1063,7 @@ function YutPan() {
     </div>
     {(client == null || myPlayer == null) ? null : <ChatComponent socket={client} myPlayer={myPlayer}/>}
     <div style={{
-      loadingBackgroundStyle,
+      ...loadingBackgroundStyle,
       display: showEndGame ? "flex" : "none",
       fontSize: "50px",
       fontWeight: "bolder",
@@ -1077,7 +1077,7 @@ function YutPan() {
     </div>
 
     <div style={{
-      loadingBackgroundStyle,
+      ...loadingBackgroundStyle,
       display: showMiniGameIsWin ? "flex" : "none",
       fontSize: "50px",
       fontWeight: "bolder",
