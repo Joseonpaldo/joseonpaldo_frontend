@@ -33,16 +33,6 @@ const RockPaperScissors = ({ socket }) => {
     }
   }, [socket]);
 
-  useEffect(() => {
-    if(isGameOver) {
-      if(gameState.playerScore > gameState.computerScore) {
-        socket.emit('hostResult', true);
-      }else if(gameState.playerScore < gameState.computerScore) {
-        socket.emit('hostResult', false);
-      }
-    }
-  }, [isGameOver]);
-
   const playGame = (choice) => {
     socket.emit('rpsPlayerChoice', choice);
   }

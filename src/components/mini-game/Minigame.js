@@ -9,6 +9,7 @@ import RPSviewer from './components/RPSviewer';
 import Bomb from './components/Bomb';
 import BombViewer from './components/BombViewer';
 import {useParams} from "next/navigation";
+import { set } from 'react-hook-form';
 
 const Minigame = ({param, roomNumber, javaSocket, player}) => {
     const [role, setRole] = React.useState(null);
@@ -65,6 +66,12 @@ const Minigame = ({param, roomNumber, javaSocket, player}) => {
                 case 14:
                     setGameType('bomb');
                     break;
+                case 15:
+                    setGameType('mugunghwa');
+                    break;
+                case 16:
+                    setGameType('snake');
+                    break;
                 default:
                     setGameType(null);
             }
@@ -83,6 +90,12 @@ const Minigame = ({param, roomNumber, javaSocket, player}) => {
                 case 4:
                     setGameType('bomb');
                     break;
+                case 5:
+                    setGameType('mugunghwa');
+                    break;
+                case 6:
+                    setGameType('snake');
+                    break;
                 default:
                     setGameType(null);
             }
@@ -93,7 +106,11 @@ const Minigame = ({param, roomNumber, javaSocket, player}) => {
         if(gameType && role){
             console.log('joinRoom is in action');
             console.log(gameType, roomNumber, role);
-            socket.emit('joinGame', { gameType, roomNumber, role});
+            if(gameType === 'mugunghwa' || gameType === 'snake'){
+                socket.emit('joinRoom', { roomId: roomNumber, socketId: socket.id, gameType});
+            }else {
+                socket.emit('joinGame', { gameType, roomNumber, role});
+            }
         }
     }, [gameType, role])
 

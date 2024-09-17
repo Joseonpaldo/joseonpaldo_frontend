@@ -71,13 +71,6 @@ const Game = ({ socket, image }) => {
     }, [socket]);
 
     useEffect(() => {
-        if (isGameOver) {
-            // Handle game over logic here
-            socket.emit('hostResult', win);
-        }
-    }, [win]);
-
-    useEffect(() => {
         if(gameStarted) {
             socket.emit('platformerStart'); // Notify server that the game has started
         }
